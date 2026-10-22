@@ -1,0 +1,22 @@
+{
+  "date": "2026-10-22T17:11:51.352Z",
+  "app": {
+    "Home": {
+      "violations": [],
+      "passes": 18
+    },
+    "Documents": {
+      "violations": [],
+      "passes": 22
+    },
+    "Settings": {
+      "violations": [],
+      "passes": 20
+    },
+    "lighthouse": {
+      "score": 100,
+      "failed": []
+    }
+  },
+  "site": {}
+}

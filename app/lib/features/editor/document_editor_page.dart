@@ -222,16 +222,19 @@ class _DocumentEditorPageState extends ConsumerState<DocumentEditorPage> {
     final current = pages.isEmpty ? null : pages[index];
     final idle = _busy == 0 && current != null;
     final ocr = _ocr;
+    // Phones / large text: Rename moves from the app bar into the toolbar.
+    final narrow = MediaQuery.sizeOf(context).width < 600 || MediaQuery.textScalerOf(context).scale(1) > 1.3;
     return Scaffold(
       appBar: AppBar(
         title: Text(doc.title, overflow: TextOverflow.ellipsis),
         actions: [
-          TextButton.icon(
-            key: const ValueKey('rename-doc'),
-            onPressed: () => _rename(doc),
-            icon: const Icon(Icons.edit_outlined),
-            label: Text(l.rename),
-          ),
+          if (!narrow)
+            TextButton.icon(
+              key: const ValueKey('rename-doc'),
+              onPressed: () => _rename(doc),
+              icon: const Icon(Icons.edit_outlined),
+              label: Text(l.rename),
+            ),
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: FilledButton.icon(
@@ -281,7 +284,7 @@ class _DocumentEditorPageState extends ConsumerState<DocumentEditorPage> {
                   ),
                 ),
               ),
-              Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              Wrap(alignment: WrapAlignment.center, crossAxisAlignment: WrapCrossAlignment.center, children: [
                 TextButton.icon(
                   key: const ValueKey('prev-page'),
                   onPressed: index > 0 ? () => _goTo(index - 1) : null,
@@ -301,7 +304,8 @@ class _DocumentEditorPageState extends ConsumerState<DocumentEditorPage> {
                 ),
               ]),
               SizedBox(
-                height: 112,
+                // Grows with the text size so "Add pages" stays readable.
+                height: 80 + MediaQuery.textScalerOf(context).scale(32),
                 child: _PageStrip(
                   pages: pages,
                   current: index,
@@ -341,6 +345,7 @@ class _DocumentEditorPageState extends ConsumerState<DocumentEditorPage> {
                   _Tool('move-later', Icons.arrow_forward, l.moveLater,
                       index < pages.length - 1 ? () => _move(doc, index, 1) : null),
                 ],
+                if (narrow) _Tool('rename-doc', Icons.edit_outlined, l.rename, () => _rename(doc)),
                 _Tool('delete-page', Icons.delete_outline, l.deletePage, () => _deletePage(doc, current!)),
                 _Tool('delete-doc', Icons.delete_forever_outlined, l.deleteDocument, () => _deleteDocument(doc)),
               ], enabled: idle),
@@ -452,10 +457,12 @@ class _Toolbar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // Room for an icon and two lines of label at the user's text size.
+    final scaled = MediaQuery.textScalerOf(context).scale(14);
     return SafeArea(
       top: false,
       child: SizedBox(
-        height: 76,
+        height: 44 + scaled * 2 * 1.45,
         child: Scrollbar(
           child: ListView(
             scrollDirection: Axis.horizontal,
@@ -463,7 +470,7 @@ class _Toolbar extends StatelessWidget {
             children: [
               for (final t in tools)
                 SizedBox(
-                  width: 92,
+                  width: (92 * scaled / 14).clamp(92, 180),
                   child: TextButton(
                     key: ValueKey(t.key),
                     onPressed: enabled ? t.onTap : null,

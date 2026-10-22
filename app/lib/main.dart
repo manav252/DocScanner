@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -14,6 +15,9 @@ import 'features/onboarding/onboarding_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Web: build the accessibility tree from the start, so screen readers and
+  // keyboard users don't first have to find Flutter's hidden "Enable accessibility" button.
+  if (kIsWeb) SemanticsBinding.instance.ensureSemantics();
   final store = await KeyValueStore.open();
   final (settings, session) = await loadSettingsAndSession(store);
   // `?demo=1` on the web (or --dart-define=DEMO_CAMERA=true) starts with the demo camera.

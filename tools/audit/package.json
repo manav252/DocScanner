@@ -1,0 +1,14 @@
+{
+  "name": "docscanner-audit",
+  "description": "Accessibility audit (axe-core + Lighthouse) of the DocScanner web app and showcase site",
+  "scripts": {
+    "audit": "node audit.mjs"
+  },
+  "type": "module",
+  "dependencies": {
+    "axe-core": "4.10.3",
+    "lighthouse": "12.6.1",
+    "puppeteer-core": "24.10.0"
+  },
+  "private": true
+}

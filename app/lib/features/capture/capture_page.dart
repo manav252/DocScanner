@@ -282,15 +282,20 @@ class _CapturePageState extends ConsumerState<CapturePage> with WidgetsBindingOb
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
-        leadingWidth: 132,
-        leading: TextButton.icon(
-          key: const ValueKey('cancel-scan'),
-          style: TextButton.styleFrom(foregroundColor: Colors.white),
-          onPressed: () => Navigator.of(context).maybePop(),
-          icon: const Icon(Icons.close),
-          label: Text(l.cancel),
-        ),
-        title: Text(_replacing ? l.retakeTitle : (demo ? l.scanDemoTitle : l.scanTitle)),
+        titleSpacing: 4,
+        title: Row(children: [
+          TextButton.icon(
+            key: const ValueKey('cancel-scan'),
+            style: TextButton.styleFrom(foregroundColor: Colors.white),
+            onPressed: () => Navigator.of(context).maybePop(),
+            icon: const Icon(Icons.close),
+            label: Text(l.cancel),
+          ),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(_replacing ? l.retakeTitle : (demo ? l.scanDemoTitle : l.scanTitle), overflow: TextOverflow.ellipsis),
+          ),
+        ]),
       ),
       body: Column(children: [
         Expanded(
@@ -319,7 +324,13 @@ class _CapturePageState extends ConsumerState<CapturePage> with WidgetsBindingOb
           top: false,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-            child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+            // Wraps onto two lines on narrow screens / large text instead of overflowing.
+            child: Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                runSpacing: 8,
+                spacing: 8,
+                children: [
               _pagesButton(doc),
               if (state.status != CaptureStatus.failed)
                 Column(mainAxisSize: MainAxisSize.min, children: [
@@ -332,8 +343,8 @@ class _CapturePageState extends ConsumerState<CapturePage> with WidgetsBindingOb
                   const SizedBox(height: 4),
                   ExcludeSemantics(child: Text(l.capture, style: const TextStyle(color: Colors.white))),
                 ]),
-              SizedBox(
-                width: _sideWidth,
+              ConstrainedBox(
+                constraints: const BoxConstraints(minWidth: _sideWidth),
                 child: (doc?.pages.isNotEmpty ?? false) && _saving == 0 && !_replacing
                     ? FilledButton.icon(
                         key: const ValueKey('capture-done'),
@@ -461,7 +472,7 @@ class _HintPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) => DecoratedBox(
         decoration: BoxDecoration(
-          color: warning ? const Color(0xE6B26A00) : Colors.black54,
+          color: warning ? const Color(0xFF8A4B00) : Colors.black87, // white text stays >= 4.5:1 over any camera image
           borderRadius: BorderRadius.circular(20),
         ),
         child: Padding(

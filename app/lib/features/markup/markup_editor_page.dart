@@ -535,6 +535,8 @@ class MarkupEditorPageState extends ConsumerState<MarkupEditorPage> {
           ]
         : MarkupTool.values;
     final sel = selected;
+    // On phones (or with large text) Undo/Redo move from the app bar into the tool panel.
+    final narrow = MediaQuery.sizeOf(context).width < 600 || MediaQuery.textScalerOf(context).scale(1) > 1.3;
 
     return PopScope(
       canPop: !(h?.dirty ?? false) || _saving,
@@ -549,18 +551,7 @@ class MarkupEditorPageState extends ConsumerState<MarkupEditorPage> {
         appBar: AppBar(
           title: Text(l.markupTitle),
           actions: [
-            TextButton.icon(
-              key: const ValueKey('markup-undo'),
-              onPressed: h?.canUndo ?? false ? undo : null,
-              icon: const Icon(Icons.undo),
-              label: Text(l.undo),
-            ),
-            TextButton.icon(
-              key: const ValueKey('markup-redo'),
-              onPressed: h?.canRedo ?? false ? redo : null,
-              icon: const Icon(Icons.redo),
-              label: Text(l.redo),
-            ),
+            if (!narrow) ..._undoRedo(h),
             Padding(
               padding: const EdgeInsets.only(right: 8),
               child: FilledButton.icon(
@@ -578,7 +569,7 @@ class MarkupEditorPageState extends ConsumerState<MarkupEditorPage> {
                 builder: (context, c) {
                   final wide = c.maxWidth >= 900;
                   final canvas = _buildCanvas(context);
-                  final panel = _buildPanel(context, tools, sel, simple);
+                  final panel = _buildPanel(context, tools, sel, simple, narrow: narrow);
                   return wide
                       ? Row(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -647,7 +638,22 @@ class MarkupEditorPageState extends ConsumerState<MarkupEditorPage> {
     );
   }
 
-  Widget _buildPanel(BuildContext context, List<MarkupTool> tools, MarkupItem? sel, bool simple) {
+  List<Widget> _undoRedo(MarkupHistory? h) => [
+        TextButton.icon(
+          key: const ValueKey('markup-undo'),
+          onPressed: h?.canUndo ?? false ? undo : null,
+          icon: const Icon(Icons.undo),
+          label: Text(context.l10n.undo),
+        ),
+        TextButton.icon(
+          key: const ValueKey('markup-redo'),
+          onPressed: h?.canRedo ?? false ? redo : null,
+          icon: const Icon(Icons.redo),
+          label: Text(context.l10n.redo),
+        ),
+      ];
+
+  Widget _buildPanel(BuildContext context, List<MarkupTool> tools, MarkupItem? sel, bool simple, {bool narrow = false}) {
     final l = context.l10n;
     final theme = Theme.of(context);
     Widget label(String t) => Padding(
