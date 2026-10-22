@@ -6,3 +6,4 @@ app/.dart_tool/
 app/test_js/node_modules/
 backend/.env
 .DS_Store
+.claude/
