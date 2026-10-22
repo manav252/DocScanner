@@ -9,7 +9,6 @@ import 'package:permission_handler/permission_handler.dart' show openAppSettings
 
 import '../../core/providers.dart';
 import '../../data/models.dart';
-import '../../imaging/geometry.dart';
 import '../../services/camera/demo_scanner_camera.dart';
 import '../../services/camera/scanner_camera.dart';
 import '../common/page_image.dart';
@@ -84,19 +83,20 @@ class _CapturePageState extends ConsumerState<CapturePage> with WidgetsBindingOb
   }
 
   Future<void> _openEditor(CaptureResult capture) async {
-    final corners = await Navigator.of(context).push<List<Pt>>(MaterialPageRoute(
+    final result = await Navigator.of(context).push<CornerAdjustResult>(MaterialPageRoute(
       builder: (_) => CornerAdjustPage(
         bytes: capture.bytes,
         width: capture.width,
         height: capture.height,
         corners: capture.corners,
         detected: capture.detected,
+        cancelLabel: 'Retake',
         confirmLabel: _replacing ? 'Replace page' : 'Keep scan',
       ),
     ));
     if (!mounted) return;
     final controller = ref.read(captureControllerProvider.notifier);
-    if (corners == null) {
+    if (result == null) {
       await controller.resume();
       return;
     }
@@ -105,7 +105,7 @@ class _CapturePageState extends ConsumerState<CapturePage> with WidgetsBindingOb
       try {
         await ref
             .read(documentProvider(_docId!).notifier)
-            .replaceImage(widget.replacePageId!, capture.bytes, capture.width, capture.height, corners);
+            .replaceImage(widget.replacePageId!, result.bytes, result.width, result.height, result.corners);
         if (mounted) Navigator.of(context).pop(true);
       } catch (e) {
         _showError('Could not save the page: $e');
@@ -123,7 +123,7 @@ class _CapturePageState extends ConsumerState<CapturePage> with WidgetsBindingOb
     // Process the page in the background and keep scanning.
     unawaited(ref
         .read(documentProvider(_docId!).notifier)
-        .addImage(capture.bytes, capture.width, capture.height, corners)
+        .addImage(result.bytes, result.width, result.height, result.corners)
         .catchError((Object e) => _showError('Could not save the page: $e'))
         .whenComplete(() {
       if (mounted) setState(() => _saving--);

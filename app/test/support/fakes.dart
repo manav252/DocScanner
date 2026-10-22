@@ -77,6 +77,14 @@ class FakeEngine implements ScanEngine {
   @override
   Future<Detection> detectFrame(FrameData frame) async => frameDetector(frames++);
 
+  int normalized = 0;
+
+  @override
+  Future<NormalizedImage> normalizeEncoded(Uint8List bytes, {int maxSide = 4000, int quality = 92}) async {
+    normalized++;
+    return (bytes: bytes, width: stillSize.$1, height: stillSize.$2);
+  }
+
   @override
   Future<EncodedDetection> detectEncoded(Uint8List bytes) async => (
         detection: stillDetection ?? Detection(fullBounds(stillSize.$1, stillSize.$2), found: false),

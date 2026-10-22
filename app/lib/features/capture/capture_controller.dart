@@ -286,7 +286,10 @@ class CaptureController extends Notifier<CaptureState> {
     try {
       final photo = await camera.takePicture();
       await camera.pause();
-      final r = await ref.read(scanEngineProvider).detectEncoded(photo.bytes);
+      final engine = ref.read(scanEngineProvider);
+      // Upright, size-capped pixels for everything downstream (editor, warp, PDF).
+      final upright = await engine.normalizeEncoded(photo.bytes);
+      final r = await engine.detectEncoded(upright.bytes);
       if (gen != _generation) return;
       final List<Pt> corners;
       final bool detected;
@@ -302,7 +305,7 @@ class CaptureController extends Notifier<CaptureState> {
       state = state.copyWith(
         status: CaptureStatus.reviewing,
         pendingCapture: CaptureResult(
-          bytes: photo.bytes,
+          bytes: upright.bytes,
           width: r.width,
           height: r.height,
           corners: corners,

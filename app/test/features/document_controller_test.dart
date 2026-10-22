@@ -147,7 +147,7 @@ void main() {
     expect(pages[0].corners.first, const Pt(10, 10));
     expect(pages[0].edits.filter, PageFilter.magicColor);
     expect(pages[1].edits.filter, PageFilter.original);
-    expect(pages[2].corners, fullBounds(80, 120), reason: 'PDF page uses its own bounds');
+    expect(pages[2].corners, fullBounds(100, 140), reason: 'PDF page uses its own (normalised) bounds');
   });
 
   test('export PDF and JPGs', () async {

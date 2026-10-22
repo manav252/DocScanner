@@ -30,6 +30,10 @@ class ServerScanEngine implements ScanEngine {
   }
 
   @override
+  Future<NormalizedImage> normalizeEncoded(Uint8List bytes, {int maxSide = 4000, int quality = 92}) =>
+      local.normalizeEncoded(bytes, maxSide: maxSide, quality: quality);
+
+  @override
   Future<EncodedDetection> detectEncoded(Uint8List bytes) => _orLocal(() async {
         final r = jsonDecode((await api.process(bytes, {'detect_only': 'true'})).body) as Map<String, dynamic>;
         return (

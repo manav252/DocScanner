@@ -68,6 +68,13 @@ class NativeScanEngine implements ScanEngine {
   }
 
   @override
+  Future<NormalizedImage> normalizeEncoded(Uint8List bytes, {int maxSide = 4000, int quality = 92}) async {
+    final r = await _call(_Request(_Kind.normalize, TransferableTypedData.fromList([bytes]), maxSide: maxSide, quality: quality))
+        as List<Object?>;
+    return (bytes: (r[0]! as TransferableTypedData).materialize().asUint8List(), width: r[1]! as int, height: r[2]! as int);
+  }
+
+  @override
   Future<Uint8List> warpEncoded(Uint8List bytes, List<Pt> corners, {int maxSide = 3000, int quality = 92}) async {
     final r = await _call(_Request(
       _Kind.warp,
@@ -102,7 +109,7 @@ class NativeScanEngine implements ScanEngine {
   }
 }
 
-enum _Kind { frame, encoded, warp, process }
+enum _Kind { frame, encoded, warp, process, normalize }
 
 class _Request {
   _Request(
@@ -166,6 +173,18 @@ void _worker(SendPort out) {
         if (m.isEmpty) throw ArgumentError('could not decode image');
         if (req.kind == _Kind.encoded) {
           out.send((id, true, _encodeDetection(detectDocumentMat(m), m.cols, m.rows)));
+        } else if (req.kind == _Kind.normalize) {
+          // imdecode already applied the EXIF orientation; imencode writes no EXIF.
+          final longest = m.cols > m.rows ? m.cols : m.rows;
+          final scaled = longest > req.maxSide
+              ? cv.resize(m, ((m.cols * req.maxSide / longest).round(), (m.rows * req.maxSide / longest).round()),
+                  interpolation: cv.INTER_AREA)
+              : m.clone();
+          final (ok, jpeg) = cv.imencode('.jpg', scaled, params: cv.VecI32.fromList([cv.IMWRITE_JPEG_QUALITY, req.quality]));
+          final size = (scaled.cols, scaled.rows);
+          scaled.dispose();
+          if (!ok) throw StateError('JPEG encoding failed');
+          out.send((id, true, [TransferableTypedData.fromList([jpeg]), size.$1, size.$2]));
         } else {
           final cv.Mat result;
           if (req.kind == _Kind.warp) {

@@ -8,7 +8,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/app_settings.dart';
 import '../../core/providers.dart';
 import '../../data/models.dart';
-import '../../imaging/geometry.dart';
 import '../../imaging/page_edits.dart';
 import '../capture/capture_page.dart';
 import '../common/page_image.dart';
@@ -109,17 +108,18 @@ class _DocumentEditorPageState extends ConsumerState<DocumentEditorPage> {
   Future<void> _adjustCorners(ScanPage page) async {
     final source = await ref.read(documentRepositoryProvider).pageImage(page.id, PageImage.source);
     if (source == null || !mounted) return;
-    final corners = await Navigator.of(context).push<List<Pt>>(MaterialPageRoute(
+    final result = await Navigator.of(context).push<CornerAdjustResult>(MaterialPageRoute(
       builder: (_) => CornerAdjustPage(
         bytes: source,
         width: page.sourceWidth,
         height: page.sourceHeight,
         corners: page.corners,
-        cancelLabel: 'Cancel',
-        confirmLabel: 'Apply',
       ),
     ));
-    if (corners != null) await _run(() => _doc.setCorners(page.id, corners));
+    if (result == null) return;
+    await _run(() => result.rotated
+        ? _doc.replaceImage(page.id, result.bytes, result.width, result.height, result.corners)
+        : _doc.setCorners(page.id, result.corners));
   }
 
   Future<void> _crop(ScanPage page) async {

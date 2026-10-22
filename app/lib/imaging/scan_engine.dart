@@ -46,6 +46,9 @@ class FrameData {
 /// A decoded still image (gallery import / captured photo) with its detection.
 typedef EncodedDetection = ({Detection detection, int width, int height});
 
+/// A photo re-encoded upright (EXIF orientation applied, tag removed) and capped in size.
+typedef NormalizedImage = ({Uint8List bytes, int width, int height});
+
 abstract interface class ScanEngine {
   /// Creates the implementation for the current platform.
   factory ScanEngine() => createScanEngine();
@@ -55,6 +58,11 @@ abstract interface class ScanEngine {
 
   /// Detect on a raw frame. Corners are in frame pixels.
   Future<Detection> detectFrame(FrameData frame);
+
+  /// Normalise a photo as it enters the app: apply the EXIF orientation, cap the
+  /// longest side at [maxSide], re-encode as JPEG without EXIF. Afterwards every
+  /// decoder (Flutter, OpenCV, the browser, the PDF writer) sees the same pixels.
+  Future<NormalizedImage> normalizeEncoded(Uint8List bytes, {int maxSide = 4000, int quality = 92});
 
   /// Decode JPEG/PNG/WebP bytes and detect.
   Future<EncodedDetection> detectEncoded(Uint8List bytes);
