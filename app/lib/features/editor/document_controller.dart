@@ -118,13 +118,14 @@ class DocumentController extends AsyncNotifier<ScanDocument> {
       });
 
   /// Store OCR for [pageId] if the page has not been re-rendered since [revision].
-  Future<void> setOcr(String pageId, int revision, OcrResult result) => _mutate((d) async {
+  Future<void> setOcr(String pageId, int revision, OcrResult result, {String language = 'eng'}) => _mutate((d) async {
         final p = d.pages.where((p) => p.id == pageId).firstOrNull;
         if (p == null || p.revision != revision) return d;
         await ref
             .read(documentRepositoryProvider)
             .putPageOcr(pageId, Uint8List.fromList(utf8.encode(jsonEncode(result.toJson()))));
-        return d.edit(pages: _replace(d, p.copyWith(ocrText: result.text, ocrRevision: revision)));
+        return d.edit(
+            pages: _replace(d, p.copyWith(ocrText: result.text, ocrRevision: revision, ocrLanguage: language)));
       });
 
   /// Mark a page's text as outdated so it is recognised again.

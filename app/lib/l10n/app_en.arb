@@ -171,6 +171,35 @@
       }
     }
   },
+  "text": "Text",
+  "textOnPage": "Text on this page",
+  "copyText": "Copy text",
+  "copied": "Copied",
+  "recognisingText": "Recognising text…",
+  "recognisingProgress": "Recognising text: page {current} of {total}",
+  "@recognisingProgress": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "noTextFound": "No text found on this page",
+  "noTextFoundHint": "Try a clearer photo, or choose the right language below.",
+  "ocrFailed": "Text recognition failed: {message}. Try again, or use a clearer photo.",
+  "@ocrFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "ocrUnavailable": "Text recognition is not available on this device.",
+  "recogniseAgain": "Recognise again",
+  "readAs": "Text language",
   "uploadExistingTitle": "Upload your scans?",
   "uploadExistingBody": "{count, plural, =1{You have 1 document on this device. Upload it to your account so it is backed up and available on your other devices?} other{You have {count} documents on this device. Upload them to your account so they are backed up and available on your other devices?}}",
   "@uploadExistingBody": {

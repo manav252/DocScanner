@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:docscanner/core/app_settings.dart';
 import 'package:docscanner/core/providers.dart';
 import 'package:docscanner/data/page_renderer.dart';
 import 'package:docscanner/data/storage/key_value_store.dart';
@@ -14,6 +15,7 @@ import 'package:docscanner/services/ocr/ocr_result.dart';
 import 'package:docscanner/services/ocr/text_recognizer.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pdf/widgets.dart' as pw;
 
 import '../imaging/fixtures.dart';
 import '../support/fakes.dart';
@@ -22,9 +24,12 @@ class FakeRecognizer implements TextRecognizer {
   int calls = 0;
   @override
   bool get isAvailable => true;
+  final languages = <String>[];
+
   @override
-  Future<OcrResult> recognize(Uint8List image) async {
+  Future<OcrResult> recognize(Uint8List image, {String language = 'eng'}) async {
     calls++;
+    languages.add(language);
     return const OcrResult('INVOICE 42\nTotal 99.50', [
       OcrLine('INVOICE 42', 0.1, 0.1, 0.5, 0.05),
       OcrLine('Total 99.50', 0.1, 0.8, 0.3, 0.04),
@@ -128,5 +133,43 @@ void main() {
       OcrLine('Total: 42', 0, 0, 1, 1),
     ]));
     expect(r.text, 'QUARTERLY REPORT\ninvoice receipt\nTotal: 42');
+  });
+
+  test('cleanOcr drops low-confidence lines and non-words; Hindi passes', () {
+    final r = cleanOcr(const OcrResult('', [
+      OcrLine('Invoice 42', 0, 0, 1, 1, confidence: 0.9),
+      OcrLine('Rrnm qx', 0, 0, 1, 1, confidence: 0.2),
+      OcrLine('~ | ;', 0, 0, 1, 1, confidence: 0.95),
+      OcrLine('भारत एक विशाल देश है।', 0, 0, 1, 1, confidence: 0.94),
+    ]));
+    expect(r.lines.map((l) => l.text), ['Invoice 42', 'भारत एक विशाल देश है।']);
+    expect(meaningfulText('i'), isFalse);
+    expect(meaningfulText('—— ——'), isFalse);
+    expect(meaningfulText('दिनांक'), isTrue);
+  });
+
+  test('OCR uses the chosen language and re-reads pages after a language change', () async {
+    expect(await c.read(ocrRunnerProvider).run(id), 2);
+    expect(recognizer.languages, ['eng', 'eng']);
+    final s = c.read(appSettingsProvider);
+    await c.read(appSettingsProvider.notifier).update(s.copyWith(ocrLanguage: OcrLanguage.hindi));
+    expect(await c.read(ocrRunnerProvider).run(id), 2, reason: 'text was read as English');
+    expect(recognizer.languages.skip(2), ['hin', 'hin']);
+    expect((await pages()).every((p) => p.ocrLanguage == 'hin'), isTrue);
+  });
+
+  test('searchable PDF keeps Hindi text when the Devanagari font is supplied', () async {
+    final jpg = File('${fixturesDir.path}/tilted_paper.jpg').readAsBytesSync();
+    final font = pw.Font.ttf(ByteData.sublistView(File('assets/fonts/NotoSansDevanagari-Regular.ttf').readAsBytesSync()));
+    final pdf = await buildPdf([
+      PdfPageInput(jpeg: jpg, width: 1200, height: 1600, lines: const [OcrLine('भारत देश', 0.1, 0.1, 0.5, 0.05)]),
+    ], compress: false, devanagariFont: font);
+    final s = latin1.decode(pdf);
+    expect(s, contains('NotoSansDevanagari'), reason: 'font embedded');
+    expect(s, contains('/ToUnicode'), reason: 'text maps back to Unicode for search/copy');
+    expect(pdfSafe('भारत देश', devanagari: true), 'भारत देश');
+    expect(pdfSafe('भारत देश'), ' ', reason: 'without the font Hindi is left out');
+    final out = File('build/test_hindi.pdf')..createSync(recursive: true);
+    out.writeAsBytesSync(pdf); // inspected by tool/check_pdf_text.py
   });
 }

@@ -331,6 +331,46 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String get text => 'टेक्स्ट';
+
+  @override
+  String get textOnPage => 'इस पेज का टेक्स्ट';
+
+  @override
+  String get copyText => 'टेक्स्ट कॉपी करें';
+
+  @override
+  String get copied => 'कॉपी हो गया';
+
+  @override
+  String get recognisingText => 'टेक्स्ट पहचाना जा रहा है…';
+
+  @override
+  String recognisingProgress(int current, int total) {
+    return 'टेक्स्ट पहचाना जा रहा है: पेज $current / $total';
+  }
+
+  @override
+  String get noTextFound => 'इस पेज पर कोई टेक्स्ट नहीं मिला';
+
+  @override
+  String get noTextFoundHint => 'साफ़ फ़ोटो आज़माएँ, या नीचे सही भाषा चुनें।';
+
+  @override
+  String ocrFailed(String message) {
+    return 'टेक्स्ट पहचान विफल: $message। फिर कोशिश करें, या साफ़ फ़ोटो लें।';
+  }
+
+  @override
+  String get ocrUnavailable => 'इस डिवाइस पर टेक्स्ट पहचान उपलब्ध नहीं है।';
+
+  @override
+  String get recogniseAgain => 'फिर से पहचानें';
+
+  @override
+  String get readAs => 'टेक्स्ट की भाषा';
+
+  @override
   String get uploadExistingTitle => 'अपने स्कैन अपलोड करें?';
 
   @override

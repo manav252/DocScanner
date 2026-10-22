@@ -2,6 +2,8 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:pdf/widgets.dart' as pw;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/providers.dart';
@@ -12,6 +14,17 @@ import '../../services/export/share_service.dart';
 import '../../services/ocr/ocr_result.dart';
 
 enum ExportFormat { pdf, jpg }
+
+pw.Font? _deva;
+
+/// Bundled Noto Sans Devanagari (OFL) so Hindi text is searchable in PDFs.
+Future<pw.Font?> _devanagariFont() async {
+  try {
+    return _deva ??= pw.Font.ttf(await rootBundle.load('assets/fonts/NotoSansDevanagari-Regular.ttf'));
+  } catch (_) {
+    return null; // without it, Hindi text is simply left out of the text layer
+  }
+}
 
 Future<List<OcrLine>?> _ocrLines(DocumentRepository repo, String pageId) async {
   final b = await repo.pageOcr(pageId);
@@ -63,6 +76,7 @@ Future<List<ExportFile>> buildExport(
             ],
             title: doc.title,
             size: pageSize,
+            devanagariFont: await _devanagariFont(),
           ),
           'application/pdf',
         ),

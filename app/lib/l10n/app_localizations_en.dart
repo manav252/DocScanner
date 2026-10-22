@@ -331,6 +331,48 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get text => 'Text';
+
+  @override
+  String get textOnPage => 'Text on this page';
+
+  @override
+  String get copyText => 'Copy text';
+
+  @override
+  String get copied => 'Copied';
+
+  @override
+  String get recognisingText => 'Recognising text…';
+
+  @override
+  String recognisingProgress(int current, int total) {
+    return 'Recognising text: page $current of $total';
+  }
+
+  @override
+  String get noTextFound => 'No text found on this page';
+
+  @override
+  String get noTextFoundHint =>
+      'Try a clearer photo, or choose the right language below.';
+
+  @override
+  String ocrFailed(String message) {
+    return 'Text recognition failed: $message. Try again, or use a clearer photo.';
+  }
+
+  @override
+  String get ocrUnavailable =>
+      'Text recognition is not available on this device.';
+
+  @override
+  String get recogniseAgain => 'Recognise again';
+
+  @override
+  String get readAs => 'Text language';
+
+  @override
   String get uploadExistingTitle => 'Upload your scans?';
 
   @override

@@ -117,7 +117,7 @@ test('rotate and crop', () => {
 
 // ---------- OCR (web): the same Tesseract.js build + language data the app serves ----------
 const Tesseract = require('tesseract.js');
-const { toResult } = require('../web/ocr/ocr.js');
+const { toResult, meaningful } = require('../web/ocr/ocr.js');
 
 test('OCR reads a flattened page and returns normalised line boxes', async () => {
   const worker = await Tesseract.createWorker('eng', 1, {
@@ -141,4 +141,51 @@ test('OCR reads a flattened page and returns normalised line boxes', async () =>
   } finally {
     await worker.terminate();
   }
+});
+
+test('OCR reads Hindi (hin+eng) from a Devanagari page', async () => {
+  const worker = await Tesseract.createWorker('hin+eng', 1, {
+    langPath: path.join(__dirname, '..', 'web', 'ocr', 'lang'),
+    gzip: true,
+    cacheMethod: 'none',
+  });
+  try {
+    const png = path.join(FIX, 'ocr', 'hindi_page.png');
+    const { width, height } = (() => {
+      const p = PNG.sync.read(fs.readFileSync(png));
+      return { width: p.width, height: p.height };
+    })();
+    const { data } = await worker.recognize(png, {}, { blocks: true, text: true });
+    const r = toResult(data, width, height);
+    assert.match(r.text, /भारत/);
+    assert.match(r.text, /दस्तावेज़|दस्तावेज/);
+    assert.match(r.text, /2026/);
+    // The amount was misread (confidence 0), so it is dropped instead of shown wrong.
+    assert.doesNotMatch(r.text, /\b250\b/);
+    assert.equal(r.lines.length, 4, r.text);
+  } finally {
+    await worker.terminate();
+  }
+});
+
+test('OCR on a photo without text returns no lines (no random letters)', async () => {
+  const worker = await Tesseract.createWorker('eng', 1, {
+    langPath: path.join(__dirname, '..', 'web', 'ocr', 'lang'),
+    gzip: true,
+    cacheMethod: 'none',
+  });
+  try {
+    const img = path.join(FIX, 'ocr', 'no_text.jpg');
+    const { data } = await worker.recognize(img, {}, { blocks: true, text: true });
+    const r = toResult(data, 1200, 1600);
+    assert.deepStrictEqual(r.lines, [], `unexpected text: ${JSON.stringify(r.text)}`);
+  } finally {
+    await worker.terminate();
+  }
+});
+
+test('meaningful-text filter', () => {
+  assert.ok(meaningful('Total 42'));
+  assert.ok(meaningful('भारत एक देश'));
+  for (const junk of ['|', '— —', 'i', '|| ~ ;', '.,;:']) assert.ok(!meaningful(junk), junk);
 });

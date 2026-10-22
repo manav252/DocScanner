@@ -626,6 +626,78 @@ abstract class AppLocalizations {
   /// **'Step {current} of {total}'**
   String guideStep(int current, int total);
 
+  /// No description provided for @text.
+  ///
+  /// In en, this message translates to:
+  /// **'Text'**
+  String get text;
+
+  /// No description provided for @textOnPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Text on this page'**
+  String get textOnPage;
+
+  /// No description provided for @copyText.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy text'**
+  String get copyText;
+
+  /// No description provided for @copied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied'**
+  String get copied;
+
+  /// No description provided for @recognisingText.
+  ///
+  /// In en, this message translates to:
+  /// **'Recognising text…'**
+  String get recognisingText;
+
+  /// No description provided for @recognisingProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Recognising text: page {current} of {total}'**
+  String recognisingProgress(int current, int total);
+
+  /// No description provided for @noTextFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No text found on this page'**
+  String get noTextFound;
+
+  /// No description provided for @noTextFoundHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Try a clearer photo, or choose the right language below.'**
+  String get noTextFoundHint;
+
+  /// No description provided for @ocrFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Text recognition failed: {message}. Try again, or use a clearer photo.'**
+  String ocrFailed(String message);
+
+  /// No description provided for @ocrUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Text recognition is not available on this device.'**
+  String get ocrUnavailable;
+
+  /// No description provided for @recogniseAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Recognise again'**
+  String get recogniseAgain;
+
+  /// No description provided for @readAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Text language'**
+  String get readAs;
+
   /// No description provided for @uploadExistingTitle.
   ///
   /// In en, this message translates to:

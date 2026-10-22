@@ -40,8 +40,10 @@ class _DocumentEditorPageState extends ConsumerState<DocumentEditorPage> {
 
   /// Recognise text for new/changed pages in the background (if enabled).
   void _maybeOcr(ScanDocument doc) {
-    if (_ocr != null || _busy > 0 || !doc.pages.any((p) => p.needsOcr)) return;
-    if (!ref.read(appSettingsProvider).autoOcr || !ref.read(ocrRunnerProvider).available) return;
+    final settings = ref.read(appSettingsProvider);
+    final lang = settings.ocrLanguage.code;
+    if (_ocr != null || _busy > 0 || !doc.pages.any((p) => p.needsOcrIn(lang))) return;
+    if (!settings.autoOcr || !ref.read(ocrRunnerProvider).available) return;
     setState(() => _ocr = const OcrProgress(0, 0));
     ref
         .read(ocrRunnerProvider)
@@ -51,7 +53,7 @@ class _DocumentEditorPageState extends ConsumerState<DocumentEditorPage> {
       if (!mounted) return;
       setState(() => _ocr = null);
       final latest = ref.read(documentProvider(widget.documentId)).value;
-      if (latest != null && latest.pages.any((p) => p.needsOcr)) {
+      if (latest != null && latest.pages.any((p) => p.needsOcrIn(lang))) {
         // Pages changed while recognising: catch up shortly.
         Future<void>.delayed(const Duration(seconds: 1), () => mounted ? _maybeOcr(latest) : null);
       }

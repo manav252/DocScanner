@@ -32,6 +32,7 @@ class ScanPage {
     this.ocrText,
     this.sourceVersion = 0,
     this.ocrRevision = -1,
+    this.ocrLanguage,
   });
 
   final String id;
@@ -54,8 +55,14 @@ class ScanPage {
   /// The [revision] that [ocrText] was recognised from (-1: never).
   final int ocrRevision;
 
+  /// Language [ocrText] was read in ('eng' / 'hin').
+  final String? ocrLanguage;
+
   /// OCR is missing or outdated (the page was re-rendered since).
   bool get needsOcr => ocrRevision != revision;
+
+  /// OCR is missing, outdated, or was read in a different language.
+  bool needsOcrIn(String language) => needsOcr || (ocrLanguage ?? 'eng') != language;
 
   ScanPage copyWith({
     List<Pt>? corners,
@@ -65,6 +72,7 @@ class ScanPage {
     int? renderHeight,
     Object? ocrText = _keep,
     int? ocrRevision,
+    String? ocrLanguage,
   }) =>
       ScanPage(
         id: id,
@@ -78,6 +86,7 @@ class ScanPage {
         ocrText: identical(ocrText, _keep) ? this.ocrText : ocrText as String?,
         sourceVersion: sourceVersion,
         ocrRevision: ocrRevision ?? this.ocrRevision,
+        ocrLanguage: ocrLanguage ?? this.ocrLanguage,
       );
 
   Map<String, Object?> toJson() => {
@@ -92,6 +101,7 @@ class ScanPage {
         if (ocrText != null) 'ocr': ocrText,
         'srcVer': sourceVersion,
         'ocrRev': ocrRevision,
+        if (ocrLanguage != null) 'ocrLang': ocrLanguage,
       };
 
   static ScanPage fromJson(Map<String, dynamic> j) => ScanPage(
@@ -106,6 +116,7 @@ class ScanPage {
         ocrText: j['ocr'] as String?,
         sourceVersion: j['srcVer'] as int? ?? 0,
         ocrRevision: j['ocrRev'] as int? ?? -1,
+        ocrLanguage: j['ocrLang'] as String?,
       );
 }
 

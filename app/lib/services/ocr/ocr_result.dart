@@ -1,15 +1,19 @@
 // Recognised text of a page, with line boxes for the searchable-PDF text layer.
 
 class OcrLine {
-  const OcrLine(this.text, this.left, this.top, this.width, this.height);
+  const OcrLine(this.text, this.left, this.top, this.width, this.height, {this.confidence = 1.0});
   final String text;
 
   /// Box normalised to the page image (0..1).
   final double left, top, width, height;
 
-  List<Object> toJson() => [text, left, top, width, height];
+  /// Engine confidence 0..1 (1.0 when the engine does not report one).
+  final double confidence;
+
+  List<Object> toJson() => [text, left, top, width, height, confidence];
   static OcrLine fromJson(List<dynamic> j) => OcrLine(j[0] as String, (j[1] as num).toDouble(), (j[2] as num).toDouble(),
-      (j[3] as num).toDouble(), (j[4] as num).toDouble());
+      (j[3] as num).toDouble(), (j[4] as num).toDouble(),
+      confidence: j.length > 5 ? (j[5] as num).toDouble() : 1.0);
 }
 
 class OcrResult {
@@ -25,15 +29,29 @@ class OcrResult {
 }
 
 final _edgeJunk = RegExp(r'^[\s|\[\]{}!¦]+|[\s|\[\]{}!¦]+$');
-final _hasWord = RegExp(r'[\p{L}\p{N}]', unicode: true);
+final _wordChar = RegExp(r'[\p{L}\p{M}\p{N}]', unicode: true);
 
-/// Remove OCR noise: page borders and table rules read as "|", "[" or "!" at
-/// the ends of lines, and lines without any letter or digit.
+/// Lines below this confidence are dropped.
+const minOcrConfidence = 0.5;
+
+/// A line counts as text when at least half its visible characters are
+/// letters/digits (any script, Devanagari included). Mirrors web/ocr/ocr.js.
+bool meaningfulText(String text) {
+  final visible = text.replaceAll(RegExp(r'\s'), '');
+  if (visible.length < 2) return false;
+  final word = _wordChar.allMatches(visible).length;
+  return word >= 2 && word / visible.length >= 0.5;
+}
+
+/// Remove OCR noise: low-confidence lines, page borders and table rules read as
+/// "|", "[" or "!" at the ends of lines, and lines without real words. A photo
+/// with no text ends up with no lines (shown as "No text found on this page").
 OcrResult cleanOcr(OcrResult r) {
   final lines = <OcrLine>[
     for (final l in r.lines)
-      if (_hasWord.hasMatch(l.text))
-        OcrLine(l.text.replaceAll(_edgeJunk, ''), l.left, l.top, l.width, l.height),
+      if (l.confidence >= minOcrConfidence)
+        if (l.text.replaceAll(_edgeJunk, '') case final t when meaningfulText(t))
+          OcrLine(t, l.left, l.top, l.width, l.height, confidence: l.confidence),
   ];
   return OcrResult(lines.map((l) => l.text).join('\n'), lines);
 }

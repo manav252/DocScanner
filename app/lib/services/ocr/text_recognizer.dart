@@ -15,8 +15,9 @@ abstract interface class TextRecognizer {
   /// False where no OCR engine exists (e.g. desktop test runs).
   bool get isAvailable;
 
-  /// Recognise text in a JPEG/PNG page image.
-  Future<OcrResult> recognize(Uint8List image);
+  /// Recognise text in a JPEG/PNG page image. [language] is 'eng' or 'hin'
+  /// (Hindi also reads English, as documents often mix both).
+  Future<OcrResult> recognize(Uint8List image, {String language = 'eng'});
 
   void dispose();
 }
@@ -27,7 +28,8 @@ class UnavailableTextRecognizer implements TextRecognizer {
   @override
   bool get isAvailable => false;
   @override
-  Future<OcrResult> recognize(Uint8List image) => throw UnsupportedError('Text recognition is not available here');
+  Future<OcrResult> recognize(Uint8List image, {String language = 'eng'}) =>
+      throw UnsupportedError('Text recognition is not available here');
   @override
   void dispose() {}
 }

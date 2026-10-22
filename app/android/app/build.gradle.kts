@@ -47,3 +47,8 @@ kotlin {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    // ML Kit Devanagari model for Hindi text recognition (Latin is included by the plugin).
+    implementation("com.google.mlkit:text-recognition-devanagari:16.0.1")
+}
