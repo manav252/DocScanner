@@ -1,0 +1,10 @@
+#!/bin/sh
+# Minimal xcodebuild stand-in so opencv_dart's native build hook can find the
+# macOS SDK on a Mac that only has the Command Line Tools (no Xcode).
+# Used ONLY by tool/host_test.sh for `flutter test` on the host; never on PATH otherwise.
+case "$*" in
+  *SDKVersion*) exec xcrun --sdk macosx --show-sdk-version ;;
+  *Path*) exec xcrun --sdk macosx --show-sdk-path ;;
+  *-version*) echo "Xcode 16.0"; echo "Build version 16A242d" ;;
+  *) echo "xcodebuild shim: unsupported: $*" >&2; exit 1 ;;
+esac

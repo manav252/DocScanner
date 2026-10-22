@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "scanner-core"
+version = "0.1.0"
+description = "OpenCV document detection, perspective correction and enhancement"
+requires-python = ">=3.10"
+dependencies = ["opencv-python-headless>=4.9", "numpy>=1.26"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[tool.setuptools]
+packages = ["scanner_core"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

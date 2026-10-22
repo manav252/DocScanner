@@ -1,0 +1,8 @@
+**/.venv/
+**/__pycache__/
+**/.pytest_cache/
+app/build/
+app/.dart_tool/
+app/test_js/node_modules/
+backend/.env
+.DS_Store

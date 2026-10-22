@@ -1,0 +1,66 @@
+# Backend + Postgres + MinIO.   docker compose up -d --build
+# API docs: http://localhost:8000/docs   MinIO console: http://localhost:9001
+name: docscanner
+
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+    environment:
+      DOCSCANNER_ENVIRONMENT: ${DOCSCANNER_ENVIRONMENT:-development}
+      DOCSCANNER_DATABASE_URL: postgresql+asyncpg://docscanner:${POSTGRES_PASSWORD:-docscanner}@db:5432/docscanner
+      DOCSCANNER_S3_ENDPOINT: http://minio:9000
+      DOCSCANNER_S3_ACCESS_KEY: ${MINIO_ROOT_USER:-docscanner}
+      DOCSCANNER_S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-docscanner-secret}
+      DOCSCANNER_S3_BUCKET: docscanner
+      DOCSCANNER_JWT_SECRET: ${DOCSCANNER_JWT_SECRET:-dev-only-insecure-secret-change-me}
+      DOCSCANNER_CORS_ORIGINS: ${DOCSCANNER_CORS_ORIGINS:-["http://localhost:8090","http://127.0.0.1:8090","http://localhost:8080"]}
+    ports:
+      - "${API_PORT:-8000}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: postgres:17.6-alpine
+    environment:
+      POSTGRES_USER: docscanner
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-docscanner}
+      POSTGRES_DB: docscanner
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U docscanner -d docscanner"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  minio:
+    # MinIO no longer publishes official images; this is the last Bitnami build (pinned).
+    image: bitnamilegacy/minio:2025.7.23
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-docscanner}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-docscanner-secret}
+      MINIO_DEFAULT_BUCKETS: docscanner
+    ports:
+      - "${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - miniodata:/bitnami/minio/data
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  miniodata:

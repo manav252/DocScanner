@@ -1,0 +1,370 @@
+// State + logic of the live scanner: pulls camera frames, runs detection,
+// smooths the outline, decides when to auto-capture, and turns a capture
+// into a photo + corners for the corner editor.
+import 'dart:async';
+import 'dart:math' as math;
+
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../core/providers.dart';
+import '../../imaging/corner_smoother.dart';
+import '../../imaging/geometry.dart';
+import '../../services/camera/scanner_camera.dart';
+
+enum CaptureStatus {
+  /// Opening the camera / loading OpenCV.
+  starting,
+  running,
+  capturing,
+
+  /// A capture is waiting in [CaptureState.pendingCapture] (corner editor open).
+  reviewing,
+
+  /// App in background: camera released.
+  suspended,
+  failed,
+}
+
+/// A captured photo with the page corners to start the corner editor from.
+class CaptureResult {
+  const CaptureResult({
+    required this.bytes,
+    required this.width,
+    required this.height,
+    required this.corners,
+    required this.detected,
+  });
+  final Uint8List bytes;
+  final int width, height;
+
+  /// TL, TR, BR, BL in photo pixels.
+  final List<Pt> corners;
+
+  /// False when nothing was found and [corners] are the full photo bounds.
+  final bool detected;
+}
+
+/// Auto-capture tuning (overridable in tests).
+class CaptureTuning {
+  const CaptureTuning({
+    this.minDocumentArea = 0.12,
+    this.lowLightThreshold = 45,
+    this.autoCaptureCooldown = const Duration(milliseconds: 1500),
+    this.steadyFrames = 12,
+    this.newPageDistance = 0.12,
+  });
+
+  /// After a capture, a corner must move this far (fraction of the frame) to
+  /// count as a new page and re-arm auto-capture.
+  final double newPageDistance;
+
+  /// Ignore "documents" covering less than this fraction of the frame.
+  final double minDocumentArea;
+
+  /// Mean frame brightness (0-255) below which we suggest more light / the torch.
+  final double lowLightThreshold;
+
+  /// No auto-capture for this long after (re)starting, so the user can aim.
+  final Duration autoCaptureCooldown;
+
+  /// Consecutive steady frames needed to auto-capture (~0.8 s at 15 fps).
+  final int steadyFrames;
+}
+
+final captureTuningProvider = Provider<CaptureTuning>((_) => const CaptureTuning());
+
+const _unset = Object();
+
+class CaptureState {
+  const CaptureState({
+    this.status = CaptureStatus.starting,
+    this.failure,
+    this.corners,
+    this.steadyProgress = 0,
+    this.autoCapture = true,
+    this.lowLight = false,
+    this.torchOn = false,
+    this.supportsTorch = false,
+    this.previewAspectRatio = 3 / 4,
+    this.fps = 0,
+    this.pendingCapture,
+    this.message,
+  });
+
+  final CaptureStatus status;
+  final CameraFailure? failure;
+
+  /// Smoothed page outline in normalised upright-preview coordinates, or null.
+  final List<Pt>? corners;
+
+  /// 0..1 while the page is held steady (auto-capture fires at 1).
+  final double steadyProgress;
+  final bool autoCapture, lowLight, torchOn, supportsTorch;
+  final double previewAspectRatio, fps;
+  final CaptureResult? pendingCapture;
+
+  /// One-off message for a snackbar (e.g. a failed capture).
+  final String? message;
+
+  bool get documentFound => corners != null;
+
+  CaptureState copyWith({
+    CaptureStatus? status,
+    Object? failure = _unset,
+    Object? corners = _unset,
+    double? steadyProgress,
+    bool? autoCapture,
+    bool? lowLight,
+    bool? torchOn,
+    bool? supportsTorch,
+    double? previewAspectRatio,
+    double? fps,
+    Object? pendingCapture = _unset,
+    Object? message = _unset,
+  }) =>
+      CaptureState(
+        status: status ?? this.status,
+        failure: identical(failure, _unset) ? this.failure : failure as CameraFailure?,
+        corners: identical(corners, _unset) ? this.corners : corners as List<Pt>?,
+        steadyProgress: steadyProgress ?? this.steadyProgress,
+        autoCapture: autoCapture ?? this.autoCapture,
+        lowLight: lowLight ?? this.lowLight,
+        torchOn: torchOn ?? this.torchOn,
+        supportsTorch: supportsTorch ?? this.supportsTorch,
+        previewAspectRatio: previewAspectRatio ?? this.previewAspectRatio,
+        fps: fps ?? this.fps,
+        pendingCapture: identical(pendingCapture, _unset) ? this.pendingCapture : pendingCapture as CaptureResult?,
+        message: identical(message, _unset) ? this.message : message as String?,
+      );
+}
+
+class CaptureController extends Notifier<CaptureState> {
+  ScannerCamera? _camera;
+  int _generation = 0;
+  late CaptureTuning _tuning;
+  final _smoother = CornerSmoother();
+  late StabilityTracker _stability;
+  final _brightness = <double>[];
+  final _frameTimes = <int>[];
+  final _clock = Stopwatch()..start();
+  Duration _autoCaptureAllowedAt = Duration.zero;
+
+  /// After a capture, auto-capture stays off until the page is taken away or
+  /// changes, so holding the same sheet does not capture it twice.
+  List<Pt>? _lastCaptured;
+  int _framesWithoutPage = 0;
+
+  /// The open camera (for building the preview).
+  ScannerCamera? get camera => _camera;
+
+  @override
+  CaptureState build() {
+    ref.watch(cameraFactoryProvider); // switching demo/device restarts the scanner
+    _tuning = ref.watch(captureTuningProvider);
+    _stability = StabilityTracker(window: _tuning.steadyFrames);
+    ref.onDispose(_shutdown);
+    scheduleMicrotask(_start);
+    return const CaptureState();
+  }
+
+  Future<void> _start() async {
+    final gen = ++_generation;
+    _resetTracking();
+    final camera = ref.read(cameraFactoryProvider)();
+    try {
+      await camera.initialize();
+      await ref.read(scanEngineProvider).ready;
+    } on CameraFailure catch (f) {
+      await camera.dispose();
+      if (gen == _generation) state = state.copyWith(status: CaptureStatus.failed, failure: f);
+      return;
+    } catch (e) {
+      await camera.dispose();
+      if (gen == _generation) {
+        state = state.copyWith(status: CaptureStatus.failed, failure: CameraFailure(CameraFailureKind.other, '$e'));
+      }
+      return;
+    }
+    if (gen != _generation) {
+      await camera.dispose();
+      return;
+    }
+    _camera = camera;
+    state = state.copyWith(
+      status: CaptureStatus.running,
+      failure: null,
+      previewAspectRatio: camera.previewAspectRatio,
+      supportsTorch: camera.supportsTorch,
+      torchOn: false,
+    );
+    unawaited(_loop(gen, camera));
+  }
+
+  void _resetTracking() {
+    _smoother.reset();
+    _stability.reset();
+    _brightness.clear();
+    _frameTimes.clear();
+    _autoCaptureAllowedAt = _clock.elapsed + _tuning.autoCaptureCooldown;
+  }
+
+  Future<void> _loop(int gen, ScannerCamera camera) async {
+    final engine = ref.read(scanEngineProvider);
+    while (gen == _generation) {
+      final AnalysisFrame frame;
+      try {
+        frame = await camera.nextFrame();
+      } catch (_) {
+        if (gen != _generation) return;
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+        continue;
+      }
+      if (gen != _generation) return;
+      if (state.status != CaptureStatus.running) continue;
+      final f = frame.data;
+      final detection = await engine.detectFrame(f).catchError((Object _) => Detection(fullBounds(f.width, f.height), found: false));
+      if (gen != _generation || state.status != CaptureStatus.running) continue;
+
+      final good = detection.found && detection.score >= _tuning.minDocumentArea;
+      final upright = good ? frame.toUpright(detection.normalized(f.width, f.height)) : null;
+      final smoothed = _smoother.update(upright);
+      final steady = _stability.update(upright);
+
+      _brightness.add(estimateBrightness(f));
+      if (_brightness.length > 15) _brightness.removeAt(0);
+      final meanBrightness = _brightness.reduce((a, b) => a + b) / _brightness.length;
+
+      final now = _clock.elapsedMilliseconds;
+      _frameTimes.add(now);
+      while (_frameTimes.length > 1 && now - _frameTimes.first > 2000) {
+        _frameTimes.removeAt(0);
+      }
+      final fps = _frameTimes.length < 2 ? 0.0 : (_frameTimes.length - 1) * 1000 / math.max(1, now - _frameTimes.first);
+
+      state = state.copyWith(
+        corners: smoothed,
+        steadyProgress: _stability.progress,
+        lowLight: _brightness.length >= 5 && meanBrightness < _tuning.lowLightThreshold,
+        fps: fps,
+      );
+      _updateArming(upright);
+      if (steady && state.autoCapture && _lastCaptured == null && _clock.elapsed >= _autoCaptureAllowedAt) {
+        await capture();
+      }
+    }
+  }
+
+  /// Re-arm auto-capture once the page leaves the view for a moment or a
+  /// clearly different page/position appears.
+  void _updateArming(List<Pt>? upright) {
+    final last = _lastCaptured;
+    if (last == null) return;
+    if (upright == null) {
+      if (++_framesWithoutPage >= 5) _lastCaptured = null;
+      return;
+    }
+    _framesWithoutPage = 0;
+    var moved = 0.0;
+    for (var i = 0; i < 4; i++) {
+      final d = upright[i].distanceTo(last[i]);
+      if (d > moved) moved = d;
+    }
+    if (moved > _tuning.newPageDistance) _lastCaptured = null;
+  }
+
+  /// Take a full-resolution photo and find the page in it.
+  Future<void> capture() async {
+    final camera = _camera;
+    if (camera == null || state.status != CaptureStatus.running) return;
+    final gen = _generation;
+    final previewCorners = state.corners;
+    _lastCaptured = previewCorners;
+    _framesWithoutPage = 0;
+    state = state.copyWith(status: CaptureStatus.capturing);
+    unawaited(HapticFeedback.mediumImpact());
+    try {
+      final photo = await camera.takePicture();
+      await camera.pause();
+      final r = await ref.read(scanEngineProvider).detectEncoded(photo.bytes);
+      if (gen != _generation) return;
+      final List<Pt> corners;
+      final bool detected;
+      if (r.detection.found) {
+        (corners, detected) = (r.detection.corners, true);
+      } else if (previewCorners != null) {
+        // The still missed the page but the preview had it: reuse the preview outline.
+        corners = [for (final p in previewCorners) Pt(p.x * (r.width - 1), p.y * (r.height - 1))];
+        detected = true;
+      } else {
+        (corners, detected) = (fullBounds(r.width, r.height), false);
+      }
+      state = state.copyWith(
+        status: CaptureStatus.reviewing,
+        pendingCapture: CaptureResult(
+          bytes: photo.bytes,
+          width: r.width,
+          height: r.height,
+          corners: corners,
+          detected: detected,
+        ),
+      );
+    } catch (e) {
+      if (gen != _generation) return;
+      await camera.resume().catchError((Object _) {});
+      _resetTracking();
+      state = state.copyWith(status: CaptureStatus.running, message: 'Could not take the photo. Please try again.');
+    }
+  }
+
+  /// Back from the corner editor: clear the capture and continue scanning.
+  Future<void> resume() async {
+    if (state.status != CaptureStatus.reviewing) return;
+    _resetTracking();
+    state = state.copyWith(status: CaptureStatus.running, pendingCapture: null, corners: null, steadyProgress: 0);
+    await _camera?.resume();
+  }
+
+  void clearMessage() => state = state.copyWith(message: null);
+
+  void setAutoCapture(bool on) {
+    _autoCaptureAllowedAt = _clock.elapsed + _tuning.autoCaptureCooldown;
+    state = state.copyWith(autoCapture: on);
+  }
+
+  Future<void> setTorch(bool on) async {
+    try {
+      await _camera?.setTorch(on);
+      state = state.copyWith(torchOn: on);
+    } catch (_) {
+      state = state.copyWith(supportsTorch: false, message: 'This camera has no flashlight.');
+    }
+  }
+
+  /// App went to the background: release the camera.
+  Future<void> suspend() async {
+    if (state.status == CaptureStatus.reviewing || state.status == CaptureStatus.failed) return;
+    _generation++;
+    final c = _camera;
+    _camera = null;
+    state = state.copyWith(status: CaptureStatus.suspended, corners: null, torchOn: false);
+    await c?.dispose();
+  }
+
+  /// App back in the foreground (or "Try again" after a failure).
+  Future<void> restart() async {
+    if (state.status != CaptureStatus.suspended && state.status != CaptureStatus.failed) return;
+    state = state.copyWith(status: CaptureStatus.starting, failure: null);
+    await _start();
+  }
+
+  void _shutdown() {
+    _generation++;
+    final c = _camera;
+    _camera = null;
+    c?.dispose();
+  }
+}
+
+final captureControllerProvider =
+    NotifierProvider.autoDispose<CaptureController, CaptureState>(CaptureController.new);

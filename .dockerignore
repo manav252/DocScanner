@@ -1,0 +1,9 @@
+**/.venv
+**/__pycache__
+**/.pytest_cache
+app/build
+app/.dart_tool
+app/test_js/node_modules
+app/ios
+app/android
+**/node_modules

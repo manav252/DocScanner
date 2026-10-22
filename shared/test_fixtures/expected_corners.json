@@ -1,0 +1,168 @@
+{
+  "image_size": [
+    1200,
+    1600
+  ],
+  "corner_order": "TL,TR,BR,BL",
+  "cases": {
+    "tilted_paper": {
+      "found": true,
+      "corners": [
+        [
+          260,
+          230
+        ],
+        [
+          1010,
+          380
+        ],
+        [
+          900,
+          1420
+        ],
+        [
+          120,
+          1260
+        ]
+      ],
+      "note": "Page rotated ~12 deg with mild perspective on a wooden desk"
+    },
+    "low_contrast": {
+      "found": true,
+      "corners": [
+        [
+          170,
+          200
+        ],
+        [
+          1040,
+          170
+        ],
+        [
+          1080,
+          1430
+        ],
+        [
+          140,
+          1460
+        ]
+      ],
+      "note": "Off-white page on a near-white table, no drop shadow"
+    },
+    "cluttered_background": {
+      "found": true,
+      "corners": [
+        [
+          330,
+          290
+        ],
+        [
+          960,
+          340
+        ],
+        [
+          920,
+          1250
+        ],
+        [
+          280,
+          1200
+        ]
+      ],
+      "note": "Page on a busy desk with many coloured shapes and a pen crossing its bottom edge"
+    },
+    "strong_perspective": {
+      "found": true,
+      "corners": [
+        [
+          380,
+          330
+        ],
+        [
+          820,
+          330
+        ],
+        [
+          1130,
+          1450
+        ],
+        [
+          70,
+          1450
+        ]
+      ],
+      "note": "Phone held at a steep angle: strong keystone"
+    },
+    "shadow_across": {
+      "found": true,
+      "corners": [
+        [
+          150,
+          180
+        ],
+        [
+          1060,
+          230
+        ],
+        [
+          1030,
+          1400
+        ],
+        [
+          170,
+          1430
+        ]
+      ],
+      "note": "A diagonal shadow (from a hand/phone) falls across the page"
+    },
+    "narrow_receipt": {
+      "found": true,
+      "corners": [
+        [
+          480,
+          160
+        ],
+        [
+          800,
+          210
+        ],
+        [
+          700,
+          1480
+        ],
+        [
+          380,
+          1430
+        ]
+      ],
+      "note": "Long narrow receipt"
+    },
+    "fills_frame": {
+      "found": true,
+      "corners": [
+        [
+          25,
+          30
+        ],
+        [
+          1175,
+          20
+        ],
+        [
+          1180,
+          1575
+        ],
+        [
+          20,
+          1580
+        ]
+      ],
+      "note": "Page nearly fills the frame, corners close to the image border"
+    },
+    "no_document": {
+      "found": false,
+      "corners": null,
+      "note": "Cluttered desk without any page: must fall back to full image bounds"
+    }
+  }
+}

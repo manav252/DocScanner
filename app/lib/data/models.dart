@@ -1,0 +1,219 @@
+// Documents and pages. A page keeps its original photo + corners + edits, so
+// every step (corners, filter, rotation, crop) stays editable; the rendered
+// image is derived from them.
+import '../imaging/geometry.dart';
+import '../imaging/page_edits.dart';
+
+/// Images stored per page.
+enum PageImage {
+  /// The original photo / imported image.
+  source,
+
+  /// Perspective-corrected, unfiltered.
+  flat,
+
+  /// flat + edits (filter, rotation, crop): what is shown and exported.
+  render,
+
+  /// Small JPEG of [render] for lists.
+  thumb,
+}
+
+class ScanPage {
+  const ScanPage({
+    required this.id,
+    required this.sourceWidth,
+    required this.sourceHeight,
+    required this.corners,
+    this.edits = const PageEdits(),
+    this.revision = 0,
+    this.renderWidth = 0,
+    this.renderHeight = 0,
+    this.ocrText,
+    this.sourceVersion = 0,
+    this.ocrRevision = -1,
+  });
+
+  final String id;
+  final int sourceWidth, sourceHeight;
+
+  /// TL, TR, BR, BL in source pixels.
+  final List<Pt> corners;
+  final PageEdits edits;
+
+  /// Bumped whenever the rendered image changes (cache key for the UI).
+  final int revision;
+  final int renderWidth, renderHeight;
+
+  /// Recognised text (OCR), if any.
+  final String? ocrText;
+
+  /// Bumped when the photo is replaced (retake), so sync knows to re-upload it.
+  final int sourceVersion;
+
+  /// The [revision] that [ocrText] was recognised from (-1: never).
+  final int ocrRevision;
+
+  /// OCR is missing or outdated (the page was re-rendered since).
+  bool get needsOcr => ocrRevision != revision;
+
+  ScanPage copyWith({
+    List<Pt>? corners,
+    PageEdits? edits,
+    int? revision,
+    int? renderWidth,
+    int? renderHeight,
+    Object? ocrText = _keep,
+    int? ocrRevision,
+  }) =>
+      ScanPage(
+        id: id,
+        sourceWidth: sourceWidth,
+        sourceHeight: sourceHeight,
+        corners: corners ?? this.corners,
+        edits: edits ?? this.edits,
+        revision: revision ?? this.revision,
+        renderWidth: renderWidth ?? this.renderWidth,
+        renderHeight: renderHeight ?? this.renderHeight,
+        ocrText: identical(ocrText, _keep) ? this.ocrText : ocrText as String?,
+        sourceVersion: sourceVersion,
+        ocrRevision: ocrRevision ?? this.ocrRevision,
+      );
+
+  Map<String, Object?> toJson() => {
+        'id': id,
+        'sw': sourceWidth,
+        'sh': sourceHeight,
+        'corners': [for (final p in corners) p.toJson()],
+        'edits': edits.toJson(),
+        'rev': revision,
+        'rw': renderWidth,
+        'rh': renderHeight,
+        if (ocrText != null) 'ocr': ocrText,
+        'srcVer': sourceVersion,
+        'ocrRev': ocrRevision,
+      };
+
+  static ScanPage fromJson(Map<String, dynamic> j) => ScanPage(
+        id: j['id'] as String,
+        sourceWidth: j['sw'] as int,
+        sourceHeight: j['sh'] as int,
+        corners: [for (final p in j['corners'] as List) Pt.fromJson(p as List)],
+        edits: PageEdits.fromJson((j['edits'] as Map).cast<String, dynamic>()),
+        revision: j['rev'] as int? ?? 0,
+        renderWidth: j['rw'] as int? ?? 0,
+        renderHeight: j['rh'] as int? ?? 0,
+        ocrText: j['ocr'] as String?,
+        sourceVersion: j['srcVer'] as int? ?? 0,
+        ocrRevision: j['ocrRev'] as int? ?? -1,
+      );
+}
+
+const _keep = Object();
+
+class ScanDocument {
+  const ScanDocument({
+    required this.id,
+    required this.title,
+    required this.createdAt,
+    required this.updatedAt,
+    this.pages = const [],
+    this.revision = 0,
+    this.remoteId,
+    this.syncedRevision = -1,
+    this.serverVersion,
+    this.deleted = false,
+  });
+
+  final String id;
+  final String title;
+  final DateTime createdAt, updatedAt;
+  final List<ScanPage> pages;
+
+  /// Local change counter; the document needs uploading when it differs from [syncedRevision].
+  final int revision;
+
+  /// Server id once synced (Stage 5).
+  final String? remoteId;
+  final int syncedRevision;
+
+  /// Server version this copy is based on (sent as base_version); null = never uploaded.
+  final int? serverVersion;
+
+  /// Tombstone kept until the deletion has been synced.
+  final bool deleted;
+
+  bool get needsSync => revision != syncedRevision;
+
+  /// Copy with a change: bumps [revision] and [updatedAt].
+  ScanDocument edit({String? title, List<ScanPage>? pages, bool? deleted, DateTime? now}) => ScanDocument(
+        id: id,
+        title: title ?? this.title,
+        createdAt: createdAt,
+        updatedAt: now ?? DateTime.now(),
+        pages: pages ?? this.pages,
+        revision: revision + 1,
+        remoteId: remoteId,
+        syncedRevision: syncedRevision,
+        serverVersion: serverVersion,
+        deleted: deleted ?? this.deleted,
+      );
+
+  /// Record that local [revision] is on the server at [serverVersion].
+  ScanDocument markSynced({required String remoteId, required int revision, int? serverVersion}) => ScanDocument(
+        id: id,
+        title: title,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+        pages: pages,
+        revision: this.revision,
+        remoteId: remoteId,
+        syncedRevision: revision,
+        serverVersion: serverVersion ?? this.serverVersion,
+        deleted: deleted,
+      );
+
+  /// Forget everything about the server (e.g. a different account signed in).
+  ScanDocument unsynced() => ScanDocument(
+        id: id,
+        title: title,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+        pages: pages,
+        revision: revision,
+        syncedRevision: -1,
+        deleted: deleted,
+      );
+
+  Map<String, Object?> toJson() => {
+        'id': id,
+        'title': title,
+        'created': createdAt.toUtc().toIso8601String(),
+        'updated': updatedAt.toUtc().toIso8601String(),
+        'pages': [for (final p in pages) p.toJson()],
+        'rev': revision,
+        'remoteId': remoteId,
+        'syncedRev': syncedRevision,
+        if (serverVersion != null) 'serverVer': serverVersion,
+        'deleted': deleted,
+      };
+
+  static ScanDocument fromJson(Map<String, dynamic> j) => ScanDocument(
+        id: j['id'] as String,
+        title: j['title'] as String,
+        createdAt: DateTime.parse(j['created'] as String).toLocal(),
+        updatedAt: DateTime.parse(j['updated'] as String).toLocal(),
+        pages: [for (final p in j['pages'] as List) ScanPage.fromJson((p as Map).cast<String, dynamic>())],
+        revision: j['rev'] as int? ?? 0,
+        remoteId: j['remoteId'] as String?,
+        syncedRevision: j['syncedRev'] as int? ?? -1,
+        serverVersion: j['serverVer'] as int?,
+        deleted: j['deleted'] as bool? ?? false,
+      );
+
+  /// Default title, e.g. "Scan 2026-10-22 18:30".
+  static String defaultTitle(DateTime t) {
+    String two(int v) => v.toString().padLeft(2, '0');
+    return 'Scan ${t.year}-${two(t.month)}-${two(t.day)} ${two(t.hour)}:${two(t.minute)}';
+  }
+}
