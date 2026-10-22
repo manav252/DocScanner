@@ -1,4 +1,4 @@
-// Persisted user settings (server URL, server-side processing) and the session.
+// Persisted user settings (appearance, language, scanning, OCR, server) and the session.
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -8,8 +8,32 @@ import '../data/storage/key_value_store.dart';
 import '../services/api/api_client.dart';
 import 'providers.dart';
 
+enum ThemeChoice { system, light, dark }
+
+enum OcrLanguage {
+  english('eng'),
+  hindi('hin');
+
+  const OcrLanguage(this.code);
+
+  /// Tesseract language code.
+  final String code;
+}
+
 class AppSettings {
-  const AppSettings({required this.serverUrl, this.processOnServer = false, this.autoOcr = true});
+  const AppSettings({
+    required this.serverUrl,
+    this.processOnServer = false,
+    this.autoOcr = true,
+    this.theme = ThemeChoice.system,
+    this.highContrast = false,
+    this.textScale = 1.0,
+    this.simpleMode = true,
+    this.localeCode,
+    this.spokenGuidance = false,
+    this.ocrLanguage = OcrLanguage.english,
+    this.onboardingDone = false,
+  });
 
   final String serverUrl;
 
@@ -19,6 +43,27 @@ class AppSettings {
   /// Recognise text in new pages automatically (searchable PDFs, search, copy).
   final bool autoOcr;
 
+  final ThemeChoice theme;
+  final bool highContrast;
+
+  /// Extra text scaling on top of the system setting (1.0 - 2.0).
+  final double textScale;
+
+  /// Fewer options and plain words. On by default for new users.
+  final bool simpleMode;
+
+  /// 'en' / 'hi', or null to follow the device.
+  final String? localeCode;
+
+  /// Speak and vibrate scanning hints ("Move closer", "Hold still", "Captured").
+  final bool spokenGuidance;
+  final OcrLanguage ocrLanguage;
+
+  /// The first-run guide was completed or skipped.
+  final bool onboardingDone;
+
+  static const textScales = [1.0, 1.25, 1.5, 2.0];
+
   /// Default backend: same host as the web app on port 8000, else localhost
   /// (Android emulators reach the host machine at 10.0.2.2).
   static String defaultServerUrl() {
@@ -27,19 +72,64 @@ class AppSettings {
     return 'http://localhost:8000';
   }
 
-  AppSettings copyWith({String? serverUrl, bool? processOnServer, bool? autoOcr}) => AppSettings(
+  AppSettings copyWith({
+    String? serverUrl,
+    bool? processOnServer,
+    bool? autoOcr,
+    ThemeChoice? theme,
+    bool? highContrast,
+    double? textScale,
+    bool? simpleMode,
+    Object? localeCode = _keep,
+    bool? spokenGuidance,
+    OcrLanguage? ocrLanguage,
+    bool? onboardingDone,
+  }) =>
+      AppSettings(
         serverUrl: serverUrl ?? this.serverUrl,
         processOnServer: processOnServer ?? this.processOnServer,
         autoOcr: autoOcr ?? this.autoOcr,
+        theme: theme ?? this.theme,
+        highContrast: highContrast ?? this.highContrast,
+        textScale: textScale ?? this.textScale,
+        simpleMode: simpleMode ?? this.simpleMode,
+        localeCode: identical(localeCode, _keep) ? this.localeCode : localeCode as String?,
+        spokenGuidance: spokenGuidance ?? this.spokenGuidance,
+        ocrLanguage: ocrLanguage ?? this.ocrLanguage,
+        onboardingDone: onboardingDone ?? this.onboardingDone,
       );
 
-  Map<String, Object> toJson() => {'serverUrl': serverUrl, 'processOnServer': processOnServer, 'autoOcr': autoOcr};
+  Map<String, Object?> toJson() => {
+        'serverUrl': serverUrl,
+        'processOnServer': processOnServer,
+        'autoOcr': autoOcr,
+        'theme': theme.name,
+        'highContrast': highContrast,
+        'textScale': textScale,
+        'simpleMode': simpleMode,
+        'locale': localeCode,
+        'spokenGuidance': spokenGuidance,
+        'ocrLanguage': ocrLanguage.name,
+        'onboardingDone': onboardingDone,
+      };
+
   static AppSettings fromJson(Map<String, dynamic> j) => AppSettings(
         serverUrl: j['serverUrl'] as String? ?? defaultServerUrl(),
         processOnServer: j['processOnServer'] as bool? ?? false,
         autoOcr: j['autoOcr'] as bool? ?? true,
+        theme: ThemeChoice.values.asNameMap()[j['theme']] ?? ThemeChoice.system,
+        highContrast: j['highContrast'] as bool? ?? false,
+        textScale: ((j['textScale'] as num?)?.toDouble() ?? 1.0).clamp(1.0, 2.0),
+        simpleMode: j['simpleMode'] as bool? ?? true,
+        localeCode: j['locale'] as String?,
+        spokenGuidance: j['spokenGuidance'] as bool? ?? false,
+        ocrLanguage: OcrLanguage.values.asNameMap()[j['ocrLanguage']] ?? OcrLanguage.english,
+        // Settings saved before the guide existed: the user already knows the app.
+        onboardingDone: j['onboardingDone'] as bool? ?? true,
       );
 }
+
+const _keep = Object();
 
 const _settingsKey = 'app/settings.json';
 const _sessionKey = 'app/session.json';

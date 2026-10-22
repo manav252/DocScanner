@@ -12,13 +12,17 @@ import 'sync_service.dart';
 enum SyncPhase { signedOut, idle, syncing, offline, error }
 
 class SyncStatus {
-  const SyncStatus(this.phase, {this.lastSynced, this.message});
+  const SyncStatus(this.phase, {this.lastSynced, this.message, this.conflicts = const []});
   final SyncPhase phase;
   final DateTime? lastSynced;
   final String? message;
 
-  SyncStatus copyWith(SyncPhase phase, {DateTime? lastSynced, String? message}) =>
-      SyncStatus(phase, lastSynced: lastSynced ?? this.lastSynced, message: message);
+  /// Documents edited on two devices in the last sync (newer edit kept).
+  final List<String> conflicts;
+
+  SyncStatus copyWith(SyncPhase phase, {DateTime? lastSynced, String? message, List<String>? conflicts}) =>
+      SyncStatus(phase,
+          lastSynced: lastSynced ?? this.lastSynced, message: message, conflicts: conflicts ?? this.conflicts);
 }
 
 class SyncController extends Notifier<SyncStatus> {
@@ -70,9 +74,9 @@ class SyncController extends Notifier<SyncStatus> {
         );
         try {
           _applying = true;
-          await service.sync();
+          final report = await service.sync();
           if (!ref.mounted) return;
-          state = state.copyWith(SyncPhase.idle, lastSynced: DateTime.now());
+          state = state.copyWith(SyncPhase.idle, lastSynced: DateTime.now(), conflicts: report.conflictTitles);
         } on OfflineException {
           if (ref.mounted) state = state.copyWith(SyncPhase.offline, message: 'Server not reachable; will retry');
         } on ApiException catch (e) {

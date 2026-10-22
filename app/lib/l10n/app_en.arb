@@ -1,0 +1,197 @@
+{
+  "@@locale": "en",
+  "appName": "DocScanner",
+  "appPurpose": "Turn paper into clean PDFs. Works offline, no account needed.",
+  "scanDocument": "Scan Document",
+  "importPhotos": "Import Photos",
+  "importPdf": "Import PDF",
+  "viewDocuments": "View Documents",
+  "recentScans": "Recent scans",
+  "seeAllDocuments": "See all documents",
+  "settings": "Settings",
+  "noScansYet": "No scans yet",
+  "noScansHint": "Tap “Scan Document” to scan a page with your camera, or import photos or a PDF.",
+  "howItWorksTitle": "How it works",
+  "howItWorksStep1": "Point the camera at a page. It is captured when you hold still.",
+  "howItWorksStep2": "Check the corners, then pick a look such as Black & White.",
+  "howItWorksStep3": "Save as PDF or JPG and share it.",
+  "statusLocalOnly": "Scans are saved on this device",
+  "statusSynced": "Backed up",
+  "statusSyncing": "Backing up…",
+  "statusOffline": "Backup server not reachable. Your scans are safe on this device and will upload later.",
+  "statusSyncError": "Backup problem: {message}",
+  "@statusSyncError": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "pendingChanges": "{count, plural, =1{1 change waiting to upload} other{{count} changes waiting to upload}}",
+  "@pendingChanges": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "documents": "Documents",
+  "searchDocuments": "Search documents and text inside pages",
+  "noResults": "No documents match “{query}”.",
+  "@noResults": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "clearSearch": "Clear search",
+  "pageCount": "{count, plural, =1{1 page} other{{count} pages}}",
+  "@pageCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "modified": "Modified {date}",
+  "@modified": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "open": "Open",
+  "rename": "Rename",
+  "export": "Export",
+  "delete": "Delete",
+  "cancel": "Cancel",
+  "save": "Save",
+  "undo": "Undo",
+  "redo": "Redo",
+  "done": "Done",
+  "next": "Next",
+  "back": "Back",
+  "skip": "Skip",
+  "close": "Close",
+  "tryAgain": "Try again",
+  "badgeDeviceOnly": "On this device",
+  "badgeBackedUp": "Backed up",
+  "badgeWaiting": "Waiting to upload",
+  "renameTitle": "Rename document",
+  "documentName": "Document name",
+  "deleteDocumentTitle": "Delete “{title}”?",
+  "@deleteDocumentTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteDocumentBody": "{count, plural, =1{Its page will be removed from this device.} other{All {count} pages will be removed from this device.}}",
+  "@deleteDocumentBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "documentDeleted": "Document deleted",
+  "importing": "Importing…",
+  "importProgress": "{count, plural, =1{1 page added} other{{count} pages added}} · {name}",
+  "@importProgress": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "importFailed": "Could not import: {message}",
+  "@importFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "importNothing": "Nothing to import. Choose JPG, PNG or PDF files.",
+  "appearance": "Appearance",
+  "theme": "Theme",
+  "themeSystem": "System",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "highContrast": "High contrast",
+  "highContrastHint": "Stronger colours and outlines",
+  "textSize": "Text size",
+  "simpleMode": "Simple Mode",
+  "simpleModeHint": "Fewer options and plain words",
+  "language": "Language",
+  "languageSystem": "Same as device",
+  "scanning": "Scanning",
+  "spokenGuidance": "Spoken guidance",
+  "spokenGuidanceHint": "Says “Move closer”, “Hold still”, “Captured” while scanning, and vibrates",
+  "textRecognition": "Text recognition",
+  "autoOcr": "Recognise text automatically",
+  "autoOcrHint": "Lets you search, copy text and make searchable PDFs. Runs on this device.",
+  "ocrLanguage": "Text language",
+  "langEnglish": "English",
+  "langHindi": "Hindi",
+  "backupSync": "Back up and sync across devices",
+  "backupSyncHint": "Optional. Everything works without an account.",
+  "signedInAs": "Signed in as {email}",
+  "@signedInAs": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "help": "Help",
+  "showGuide": "Show the welcome guide",
+  "about": "About",
+  "guide1Title": "Scan any page",
+  "guide1Body": "Point your camera at a document. DocScanner finds the edges and captures it when you hold still.",
+  "guide2Title": "Fix and enhance",
+  "guide2Body": "Adjust the corners, choose Black & White or Magic Color, add text or a signature.",
+  "guide3Title": "Save and share, no account needed",
+  "guide3Body": "Export as PDF or JPG. Your scans stay on this device unless you choose to back them up.",
+  "getStarted": "Get started",
+  "guideStep": "Step {current} of {total}",
+  "@guideStep": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "uploadExistingTitle": "Upload your scans?",
+  "uploadExistingBody": "{count, plural, =1{You have 1 document on this device. Upload it to your account so it is backed up and available on your other devices?} other{You have {count} documents on this device. Upload them to your account so they are backed up and available on your other devices?}}",
+  "@uploadExistingBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "uploadNow": "Upload now",
+  "notNow": "Not now",
+  "uploadLocalDocs": "Upload documents from this device",
+  "conflictsResolved": "{count, plural, =1{1 document was edited on two devices; the newer edit was kept: {titles}} other{{count} documents were edited on two devices; the newer edits were kept: {titles}}}",
+  "@conflictsResolved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "titles": {
+        "type": "String"
+      }
+    }
+  }
+}

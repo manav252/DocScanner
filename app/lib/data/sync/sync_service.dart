@@ -53,6 +53,9 @@ class SyncState {
 
 class SyncReport {
   int pushed = 0, pulled = 0, deleted = 0, conflicts = 0;
+
+  /// Titles of documents edited on two devices (the newer edit was kept).
+  final conflictTitles = <String>[];
   @override
   String toString() => 'pushed $pushed, pulled $pulled, deleted $deleted, conflicts $conflicts';
 }
@@ -85,6 +88,14 @@ class SyncService {
     return report;
   }
 
+  /// Call right after sign-in: if this is a different account than last time,
+  /// local documents are detached from the old one (and not uploaded until the
+  /// user agrees).
+  Future<void> prepareForAccount(String userId) async {
+    final state = await _loadState();
+    if (state.userId != userId) await _adoptAccount(state, userId);
+  }
+
   /// A different account signed in: everything local is new to it.
   Future<void> _adoptAccount(SyncState state, String userId) async {
     for (final d in await repo.listAll()) {
@@ -106,6 +117,8 @@ class SyncService {
   Future<void> _push(SyncState state, SyncReport report) async {
     for (final doc in await repo.listAll()) {
       if (!doc.needsSync) continue;
+      // Documents the user has not chosen to back up stay on this device.
+      if (!doc.backup && !(doc.deleted && doc.remoteId != null)) continue;
       if (doc.deleted) {
         // Deletion wins over concurrent remote edits.
         if (doc.remoteId != null) await api.deleteDocument(doc.id);
@@ -128,6 +141,7 @@ class SyncService {
       report.pushed++;
     } on ConflictException catch (c) {
       report.conflicts++;
+      report.conflictTitles.add(doc.title);
       final serverUpdated = DateTime.parse(c.server['updated_at'] as String);
       if (attempt == 0 && !doc.updatedAt.isBefore(serverUpdated)) {
         // Ours is newer: overwrite, based on the version we just saw.
@@ -247,6 +261,7 @@ class SyncService {
       remoteId: id,
       syncedRevision: rev,
       serverVersion: version,
+      backup: true,
     ));
     await _saveState(state);
     return true;

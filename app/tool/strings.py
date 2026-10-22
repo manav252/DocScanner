@@ -1,0 +1,150 @@
+"""Single source of the app's UI strings (English + Hindi).
+
+Edit this file, then run:  python3 tool/strings.py   (writes lib/l10n/app_en.arb and app_hi.arb)
+and `flutter gen-l10n` (or any flutter build/run) regenerates AppLocalizations.
+
+Each entry: key -> (english, hindi) or (english, hindi, {placeholder: type}).
+Placeholders use {name} in both languages.
+"""
+import json
+from pathlib import Path
+
+S = {
+    # ---------- app ----------
+    "appName": ("DocScanner", "डॉकस्कैनर"),
+    "appPurpose": ("Turn paper into clean PDFs. Works offline, no account needed.",
+                   "काग़ज़ को साफ़ PDF में बदलें। ऑफ़लाइन चलता है, खाते की ज़रूरत नहीं।"),
+    # ---------- home ----------
+    "scanDocument": ("Scan Document", "दस्तावेज़ स्कैन करें"),
+    "importPhotos": ("Import Photos", "फ़ोटो जोड़ें"),
+    "importPdf": ("Import PDF", "PDF जोड़ें"),
+    "viewDocuments": ("View Documents", "दस्तावेज़ देखें"),
+    "recentScans": ("Recent scans", "हाल के स्कैन"),
+    "seeAllDocuments": ("See all documents", "सभी दस्तावेज़ देखें"),
+    "settings": ("Settings", "सेटिंग्स"),
+    "noScansYet": ("No scans yet", "अभी कोई स्कैन नहीं"),
+    "noScansHint": ("Tap “Scan Document” to scan a page with your camera, or import photos or a PDF.",
+                    "कैमरे से पेज स्कैन करने के लिए “दस्तावेज़ स्कैन करें” दबाएँ, या फ़ोटो या PDF जोड़ें।"),
+    "howItWorksTitle": ("How it works", "यह कैसे काम करता है"),
+    "howItWorksStep1": ("Point the camera at a page. It is captured when you hold still.",
+                        "कैमरे को पेज पर रखें। स्थिर रहने पर तस्वीर अपने-आप ली जाती है।"),
+    "howItWorksStep2": ("Check the corners, then pick a look such as Black & White.",
+                        "कोनों की जाँच करें, फिर ब्लैक एंड व्हाइट जैसा रूप चुनें।"),
+    "howItWorksStep3": ("Save as PDF or JPG and share it.", "PDF या JPG के रूप में सहेजें और साझा करें।"),
+    "statusLocalOnly": ("Scans are saved on this device", "स्कैन इसी डिवाइस पर सहेजे जाते हैं"),
+    "statusSynced": ("Backed up", "बैकअप हो गया"),
+    "statusSyncing": ("Backing up…", "बैकअप हो रहा है…"),
+    "statusOffline": ("Backup server not reachable. Your scans are safe on this device and will upload later.",
+                      "बैकअप सर्वर से संपर्क नहीं हो पा रहा। आपके स्कैन इस डिवाइस पर सुरक्षित हैं और बाद में अपलोड होंगे।"),
+    "statusSyncError": ("Backup problem: {message}", "बैकअप में समस्या: {message}", {"message": "String"}),
+    "pendingChanges": ("{count, plural, =1{1 change waiting to upload} other{{count} changes waiting to upload}}",
+                       "{count, plural, =1{1 बदलाव अपलोड होने की प्रतीक्षा में} other{{count} बदलाव अपलोड होने की प्रतीक्षा में}}",
+                       {"count": "int"}),
+    # ---------- documents ----------
+    "documents": ("Documents", "दस्तावेज़"),
+    "searchDocuments": ("Search documents and text inside pages", "दस्तावेज़ और पेजों के अंदर का टेक्स्ट खोजें"),
+    "noResults": ("No documents match “{query}”.", "“{query}” से मेल खाता कोई दस्तावेज़ नहीं।", {"query": "String"}),
+    "clearSearch": ("Clear search", "खोज साफ़ करें"),
+    "pageCount": ("{count, plural, =1{1 page} other{{count} pages}}", "{count, plural, =1{1 पेज} other{{count} पेज}}",
+                  {"count": "int"}),
+    "modified": ("Modified {date}", "बदला गया {date}", {"date": "String"}),
+    "open": ("Open", "खोलें"),
+    "rename": ("Rename", "नाम बदलें"),
+    "export": ("Export", "निर्यात"),
+    "delete": ("Delete", "हटाएँ"),
+    "cancel": ("Cancel", "रद्द करें"),
+    "save": ("Save", "सहेजें"),
+    "undo": ("Undo", "पूर्ववत करें"),
+    "redo": ("Redo", "फिर से करें"),
+    "done": ("Done", "हो गया"),
+    "next": ("Next", "आगे"),
+    "back": ("Back", "पीछे"),
+    "skip": ("Skip", "छोड़ें"),
+    "close": ("Close", "बंद करें"),
+    "tryAgain": ("Try again", "फिर कोशिश करें"),
+    "badgeDeviceOnly": ("On this device", "इस डिवाइस पर"),
+    "badgeBackedUp": ("Backed up", "बैकअप हुआ"),
+    "badgeWaiting": ("Waiting to upload", "अपलोड की प्रतीक्षा"),
+    "renameTitle": ("Rename document", "दस्तावेज़ का नाम बदलें"),
+    "documentName": ("Document name", "दस्तावेज़ का नाम"),
+    "deleteDocumentTitle": ("Delete “{title}”?", "“{title}” हटाएँ?", {"title": "String"}),
+    "deleteDocumentBody": ("{count, plural, =1{Its page will be removed from this device.} other{All {count} pages will be removed from this device.}}",
+                           "{count, plural, =1{इसका पेज इस डिवाइस से हटा दिया जाएगा।} other{इसके सभी {count} पेज इस डिवाइस से हटा दिए जाएँगे।}}",
+                           {"count": "int"}),
+    "documentDeleted": ("Document deleted", "दस्तावेज़ हटा दिया गया"),
+    "importing": ("Importing…", "जोड़ा जा रहा है…"),
+    "importProgress": ("{count, plural, =1{1 page added} other{{count} pages added}} · {name}",
+                       "{count, plural, =1{1 पेज जोड़ा} other{{count} पेज जोड़े}} · {name}", {"count": "int", "name": "String"}),
+    "importFailed": ("Could not import: {message}", "जोड़ नहीं सके: {message}", {"message": "String"}),
+    "importNothing": ("Nothing to import. Choose JPG, PNG or PDF files.", "जोड़ने के लिए कुछ नहीं। JPG, PNG या PDF फ़ाइलें चुनें।"),
+    # ---------- settings ----------
+    "appearance": ("Appearance", "रूप"),
+    "theme": ("Theme", "थीम"),
+    "themeSystem": ("System", "सिस्टम"),
+    "themeLight": ("Light", "हल्का"),
+    "themeDark": ("Dark", "गहरा"),
+    "highContrast": ("High contrast", "उच्च कंट्रास्ट"),
+    "highContrastHint": ("Stronger colours and outlines", "गहरे रंग और मोटी रेखाएँ"),
+    "textSize": ("Text size", "टेक्स्ट का आकार"),
+    "simpleMode": ("Simple Mode", "सरल मोड"),
+    "simpleModeHint": ("Fewer options and plain words", "कम विकल्प और आसान शब्द"),
+    "language": ("Language", "भाषा"),
+    "languageSystem": ("Same as device", "डिवाइस जैसी"),
+    "scanning": ("Scanning", "स्कैनिंग"),
+    "spokenGuidance": ("Spoken guidance", "बोलकर मार्गदर्शन"),
+    "spokenGuidanceHint": ("Says “Move closer”, “Hold still”, “Captured” while scanning, and vibrates",
+                           "स्कैन करते समय “पास लाएँ”, “स्थिर रखें”, “तस्वीर ली गई” बोलता है और कंपन करता है"),
+    "textRecognition": ("Text recognition", "टेक्स्ट पहचान"),
+    "autoOcr": ("Recognise text automatically", "टेक्स्ट अपने-आप पहचानें"),
+    "autoOcrHint": ("Lets you search, copy text and make searchable PDFs. Runs on this device.",
+                    "खोजने, टेक्स्ट कॉपी करने और खोजने योग्य PDF बनाने देता है। इसी डिवाइस पर चलता है।"),
+    "ocrLanguage": ("Text language", "टेक्स्ट की भाषा"),
+    "langEnglish": ("English", "अंग्रेज़ी"),
+    "langHindi": ("Hindi", "हिन्दी"),
+    "backupSync": ("Back up and sync across devices", "बैकअप लें और डिवाइसों के बीच सिंक करें"),
+    "backupSyncHint": ("Optional. Everything works without an account.", "वैकल्पिक। खाते के बिना सब कुछ काम करता है।"),
+    "signedInAs": ("Signed in as {email}", "{email} के रूप में साइन इन", {"email": "String"}),
+    "help": ("Help", "मदद"),
+    "showGuide": ("Show the welcome guide", "स्वागत गाइड दिखाएँ"),
+    "about": ("About", "जानकारी"),
+    # ---------- onboarding ----------
+    "guide1Title": ("Scan any page", "कोई भी पेज स्कैन करें"),
+    "guide1Body": ("Point your camera at a document. DocScanner finds the edges and captures it when you hold still.",
+                   "कैमरे को दस्तावेज़ पर रखें। डॉकस्कैनर किनारे ढूँढता है और स्थिर रहने पर तस्वीर ले लेता है।"),
+    "guide2Title": ("Fix and enhance", "ठीक करें और सुधारें"),
+    "guide2Body": ("Adjust the corners, choose Black & White or Magic Color, add text or a signature.",
+                   "कोने ठीक करें, ब्लैक एंड व्हाइट या मैजिक कलर चुनें, टेक्स्ट या हस्ताक्षर जोड़ें।"),
+    "guide3Title": ("Save and share, no account needed", "सहेजें और साझा करें, खाते की ज़रूरत नहीं"),
+    "guide3Body": ("Export as PDF or JPG. Your scans stay on this device unless you choose to back them up.",
+                   "PDF या JPG के रूप में निर्यात करें। जब तक आप बैकअप न चुनें, स्कैन इसी डिवाइस पर रहते हैं।"),
+    "getStarted": ("Get started", "शुरू करें"),
+    "guideStep": ("Step {current} of {total}", "चरण {current} / {total}", {"current": "int", "total": "int"}),
+    # ---------- account ----------
+    "uploadExistingTitle": ("Upload your scans?", "अपने स्कैन अपलोड करें?"),
+    "uploadExistingBody": ("{count, plural, =1{You have 1 document on this device. Upload it to your account so it is backed up and available on your other devices?} other{You have {count} documents on this device. Upload them to your account so they are backed up and available on your other devices?}}",
+                           "{count, plural, =1{इस डिवाइस पर 1 दस्तावेज़ है। क्या इसे अपने खाते में अपलोड करें ताकि बैकअप रहे और दूसरे डिवाइस पर भी मिले?} other{इस डिवाइस पर {count} दस्तावेज़ हैं। क्या इन्हें अपने खाते में अपलोड करें ताकि बैकअप रहे और दूसरे डिवाइस पर भी मिलें?}}",
+                           {"count": "int"}),
+    "uploadNow": ("Upload now", "अभी अपलोड करें"),
+    "notNow": ("Not now", "अभी नहीं"),
+    "uploadLocalDocs": ("Upload documents from this device", "इस डिवाइस के दस्तावेज़ अपलोड करें"),
+    "conflictsResolved": ("{count, plural, =1{1 document was edited on two devices; the newer edit was kept: {titles}} other{{count} documents were edited on two devices; the newer edits were kept: {titles}}}",
+                          "{count, plural, =1{1 दस्तावेज़ दो डिवाइस पर बदला गया; नया बदलाव रखा गया: {titles}} other{{count} दस्तावेज़ दो डिवाइस पर बदले गए; नए बदलाव रखे गए: {titles}}}",
+                          {"count": "int", "titles": "String"}),
+}
+
+
+def main() -> None:
+    out = Path(__file__).resolve().parents[1] / "lib" / "l10n"
+    out.mkdir(parents=True, exist_ok=True)
+    for i, lang in enumerate(("en", "hi")):
+        arb: dict = {"@@locale": lang}
+        for key, entry in S.items():
+            arb[key] = entry[i]
+            if lang == "en" and len(entry) > 2:
+                arb[f"@{key}"] = {"placeholders": {k: {"type": v} for k, v in entry[2].items()}}
+        (out / f"app_{lang}.arb").write_text(json.dumps(arb, ensure_ascii=False, indent=2) + "\n")
+    print(f"wrote {len(S)} strings x 2 languages")
+
+
+if __name__ == "__main__":
+    main()

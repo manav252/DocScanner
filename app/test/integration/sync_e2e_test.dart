@@ -53,7 +53,7 @@ void main() {
   test('A creates and pushes a document', () async {
     await a.api.register(email, 'correct horse battery');
     final pages = [await addPage(a, 'p1', photo), await addPage(a, 'p2', other)];
-    await a.repo.save(ScanDocument(id: 'doc1', title: 'Lease', createdAt: t0, updatedAt: t0, pages: pages).edit(now: t0));
+    await a.repo.save(ScanDocument(id: 'doc1', title: 'Lease', createdAt: t0, updatedAt: t0, pages: pages, backup: true).edit(now: t0));
     final r = await a.sync.sync();
     expect(r.pushed, 1);
     final d = await a.doc('doc1');
@@ -140,17 +140,35 @@ void main() {
   test('offline is reported as OfflineException and nothing is lost', () async {
     final off = Device('http://127.0.0.1:9');
     off.api.session = a.api.session;
-    await off.repo.save(ScanDocument(id: 'x', title: 'Offline', createdAt: t0, updatedAt: t0).edit());
+    await off.repo.save(ScanDocument(id: 'x', title: 'Offline', createdAt: t0, updatedAt: t0, backup: true).edit());
     await expectLater(off.sync.sync(), throwsA(isA<OfflineException>()));
     expect((await off.repo.get('x'))!.needsSync, isTrue);
   });
 
-  test('signing into another account uploads local documents there', () async {
-    await a.repo.save(ScanDocument(id: 'mine', title: 'Mine', createdAt: t0, updatedAt: t0).edit());
+  test('guest documents are never uploaded without consent', () async {
+    final c = Device(api!);
+    await c.api.register('guest-$email', 'correct horse battery');
+    await c.repo.save(ScanDocument(id: 'guest', title: 'Made as guest', createdAt: t0, updatedAt: t0).edit());
+    final r = await c.sync.sync();
+    expect(r.pushed, 0);
+    expect((await c.api.listDocuments())['documents'], isEmpty);
+    // The user chooses "Upload now".
+    final d = (await c.repo.get('guest'))!;
+    await c.repo.save(d.edit(backup: true, now: d.updatedAt));
+    expect((await c.sync.sync()).pushed, 1);
+    expect([for (final x in (await c.api.listDocuments())['documents'] as List) (x as Map)['id']], ['guest']);
+  });
+
+  test('signing into another account does not copy documents there until asked', () async {
+    await a.repo.save(ScanDocument(id: 'mine', title: 'Mine', createdAt: t0, updatedAt: t0, backup: true).edit());
     await a.sync.sync();
     await a.api.register('other-$email', 'correct horse battery');
-    final r = await a.sync.sync();
-    expect(r.pushed, 1);
+    await a.sync.prepareForAccount(a.api.session!.userId);
+    expect((await a.repo.get('mine'))!.backup, isFalse, reason: 'detached from the previous account');
+    expect((await a.sync.sync()).pushed, 0);
+    final d = (await a.repo.get('mine'))!;
+    await a.repo.save(d.edit(backup: true, now: d.updatedAt));
+    expect((await a.sync.sync()).pushed, 1);
     final list = await a.api.listDocuments();
     expect([for (final d in list['documents'] as List) (d as Map)['id']], ['mine']);
   });

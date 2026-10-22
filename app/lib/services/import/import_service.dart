@@ -26,6 +26,9 @@ class ImportService {
   /// Photo library (mobile) / image file picker (web). Multiple selection.
   Future<List<ImportedFile>> pickImages() => _pick(FileType.image);
 
+  /// PDF files only.
+  Future<List<ImportedFile>> pickPdfs() => _pick(FileType.custom, const ['pdf']);
+
   /// Files app / file dialog: PDFs and images.
   Future<List<ImportedFile>> pickFiles() =>
       _pick(FileType.custom, const ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'heic', 'heif']);

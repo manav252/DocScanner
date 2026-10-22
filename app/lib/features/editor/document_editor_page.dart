@@ -10,6 +10,7 @@ import '../../core/providers.dart';
 import '../../data/models.dart';
 import '../../imaging/page_edits.dart';
 import '../capture/capture_page.dart';
+import '../common/dialogs.dart';
 import '../common/page_image.dart';
 import '../corners/corner_adjust_page.dart';
 import '../library/import_flow.dart';
@@ -403,57 +404,3 @@ class _EmptyDocument extends StatelessWidget {
         ]),
       );
 }
-
-class RenameDialog extends StatefulWidget {
-  const RenameDialog({super.key, required this.initial});
-  final String initial;
-
-  @override
-  State<RenameDialog> createState() => _RenameDialogState();
-}
-
-class _RenameDialogState extends State<RenameDialog> {
-  late final _c = TextEditingController(text: widget.initial)
-    ..selection = TextSelection(baseOffset: 0, extentOffset: widget.initial.length);
-
-  @override
-  void dispose() {
-    _c.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => AlertDialog(
-        title: const Text('Rename'),
-        content: TextField(
-          key: const ValueKey('rename-field'),
-          controller: _c,
-          autofocus: true,
-          maxLength: 120,
-          decoration: const InputDecoration(labelText: 'Document name'),
-          onSubmitted: (v) => Navigator.of(context).pop(v),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.of(context).pop(_c.text), child: const Text('Save')),
-        ],
-      );
-}
-
-Future<bool> confirmDelete(BuildContext context, String title, String body) async =>
-    await showDialog<bool>(
-      context: context,
-      builder: (c) => AlertDialog(
-        title: Text(title),
-        content: Text(body),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(c).pop(false), child: const Text('Cancel')),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Theme.of(c).colorScheme.error),
-            onPressed: () => Navigator.of(c).pop(true),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    ) ??
-    false;

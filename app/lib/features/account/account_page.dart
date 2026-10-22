@@ -3,6 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/app_settings.dart';
+import '../../core/l10n.dart';
+import '../../core/providers.dart';
+import '../../data/sync/sync_service.dart';
+import '../library/library_controller.dart';
 import '../../data/sync/sync_controller.dart';
 import '../../services/api/api_client.dart';
 
@@ -13,27 +17,13 @@ class AccountPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final session = ref.watch(sessionProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Account & settings')),
+      appBar: AppBar(title: Text(context.l10n.backupSync)),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 520),
             child: session == null ? const _SignInForm() : _SignedIn(session: session),
-          ),
-          const SizedBox(height: 24),
-          const Divider(),
-          SwitchListTile(
-            key: const ValueKey('auto-ocr'),
-            contentPadding: EdgeInsets.zero,
-            title: const Text('Recognize text automatically'),
-            subtitle: const Text('Makes PDFs searchable and lets you copy text and search your library. '
-                'Runs on this device.'),
-            value: ref.watch(appSettingsProvider).autoOcr,
-            onChanged: (v) {
-              final s = ref.read(appSettingsProvider);
-              ref.read(appSettingsProvider.notifier).update(s.copyWith(autoOcr: v));
-            },
           ),
         ],
       ),
@@ -193,7 +183,40 @@ class _SignInFormState extends ConsumerState<_SignInForm> {
       } else {
         await api.login(_email.text, _password.text);
       }
-      // onSessionChanged stored the session; sync starts automatically.
+      // onSessionChanged stored the session; sync starts automatically for
+      // documents marked for backup. Ask before uploading what is already here.
+      await SyncService(
+        api: api,
+        repo: ref.read(documentRepositoryProvider),
+        store: ref.read(keyValueStoreProvider),
+      ).prepareForAccount(api.session!.userId);
+      final actions = ref.read(libraryActionsProvider);
+      final local = await actions.localOnly();
+      if (local.isNotEmpty && mounted) {
+        final l = context.l10n;
+        final upload = await showDialog<bool>(
+          context: context,
+          builder: (c) => AlertDialog(
+            title: Text(l.uploadExistingTitle),
+            content: Text(l.uploadExistingBody(local.length)),
+            actions: [
+              TextButton.icon(
+                onPressed: () => Navigator.of(c).pop(false),
+                icon: const Icon(Icons.phone_android),
+                label: Text(l.notNow),
+              ),
+              FilledButton.icon(
+                key: const ValueKey('upload-existing'),
+                onPressed: () => Navigator.of(c).pop(true),
+                icon: const Icon(Icons.cloud_upload_outlined),
+                label: Text(l.uploadNow),
+              ),
+            ],
+          ),
+        );
+        if (upload == true) await actions.backUp(local);
+      }
+      ref.read(syncControllerProvider.notifier).syncNow();
     } on OfflineException {
       _error = "Can't reach the server at ${_server.text.trim()}. Check the address and that the backend is running.";
     } on ApiException catch (e) {

@@ -123,7 +123,8 @@ class ScanDocument {
     this.syncedRevision = -1,
     this.serverVersion,
     this.deleted = false,
-  });
+    bool? backup,
+  }) : backup = backup ?? remoteId != null;
 
   final String id;
   final String title;
@@ -143,10 +144,15 @@ class ScanDocument {
   /// Tombstone kept until the deletion has been synced.
   final bool deleted;
 
+  /// Back this document up to the signed-in account. Off for documents made as a
+  /// guest until the user chooses to upload them (documents already on the
+  /// server stay backed up).
+  final bool backup;
+
   bool get needsSync => revision != syncedRevision;
 
   /// Copy with a change: bumps [revision] and [updatedAt].
-  ScanDocument edit({String? title, List<ScanPage>? pages, bool? deleted, DateTime? now}) => ScanDocument(
+  ScanDocument edit({String? title, List<ScanPage>? pages, bool? deleted, DateTime? now, bool? backup}) => ScanDocument(
         id: id,
         title: title ?? this.title,
         createdAt: createdAt,
@@ -157,6 +163,7 @@ class ScanDocument {
         syncedRevision: syncedRevision,
         serverVersion: serverVersion,
         deleted: deleted ?? this.deleted,
+        backup: backup ?? this.backup,
       );
 
   /// Record that local [revision] is on the server at [serverVersion].
@@ -171,9 +178,11 @@ class ScanDocument {
         syncedRevision: revision,
         serverVersion: serverVersion ?? this.serverVersion,
         deleted: deleted,
+        backup: true,
       );
 
-  /// Forget everything about the server (e.g. a different account signed in).
+  /// Forget everything about the server (e.g. a different account signed in);
+  /// the user is asked again before it is uploaded anywhere.
   ScanDocument unsynced() => ScanDocument(
         id: id,
         title: title,
@@ -183,6 +192,7 @@ class ScanDocument {
         revision: revision,
         syncedRevision: -1,
         deleted: deleted,
+        backup: false,
       );
 
   Map<String, Object?> toJson() => {
@@ -196,6 +206,7 @@ class ScanDocument {
         'syncedRev': syncedRevision,
         if (serverVersion != null) 'serverVer': serverVersion,
         'deleted': deleted,
+        'backup': backup,
       };
 
   static ScanDocument fromJson(Map<String, dynamic> j) => ScanDocument(
@@ -209,6 +220,7 @@ class ScanDocument {
         syncedRevision: j['syncedRev'] as int? ?? -1,
         serverVersion: j['serverVer'] as int?,
         deleted: j['deleted'] as bool? ?? false,
+        backup: j['backup'] as bool?,
       );
 
   /// Default title, e.g. "Scan 2026-10-22 18:30".
