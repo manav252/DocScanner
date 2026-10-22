@@ -43,10 +43,21 @@ class CameraModeNotifier extends Notifier<CameraMode> {
 
 final cameraModeProvider = NotifierProvider<CameraModeNotifier, CameraMode>(CameraModeNotifier.new);
 
+/// Which of the device's cameras the scanner uses (see [ScannerCamera.cameraCount]).
+class CameraIndexNotifier extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  void next(int count) => state = count <= 1 ? 0 : (state + 1) % count;
+}
+
+final cameraIndexProvider = NotifierProvider<CameraIndexNotifier, int>(CameraIndexNotifier.new);
+
 /// Creates a fresh camera each time the scanner opens.
 final cameraFactoryProvider = Provider<ScannerCamera Function()>((ref) {
+  final index = ref.watch(cameraIndexProvider);
   return switch (ref.watch(cameraModeProvider)) {
-    CameraMode.device => ScannerCamera.device,
+    CameraMode.device => () => ScannerCamera.device(index: index),
     CameraMode.demo => DemoScannerCamera.new,
   };
 });

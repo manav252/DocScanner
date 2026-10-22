@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 
+import '../../core/l10n.dart';
 import '../../imaging/geometry.dart';
 
 /// Whether [corners] (TL, TR, BR, BL in handle order) form a usable page outline.
@@ -238,19 +239,20 @@ class CornerEditorState extends State<CornerEditor> {
     final valid = isValidQuad(widget.corners, widget.imageSize);
     final scheme = Theme.of(context).colorScheme;
     final color = valid ? scheme.primary : scheme.error;
-    final name = cornerNames[selectedCorner];
+    final l = context.l10n;
+    final name = [l.cornerTopLeft, l.cornerTopRight, l.cornerBottomRight, l.cornerBottomLeft][selectedCorner];
     return Focus(
       focusNode: _focus,
       onKeyEvent: _onKey,
       onFocusChange: (f) => setState(() => _focused = f),
       child: Semantics(
-        label: 'Page corners. Selected: $name corner. Use the move actions, or drag the corners.',
+        label: l.cornersSemantics(name),
         customSemanticsActions: {
-          const CustomSemanticsAction(label: 'Next corner'): () => selectCorner(selectedCorner + 1),
-          const CustomSemanticsAction(label: 'Move corner left'): () => nudge(const Offset(-1, 0)),
-          const CustomSemanticsAction(label: 'Move corner right'): () => nudge(const Offset(1, 0)),
-          const CustomSemanticsAction(label: 'Move corner up'): () => nudge(const Offset(0, -1)),
-          const CustomSemanticsAction(label: 'Move corner down'): () => nudge(const Offset(0, 1)),
+          CustomSemanticsAction(label: l.nextCorner): () => selectCorner(selectedCorner + 1),
+          CustomSemanticsAction(label: l.moveCornerLeft): () => nudge(const Offset(-1, 0)),
+          CustomSemanticsAction(label: l.moveCornerRight): () => nudge(const Offset(1, 0)),
+          CustomSemanticsAction(label: l.moveCornerUp): () => nudge(const Offset(0, -1)),
+          CustomSemanticsAction(label: l.moveCornerDown): () => nudge(const Offset(0, 1)),
         },
         child: LayoutBuilder(builder: (context, constraints) {
           final box = constraints.biggest;

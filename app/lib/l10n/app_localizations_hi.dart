@@ -521,6 +521,577 @@ class AppLocalizationsHi extends AppLocalizations {
   String get selected => 'चुना गया';
 
   @override
+  String get scanTitle => 'स्कैन';
+
+  @override
+  String get scanDemoTitle => 'स्कैन (डेमो कैमरा)';
+
+  @override
+  String get retakeTitle => 'पेज फिर से लें';
+
+  @override
+  String get flashOn => 'टॉर्च चालू';
+
+  @override
+  String get flashOff => 'टॉर्च बंद';
+
+  @override
+  String get switchCamera => 'कैमरा बदलें';
+
+  @override
+  String get autoCaptureOn => 'अपने-आप फ़ोटो: चालू';
+
+  @override
+  String get autoCaptureOff => 'अपने-आप फ़ोटो: बंद';
+
+  @override
+  String get uploadPhoto => 'फ़ोटो अपलोड करें';
+
+  @override
+  String get nextSample => 'अगला नमूना पेज';
+
+  @override
+  String get useDemoCamera => 'डेमो कैमरा इस्तेमाल करें';
+
+  @override
+  String get useDeviceCamera => 'डिवाइस कैमरा इस्तेमाल करें';
+
+  @override
+  String get demoCameraNote =>
+      'डेमो कैमरा: आपका कैमरा नहीं, नमूना पेज दिखाता है।';
+
+  @override
+  String get diagnostics => 'डिटेक्टर जाँच';
+
+  @override
+  String get startingCamera => 'कैमरा शुरू हो रहा है…';
+
+  @override
+  String get capturing => 'फ़ोटो ली जा रही है…';
+
+  @override
+  String get hintTooDarkFlash => 'बहुत अँधेरा: टॉर्च चालू करें';
+
+  @override
+  String get hintTooDark => 'बहुत अँधेरा: रोशनी बढ़ाएँ';
+
+  @override
+  String get hintPointCamera => 'कैमरे को दस्तावेज़ पर रखें';
+
+  @override
+  String get hintMoveCloser => 'पास लाएँ';
+
+  @override
+  String get hintHoldStill => 'स्थिर रखें';
+
+  @override
+  String get hintFound => 'दस्तावेज़ मिल गया';
+
+  @override
+  String get hintNextPage => 'पेज की फ़ोटो ली गई। अगला पेज दिखाएँ।';
+
+  @override
+  String get hintTapShutter => 'दस्तावेज़ मिल गया: फ़ोटो लें दबाएँ';
+
+  @override
+  String get capture => 'फ़ोटो लें';
+
+  @override
+  String capturedPage(int page) {
+    return 'फ़ोटो ली गई, पेज $page';
+  }
+
+  @override
+  String reviewPages(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count पेज देखें',
+      one: '1 पेज देखें',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get savingPages => 'सहेजा जा रहा है…';
+
+  @override
+  String get keepScan => 'स्कैन रखें';
+
+  @override
+  String get replacePage => 'पेज बदलें';
+
+  @override
+  String get retake => 'फिर से लें';
+
+  @override
+  String get couldNotSavePage => 'पेज सहेजा नहीं जा सका। कृपया फिर कोशिश करें।';
+
+  @override
+  String get camOffTitle => 'कैमरे की अनुमति बंद है';
+
+  @override
+  String get camOffWeb =>
+      'इस साइट को कैमरे की अनुमति दें (पता बार में कैमरा आइकन), फिर कोशिश करें। चाहें तो फ़ोटो भी अपलोड कर सकते हैं।';
+
+  @override
+  String get camOffApp =>
+      'सेटिंग्स में डॉकस्कैनर को कैमरे की अनुमति दें, फिर कोशिश करें। चाहें तो फ़ोटो भी अपलोड कर सकते हैं।';
+
+  @override
+  String get noCameraTitle => 'कोई कैमरा नहीं मिला';
+
+  @override
+  String get noCameraBody =>
+      'इस कंप्यूटर पर इस्तेमाल लायक कैमरा नहीं है। पेज की फ़ोटो अपलोड करें, या डेमो कैमरा आज़माएँ।';
+
+  @override
+  String get cameraBusyTitle => 'कैमरा व्यस्त है';
+
+  @override
+  String get cameraBusyBody =>
+      'कोई और ऐप या ब्राउज़र टैब कैमरा इस्तेमाल कर रहा है। उसे बंद करके फिर कोशिश करें।';
+
+  @override
+  String get cameraHttpsTitle => 'यहाँ कैमरा उपलब्ध नहीं है';
+
+  @override
+  String get cameraHttpsBody =>
+      'ब्राउज़र केवल https:// या localhost पेज पर कैमरा चलने देते हैं। इसके बजाय फ़ोटो अपलोड करें।';
+
+  @override
+  String get cameraErrorTitle => 'कैमरा शुरू नहीं हो सका';
+
+  @override
+  String get openSettings => 'सेटिंग्स खोलें';
+
+  @override
+  String get msgCaptureFailed => 'फ़ोटो नहीं ली जा सकी। कृपया फिर कोशिश करें।';
+
+  @override
+  String get msgBadPhotoFile => 'यह फ़ाइल फ़ोटो के रूप में नहीं खुल सकी।';
+
+  @override
+  String get msgNoFlashlight => 'इस कैमरे में टॉर्च नहीं है।';
+
+  @override
+  String pageOf(int page, int total) {
+    return 'पेज $page / $total';
+  }
+
+  @override
+  String get previousPage => 'पिछला पेज';
+
+  @override
+  String get nextPage => 'अगला पेज';
+
+  @override
+  String get addPages => 'पेज जोड़ें';
+
+  @override
+  String get scanMore => 'और स्कैन करें';
+
+  @override
+  String get importPdfOrFiles => 'PDF या फ़ाइलें जोड़ें';
+
+  @override
+  String get toolFilters => 'फ़िल्टर';
+
+  @override
+  String get toolRotate => 'घुमाएँ';
+
+  @override
+  String get toolCrop => 'काटें';
+
+  @override
+  String get toolCorners => 'कोने';
+
+  @override
+  String get toolPageText => 'टेक्स्ट';
+
+  @override
+  String get toolRetake => 'फिर से लें';
+
+  @override
+  String get moveEarlier => 'पहले ले जाएँ';
+
+  @override
+  String get moveLater => 'बाद में ले जाएँ';
+
+  @override
+  String get deletePage => 'पेज हटाएँ';
+
+  @override
+  String get deleteDocument => 'दस्तावेज़ हटाएँ';
+
+  @override
+  String pageDeleted(int page) {
+    return 'पेज $page हटाया गया';
+  }
+
+  @override
+  String pageMoved(int page) {
+    return 'पेज अब $page नंबर पर है';
+  }
+
+  @override
+  String deleteDocTitle(String title) {
+    return '“$title” हटाएँ?';
+  }
+
+  @override
+  String deleteDocBody(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'सभी $count पेज हटा दिए जाएँगे।',
+      one: 'इसका पेज हटा दिया जाएगा।',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recognizingText => 'टेक्स्ट पहचाना जा रहा है…';
+
+  @override
+  String recognizingTextOf(int done, int total) {
+    return 'टेक्स्ट पहचाना जा रहा है $done / $total…';
+  }
+
+  @override
+  String somethingWentWrong(String message) {
+    return 'कुछ गड़बड़ हो गई: $message';
+  }
+
+  @override
+  String get noPagesYet => 'अभी कोई पेज नहीं';
+
+  @override
+  String get noPagesHint =>
+      'पेज जोड़ने के लिए स्कैन करें या फ़ोटो या PDF जोड़ें।';
+
+  @override
+  String pageThumbLabel(int page) {
+    return 'पेज $page। क्रम बदलने के लिए खींचें, या पहले/बाद में ले जाएँ बटन दबाएँ।';
+  }
+
+  @override
+  String get documentNotFound => 'यह दस्तावेज़ खुल नहीं सका।';
+
+  @override
+  String get filterOriginal => 'मूल';
+
+  @override
+  String get filterGrayscale => 'ग्रेस्केल';
+
+  @override
+  String get filterBw => 'ब्लैक एंड व्हाइट';
+
+  @override
+  String get filterMagic => 'मैजिक कलर';
+
+  @override
+  String get showOriginal => 'मूल से तुलना करें';
+
+  @override
+  String get before => 'पहले';
+
+  @override
+  String get after => 'बाद में';
+
+  @override
+  String get applying => 'लागू हो रहा है…';
+
+  @override
+  String applyToAll(String filter) {
+    return '$filter सभी पेज पर लगाएँ';
+  }
+
+  @override
+  String get previewFailed => 'पूर्वावलोकन उपलब्ध नहीं';
+
+  @override
+  String exportTitle(String title) {
+    return '“$title” निर्यात करें';
+  }
+
+  @override
+  String get formatPdf => 'PDF';
+
+  @override
+  String formatJpg(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'JPG ($count फ़ाइलें)',
+      one: 'JPG',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get pageSize => 'पेज का आकार';
+
+  @override
+  String get pageSizeFit => 'पेज के अनुसार';
+
+  @override
+  String get pageSizeA4 => 'A4';
+
+  @override
+  String get pageSizeLetter => 'US लेटर';
+
+  @override
+  String get searchablePdf => 'खोजने योग्य PDF';
+
+  @override
+  String get searchablePdfHint =>
+      'टेक्स्ट पहचानें ताकि उसे खोजा और कॉपी किया जा सके';
+
+  @override
+  String get download => 'डाउनलोड करें';
+
+  @override
+  String get share => 'साझा करें';
+
+  @override
+  String get shareOrSave => 'साझा करें या सहेजें';
+
+  @override
+  String get creatingPdf => 'PDF बन रहा है…';
+
+  @override
+  String get creatingImages => 'तस्वीरें बन रही हैं…';
+
+  @override
+  String savedFile(String name) {
+    return '$name आपके डाउनलोड फ़ोल्डर में सहेजा गया';
+  }
+
+  @override
+  String savedImages(int count) {
+    return '$count तस्वीरें आपके डाउनलोड फ़ोल्डर में सहेजी गईं';
+  }
+
+  @override
+  String exportFailed(String message) {
+    return 'निर्यात नहीं हो सका: $message';
+  }
+
+  @override
+  String get exportHelpWeb =>
+      'डाउनलोड फ़ाइल को आपके डाउनलोड फ़ोल्डर में सहेजता है। साझा करें उन ब्राउज़रों में शेयर मेन्यू खोलता है जो इसे सपोर्ट करते हैं (जैसे फ़ोन पर Safari और Chrome); बाक़ी जगह फ़ाइल डाउनलोड होती है।';
+
+  @override
+  String get exportHelpIos =>
+      'फ़ाइल सहेजने के लिए “साझा करें या सहेजें” दबाएँ, फिर “Save to Files” चुनें।';
+
+  @override
+  String get exportHelpAndroid =>
+      'फ़ाइल सहेजने के लिए “साझा करें या सहेजें” दबाएँ, फिर Files, Drive या कोई और ऐप चुनें।';
+
+  @override
+  String get markupBurnedIn => 'मार्कअप निर्यात किए गए पेज का हिस्सा बन जाएगा।';
+
+  @override
+  String get adjustCorners => 'कोने ठीक करें';
+
+  @override
+  String get noEdgesFound =>
+      'पेज के किनारे नहीं मिले। कोने ठीक करें या पूरी फ़ोटो रखें।';
+
+  @override
+  String get cornersHint =>
+      'कोनों या किनारों को पेज पर खींचें। कीबोर्ड: Tab से कोना चुनें, तीर कुंजियों से खिसकाएँ।';
+
+  @override
+  String get cornersCrossed =>
+      'कोने एक-दूसरे को काट रहे हैं। उन्हें वापस पेज के चारों ओर खींचें।';
+
+  @override
+  String get resetCorners => 'कोने पहले जैसे करें';
+
+  @override
+  String get useFullPhoto => 'पूरी फ़ोटो रखें';
+
+  @override
+  String get rotate => 'घुमाएँ';
+
+  @override
+  String get confirm => 'पुष्टि करें';
+
+  @override
+  String get couldNotRotate => 'फ़ोटो घुमाई नहीं जा सकी।';
+
+  @override
+  String get cornerTopLeft => 'ऊपर-बाएँ';
+
+  @override
+  String get cornerTopRight => 'ऊपर-दाएँ';
+
+  @override
+  String get cornerBottomRight => 'नीचे-दाएँ';
+
+  @override
+  String get cornerBottomLeft => 'नीचे-बाएँ';
+
+  @override
+  String cornersSemantics(String corner) {
+    return 'पेज के कोने। चुना गया: $corner कोना। खिसकाने वाले विकल्प इस्तेमाल करें, या कोनों को खींचें।';
+  }
+
+  @override
+  String get nextCorner => 'अगला कोना';
+
+  @override
+  String get moveCornerLeft => 'कोना बाएँ ले जाएँ';
+
+  @override
+  String get moveCornerRight => 'कोना दाएँ ले जाएँ';
+
+  @override
+  String get moveCornerUp => 'कोना ऊपर ले जाएँ';
+
+  @override
+  String get moveCornerDown => 'कोना नीचे ले जाएँ';
+
+  @override
+  String get cropTitle => 'काटें';
+
+  @override
+  String get reset => 'पहले जैसा करें';
+
+  @override
+  String get apply => 'लागू करें';
+
+  @override
+  String get cropHint =>
+      'बॉक्स के किनारे या कोने खींचें। उसे खिसकाने के लिए अंदर से खींचें।';
+
+  @override
+  String get backUpYourScans => 'अपने स्कैन का बैकअप और सिंक करें';
+
+  @override
+  String get backUpIntro =>
+      'वैकल्पिक। खाते के बिना सब कुछ इसी डिवाइस पर रहता है और हर सुविधा काम करती है। बैकअप और दूसरे डिवाइस पर इस्तेमाल के लिए साइन इन करें।';
+
+  @override
+  String get server => 'सर्वर';
+
+  @override
+  String get serverHint => 'http://192.168.1.20:8000 जैसा पता लिखें';
+
+  @override
+  String get testConnection => 'कनेक्शन जाँचें';
+
+  @override
+  String get serverReachable => 'सर्वर से जुड़ गया।';
+
+  @override
+  String get serverUnreachable =>
+      'सर्वर तक नहीं पहुँच पा रहे। पता और बैकएंड चल रहा है या नहीं, जाँचें।';
+
+  @override
+  String get signIn => 'साइन इन करें';
+
+  @override
+  String get createAccount => 'खाता बनाएँ';
+
+  @override
+  String get email => 'ईमेल';
+
+  @override
+  String get enterEmail => 'अपना ईमेल लिखें';
+
+  @override
+  String get password => 'पासवर्ड';
+
+  @override
+  String get passwordRule => 'कम से कम 8 अक्षर';
+
+  @override
+  String get showPassword => 'दिखाएँ';
+
+  @override
+  String get hidePassword => 'छिपाएँ';
+
+  @override
+  String get showPasswordLabel => 'पासवर्ड दिखाएँ';
+
+  @override
+  String get hidePasswordLabel => 'पासवर्ड छिपाएँ';
+
+  @override
+  String errOffline(String url) {
+    return '$url पर सर्वर तक नहीं पहुँच पा रहे। पता और बैकएंड चल रहा है या नहीं, जाँचें।';
+  }
+
+  @override
+  String get errWrongPassword => 'ईमेल या पासवर्ड ग़लत है।';
+
+  @override
+  String get errAccountExists => 'इस ईमेल से खाता पहले से है। साइन इन करें।';
+
+  @override
+  String get errInvalidInput =>
+      'ईमेल पता जाँचें; पासवर्ड में कम से कम 8 अक्षर चाहिए।';
+
+  @override
+  String get syncNow => 'अभी सिंक करें';
+
+  @override
+  String get processOnServer => 'फ़ोटो सर्वर पर प्रोसेस करें';
+
+  @override
+  String get processOnServerHint =>
+      'धीमे डिवाइस के लिए: पेज पहचान, सीधा करना और फ़िल्टर सर्वर पर चलते हैं। कैमरा प्रीव्यू इसी डिवाइस पर चलता है।';
+
+  @override
+  String get signOut => 'साइन आउट करें';
+
+  @override
+  String get signOutTitle => 'साइन आउट करें?';
+
+  @override
+  String get signOutBody =>
+      'आपके स्कैन इसी डिवाइस पर रहेंगे। साइन आउट रहते हुए किए बदलाव दोबारा साइन इन करने पर सिंक होंगे।';
+
+  @override
+  String get signedInNote =>
+      'स्कैन इसी डिवाइस पर रहते हैं और आपके खाते में बैकअप होते हैं। ऑफ़लाइन भी काम करते हैं।';
+
+  @override
+  String get syncNever => 'अभी सिंक नहीं हुआ';
+
+  @override
+  String get syncJustNow => 'अभी-अभी सिंक हुआ';
+
+  @override
+  String syncMinutesAgo(int minutes) {
+    return '$minutes मिनट पहले सिंक हुआ';
+  }
+
+  @override
+  String syncHoursAgo(int hours) {
+    return '$hours घंटे पहले सिंक हुआ';
+  }
+
+  @override
+  String get syncNotSignedIn => 'साइन इन नहीं है';
+
+  @override
+  String get syncSyncing => 'सिंक हो रहा है…';
+
+  @override
+  String get syncOffline =>
+      'ऑफ़लाइन। बदलाव इस डिवाइस पर सहेजे गए हैं और बाद में सिंक होंगे।';
+
+  @override
+  String syncProblem(String message) {
+    return 'सिंक में समस्या: $message';
+  }
+
+  @override
   String get uploadExistingTitle => 'अपने स्कैन अपलोड करें?';
 
   @override

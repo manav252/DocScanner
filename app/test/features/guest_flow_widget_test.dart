@@ -147,12 +147,105 @@ void main() {
     await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 100)));
     final doc = (await tester.runAsync(() => DocumentRepository(store).get('a')))!;
     expect(doc.pages.first.edits.quarterTurns, 1);
-    await tester.tap(find.text('Lease agreement'));
+    await tester.tap(find.byKey(const ValueKey('rename-doc')));
     await tester.pumpAndSettle();
     await tester.enterText(find.byKey(const ValueKey('rename-field')), 'Lease 2026');
     await tester.tap(find.text('Save'));
     await settle(tester);
     await tester.pumpAndSettle();
     expect(find.text('Lease 2026'), findsOneWidget);
+  });
+
+  Future<void> openEditor(WidgetTester tester, MemoryStore store, FakeEngine engine) async {
+    tester.view.physicalSize = const Size(1000, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(testApp(const DocumentEditorPage(documentId: 'a'), overrides: overrides(store, engine)));
+    await settle(tester);
+  }
+
+  Future<List<String>> pageIds(WidgetTester tester, MemoryStore store) async =>
+      [for (final p in (await tester.runAsync(() => DocumentRepository(store).get('a')))!.pages) p.id];
+
+  testWidgets('editor: every page tool is labelled; no icon-only buttons or hidden menus', (tester) async {
+    final (store, engine) = (await tester.runAsync(seed))!;
+    await openEditor(tester, store, engine);
+    for (final label in ['Rename', 'Export', 'Previous page', 'Next page', 'Add pages', 'Filters', 'Rotate', 'Crop',
+        'Corners', 'Markup', 'Text', 'Retake', 'Move earlier', 'Move later', 'Delete page', 'Delete document']) {
+      expect(find.text(label), findsWidgets, reason: label);
+    }
+    expect(find.byType(IconButton), findsNothing);
+    expect(find.byType(PopupMenuButton<Object>), findsNothing);
+  });
+
+  testWidgets('editor: Move later / Next page / Move earlier reorder without dragging', (tester) async {
+    final (store, engine) = (await tester.runAsync(seed))!;
+    await openEditor(tester, store, engine);
+    await tester.tap(find.byKey(const ValueKey('move-later')));
+    await settle(tester);
+    expect(await pageIds(tester, store), ['a1', 'a0', 'a2']);
+    expect(find.text('Page 2 of 3'), findsOneWidget, reason: 'follows the moved page');
+    await tester.tap(find.byKey(const ValueKey('next-page')));
+    await settle(tester);
+    expect(find.text('Page 3 of 3'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('move-earlier')));
+    await settle(tester);
+    expect(await pageIds(tester, store), ['a1', 'a2', 'a0']);
+  });
+
+  testWidgets('editor: Delete page is immediate and Undo brings it back with its images', (tester) async {
+    final (store, engine) = (await tester.runAsync(seed))!;
+    await openEditor(tester, store, engine);
+    await tester.tap(find.byKey(const ValueKey('next-page')));
+    await settle(tester);
+    await tester.tap(find.byKey(const ValueKey('delete-page')));
+    await settle(tester);
+    expect(await pageIds(tester, store), ['a0', 'a2']);
+    expect(find.text('Page 2 deleted'), findsOneWidget);
+    expect(await tester.runAsync(() => DocumentRepository(store).pageImage('a1', PageImage.render)), isNull);
+
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Undo'));
+    await settle(tester);
+    await settle(tester);
+    expect(await pageIds(tester, store), ['a0', 'a1', 'a2']);
+    expect(await tester.runAsync(() => DocumentRepository(store).pageImage('a1', PageImage.render)), isNotNull);
+  });
+
+  testWidgets('editor: Add pages is a labelled button that lists the choices', (tester) async {
+    final (store, engine) = (await tester.runAsync(seed))!;
+    await openEditor(tester, store, engine);
+    await tester.tap(find.byKey(const ValueKey('add-pages')));
+    await tester.pumpAndSettle();
+    for (final label in ['Scan more', 'Import Photos', 'Import PDF or files']) {
+      expect(find.text(label), findsOneWidget, reason: label);
+    }
+  });
+
+  testWidgets('filters: preview cards, compare with original, apply shows progress', (tester) async {
+    final (store, engine) = (await tester.runAsync(seed))!;
+    await openEditor(tester, store, engine);
+    await tester.tap(find.byKey(const ValueKey('tool-filters')));
+    for (var i = 0; i < 4; i++) {
+      await settle(tester);
+    }
+    await tester.pumpAndSettle();
+    for (final label in ['Original', 'Grayscale', 'Black & White', 'Magic Color']) {
+      expect(find.text(label), findsOneWidget, reason: label);
+    }
+    expect(find.text('After'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('compare-original')));
+    await tester.pump();
+    expect(find.text('Before'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('filter-bw')));
+    await tester.pump();
+    for (var i = 0; i < 4; i++) {
+      await settle(tester);
+    }
+    final doc = (await tester.runAsync(() => DocumentRepository(store).get('a')))!;
+    expect(doc.pages.first.edits.filter.wireName, 'bw');
+    expect(find.text('Applying…'), findsNothing);
+    expect(find.text('Apply Black & White to all pages'), findsOneWidget);
   });
 }

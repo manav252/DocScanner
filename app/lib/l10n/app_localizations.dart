@@ -992,6 +992,984 @@ abstract class AppLocalizations {
   /// **'selected'**
   String get selected;
 
+  /// No description provided for @scanTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan'**
+  String get scanTitle;
+
+  /// No description provided for @scanDemoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan (demo camera)'**
+  String get scanDemoTitle;
+
+  /// No description provided for @retakeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Retake page'**
+  String get retakeTitle;
+
+  /// No description provided for @flashOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Flashlight on'**
+  String get flashOn;
+
+  /// No description provided for @flashOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Flashlight off'**
+  String get flashOff;
+
+  /// No description provided for @switchCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch camera'**
+  String get switchCamera;
+
+  /// No description provided for @autoCaptureOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto capture: on'**
+  String get autoCaptureOn;
+
+  /// No description provided for @autoCaptureOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto capture: off'**
+  String get autoCaptureOff;
+
+  /// No description provided for @uploadPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload a photo'**
+  String get uploadPhoto;
+
+  /// No description provided for @nextSample.
+  ///
+  /// In en, this message translates to:
+  /// **'Next sample page'**
+  String get nextSample;
+
+  /// No description provided for @useDemoCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Use demo camera'**
+  String get useDemoCamera;
+
+  /// No description provided for @useDeviceCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Use device camera'**
+  String get useDeviceCamera;
+
+  /// No description provided for @demoCameraNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Demo camera: shows sample pages, not your camera.'**
+  String get demoCameraNote;
+
+  /// No description provided for @diagnostics.
+  ///
+  /// In en, this message translates to:
+  /// **'Detector diagnostics'**
+  String get diagnostics;
+
+  /// No description provided for @startingCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting camera…'**
+  String get startingCamera;
+
+  /// No description provided for @capturing.
+  ///
+  /// In en, this message translates to:
+  /// **'Capturing…'**
+  String get capturing;
+
+  /// No description provided for @hintTooDarkFlash.
+  ///
+  /// In en, this message translates to:
+  /// **'Too dark: turn on the flashlight'**
+  String get hintTooDarkFlash;
+
+  /// No description provided for @hintTooDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Too dark: add more light'**
+  String get hintTooDark;
+
+  /// No description provided for @hintPointCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Point the camera at a document'**
+  String get hintPointCamera;
+
+  /// No description provided for @hintMoveCloser.
+  ///
+  /// In en, this message translates to:
+  /// **'Move closer'**
+  String get hintMoveCloser;
+
+  /// No description provided for @hintHoldStill.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold still'**
+  String get hintHoldStill;
+
+  /// No description provided for @hintFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Document found'**
+  String get hintFound;
+
+  /// No description provided for @hintNextPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Page captured. Show the next page.'**
+  String get hintNextPage;
+
+  /// No description provided for @hintTapShutter.
+  ///
+  /// In en, this message translates to:
+  /// **'Document found: tap Capture'**
+  String get hintTapShutter;
+
+  /// No description provided for @capture.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture'**
+  String get capture;
+
+  /// No description provided for @capturedPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Captured, page {page}'**
+  String capturedPage(int page);
+
+  /// No description provided for @reviewPages.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Review 1 page} other{Review {count} pages}}'**
+  String reviewPages(int count);
+
+  /// No description provided for @savingPages.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving…'**
+  String get savingPages;
+
+  /// No description provided for @keepScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep scan'**
+  String get keepScan;
+
+  /// No description provided for @replacePage.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace page'**
+  String get replacePage;
+
+  /// No description provided for @retake.
+  ///
+  /// In en, this message translates to:
+  /// **'Retake'**
+  String get retake;
+
+  /// No description provided for @couldNotSavePage.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the page. Please try again.'**
+  String get couldNotSavePage;
+
+  /// No description provided for @camOffTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera access is off'**
+  String get camOffTitle;
+
+  /// No description provided for @camOffWeb.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow camera access for this site (camera icon in the address bar), then try again. You can also upload a photo instead.'**
+  String get camOffWeb;
+
+  /// No description provided for @camOffApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow camera access for DocScanner in Settings, then try again. You can also upload a photo instead.'**
+  String get camOffApp;
+
+  /// No description provided for @noCameraTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No camera found'**
+  String get noCameraTitle;
+
+  /// No description provided for @noCameraBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This computer has no camera we can use. Upload a photo of the page, or try the demo camera.'**
+  String get noCameraBody;
+
+  /// No description provided for @cameraBusyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera is busy'**
+  String get cameraBusyTitle;
+
+  /// No description provided for @cameraBusyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Another app or browser tab is using the camera. Close it and try again.'**
+  String get cameraBusyBody;
+
+  /// No description provided for @cameraHttpsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera not available here'**
+  String get cameraHttpsTitle;
+
+  /// No description provided for @cameraHttpsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Browsers only allow the camera on https:// pages or localhost. Upload a photo instead.'**
+  String get cameraHttpsBody;
+
+  /// No description provided for @cameraErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not start the camera'**
+  String get cameraErrorTitle;
+
+  /// No description provided for @openSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Settings'**
+  String get openSettings;
+
+  /// No description provided for @msgCaptureFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not take the photo. Please try again.'**
+  String get msgCaptureFailed;
+
+  /// No description provided for @msgBadPhotoFile.
+  ///
+  /// In en, this message translates to:
+  /// **'That file could not be opened as a photo.'**
+  String get msgBadPhotoFile;
+
+  /// No description provided for @msgNoFlashlight.
+  ///
+  /// In en, this message translates to:
+  /// **'This camera has no flashlight.'**
+  String get msgNoFlashlight;
+
+  /// No description provided for @pageOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Page {page} of {total}'**
+  String pageOf(int page, int total);
+
+  /// No description provided for @previousPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous page'**
+  String get previousPage;
+
+  /// No description provided for @nextPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Next page'**
+  String get nextPage;
+
+  /// No description provided for @addPages.
+  ///
+  /// In en, this message translates to:
+  /// **'Add pages'**
+  String get addPages;
+
+  /// No description provided for @scanMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan more'**
+  String get scanMore;
+
+  /// No description provided for @importPdfOrFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Import PDF or files'**
+  String get importPdfOrFiles;
+
+  /// No description provided for @toolFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get toolFilters;
+
+  /// No description provided for @toolRotate.
+  ///
+  /// In en, this message translates to:
+  /// **'Rotate'**
+  String get toolRotate;
+
+  /// No description provided for @toolCrop.
+  ///
+  /// In en, this message translates to:
+  /// **'Crop'**
+  String get toolCrop;
+
+  /// No description provided for @toolCorners.
+  ///
+  /// In en, this message translates to:
+  /// **'Corners'**
+  String get toolCorners;
+
+  /// No description provided for @toolPageText.
+  ///
+  /// In en, this message translates to:
+  /// **'Text'**
+  String get toolPageText;
+
+  /// No description provided for @toolRetake.
+  ///
+  /// In en, this message translates to:
+  /// **'Retake'**
+  String get toolRetake;
+
+  /// No description provided for @moveEarlier.
+  ///
+  /// In en, this message translates to:
+  /// **'Move earlier'**
+  String get moveEarlier;
+
+  /// No description provided for @moveLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Move later'**
+  String get moveLater;
+
+  /// No description provided for @deletePage.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete page'**
+  String get deletePage;
+
+  /// No description provided for @deleteDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete document'**
+  String get deleteDocument;
+
+  /// No description provided for @pageDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Page {page} deleted'**
+  String pageDeleted(int page);
+
+  /// No description provided for @pageMoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Page moved to position {page}'**
+  String pageMoved(int page);
+
+  /// No description provided for @deleteDocTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete “{title}”?'**
+  String deleteDocTitle(String title);
+
+  /// No description provided for @deleteDocBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Its page will be removed.} other{All {count} pages will be removed.}}'**
+  String deleteDocBody(int count);
+
+  /// No description provided for @recognizingText.
+  ///
+  /// In en, this message translates to:
+  /// **'Recognising text…'**
+  String get recognizingText;
+
+  /// No description provided for @recognizingTextOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Recognising text {done} of {total}…'**
+  String recognizingTextOf(int done, int total);
+
+  /// No description provided for @somethingWentWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong: {message}'**
+  String somethingWentWrong(String message);
+
+  /// No description provided for @noPagesYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No pages yet'**
+  String get noPagesYet;
+
+  /// No description provided for @noPagesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan a page or import photos or a PDF to add pages.'**
+  String get noPagesHint;
+
+  /// No description provided for @pageThumbLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Page {page}. Drag to reorder, or use Move earlier and Move later.'**
+  String pageThumbLabel(int page);
+
+  /// No description provided for @documentNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This document could not be opened.'**
+  String get documentNotFound;
+
+  /// No description provided for @filterOriginal.
+  ///
+  /// In en, this message translates to:
+  /// **'Original'**
+  String get filterOriginal;
+
+  /// No description provided for @filterGrayscale.
+  ///
+  /// In en, this message translates to:
+  /// **'Grayscale'**
+  String get filterGrayscale;
+
+  /// No description provided for @filterBw.
+  ///
+  /// In en, this message translates to:
+  /// **'Black & White'**
+  String get filterBw;
+
+  /// No description provided for @filterMagic.
+  ///
+  /// In en, this message translates to:
+  /// **'Magic Color'**
+  String get filterMagic;
+
+  /// No description provided for @showOriginal.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare with original'**
+  String get showOriginal;
+
+  /// No description provided for @before.
+  ///
+  /// In en, this message translates to:
+  /// **'Before'**
+  String get before;
+
+  /// No description provided for @after.
+  ///
+  /// In en, this message translates to:
+  /// **'After'**
+  String get after;
+
+  /// No description provided for @applying.
+  ///
+  /// In en, this message translates to:
+  /// **'Applying…'**
+  String get applying;
+
+  /// No description provided for @applyToAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply {filter} to all pages'**
+  String applyToAll(String filter);
+
+  /// No description provided for @previewFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview not available'**
+  String get previewFailed;
+
+  /// No description provided for @exportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Export “{title}”'**
+  String exportTitle(String title);
+
+  /// No description provided for @formatPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF'**
+  String get formatPdf;
+
+  /// No description provided for @formatJpg.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{JPG} other{JPG ({count} files)}}'**
+  String formatJpg(int count);
+
+  /// No description provided for @pageSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Page size'**
+  String get pageSize;
+
+  /// No description provided for @pageSizeFit.
+  ///
+  /// In en, this message translates to:
+  /// **'Fit to page'**
+  String get pageSizeFit;
+
+  /// No description provided for @pageSizeA4.
+  ///
+  /// In en, this message translates to:
+  /// **'A4'**
+  String get pageSizeA4;
+
+  /// No description provided for @pageSizeLetter.
+  ///
+  /// In en, this message translates to:
+  /// **'US Letter'**
+  String get pageSizeLetter;
+
+  /// No description provided for @searchablePdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Searchable PDF'**
+  String get searchablePdf;
+
+  /// No description provided for @searchablePdfHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Recognise text so it can be searched and copied'**
+  String get searchablePdfHint;
+
+  /// No description provided for @download.
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get download;
+
+  /// No description provided for @share.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get share;
+
+  /// No description provided for @shareOrSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Share or save'**
+  String get shareOrSave;
+
+  /// No description provided for @creatingPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Creating PDF…'**
+  String get creatingPdf;
+
+  /// No description provided for @creatingImages.
+  ///
+  /// In en, this message translates to:
+  /// **'Creating images…'**
+  String get creatingImages;
+
+  /// No description provided for @savedFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved {name} to your Downloads folder'**
+  String savedFile(String name);
+
+  /// No description provided for @savedImages.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved {count} images to your Downloads folder'**
+  String savedImages(int count);
+
+  /// No description provided for @exportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Export failed: {message}'**
+  String exportFailed(String message);
+
+  /// No description provided for @exportHelpWeb.
+  ///
+  /// In en, this message translates to:
+  /// **'Download saves the file to your Downloads folder. Share opens your device’s share menu in browsers that support it (for example Safari and Chrome on phones); elsewhere it downloads the file.'**
+  String get exportHelpWeb;
+
+  /// No description provided for @exportHelpIos.
+  ///
+  /// In en, this message translates to:
+  /// **'To save the file, tap Share or save, then “Save to Files”.'**
+  String get exportHelpIos;
+
+  /// No description provided for @exportHelpAndroid.
+  ///
+  /// In en, this message translates to:
+  /// **'To save the file, tap Share or save, then pick Files, Drive or another app.'**
+  String get exportHelpAndroid;
+
+  /// No description provided for @markupBurnedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Markup will be part of the exported pages.'**
+  String get markupBurnedIn;
+
+  /// No description provided for @adjustCorners.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust corners'**
+  String get adjustCorners;
+
+  /// No description provided for @noEdgesFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No page edges found. Adjust the corners or keep the full photo.'**
+  String get noEdgesFound;
+
+  /// No description provided for @cornersHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag the corners or edges onto the page. Keyboard: Tab picks a corner, arrow keys move it.'**
+  String get cornersHint;
+
+  /// No description provided for @cornersCrossed.
+  ///
+  /// In en, this message translates to:
+  /// **'The corners cross over. Drag them back around the page.'**
+  String get cornersCrossed;
+
+  /// No description provided for @resetCorners.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset corners'**
+  String get resetCorners;
+
+  /// No description provided for @useFullPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Use full photo'**
+  String get useFullPhoto;
+
+  /// No description provided for @rotate.
+  ///
+  /// In en, this message translates to:
+  /// **'Rotate'**
+  String get rotate;
+
+  /// No description provided for @confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get confirm;
+
+  /// No description provided for @couldNotRotate.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not rotate the photo.'**
+  String get couldNotRotate;
+
+  /// No description provided for @cornerTopLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'top-left'**
+  String get cornerTopLeft;
+
+  /// No description provided for @cornerTopRight.
+  ///
+  /// In en, this message translates to:
+  /// **'top-right'**
+  String get cornerTopRight;
+
+  /// No description provided for @cornerBottomRight.
+  ///
+  /// In en, this message translates to:
+  /// **'bottom-right'**
+  String get cornerBottomRight;
+
+  /// No description provided for @cornerBottomLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'bottom-left'**
+  String get cornerBottomLeft;
+
+  /// No description provided for @cornersSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'Page corners. Selected: {corner} corner. Use the move actions, or drag the corners.'**
+  String cornersSemantics(String corner);
+
+  /// No description provided for @nextCorner.
+  ///
+  /// In en, this message translates to:
+  /// **'Next corner'**
+  String get nextCorner;
+
+  /// No description provided for @moveCornerLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Move corner left'**
+  String get moveCornerLeft;
+
+  /// No description provided for @moveCornerRight.
+  ///
+  /// In en, this message translates to:
+  /// **'Move corner right'**
+  String get moveCornerRight;
+
+  /// No description provided for @moveCornerUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Move corner up'**
+  String get moveCornerUp;
+
+  /// No description provided for @moveCornerDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Move corner down'**
+  String get moveCornerDown;
+
+  /// No description provided for @cropTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Crop'**
+  String get cropTitle;
+
+  /// No description provided for @reset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get reset;
+
+  /// No description provided for @apply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get apply;
+
+  /// No description provided for @cropHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag the edges or corners of the box. Drag inside it to move it.'**
+  String get cropHint;
+
+  /// No description provided for @backUpYourScans.
+  ///
+  /// In en, this message translates to:
+  /// **'Back up and sync your scans'**
+  String get backUpYourScans;
+
+  /// No description provided for @backUpIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional. Without an account everything stays on this device and every feature still works. Sign in to back up and use your scans on other devices.'**
+  String get backUpIntro;
+
+  /// No description provided for @server.
+  ///
+  /// In en, this message translates to:
+  /// **'Server'**
+  String get server;
+
+  /// No description provided for @serverHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a URL like http://192.168.1.20:8000'**
+  String get serverHint;
+
+  /// No description provided for @testConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Test connection'**
+  String get testConnection;
+
+  /// No description provided for @serverReachable.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected to the server.'**
+  String get serverReachable;
+
+  /// No description provided for @serverUnreachable.
+  ///
+  /// In en, this message translates to:
+  /// **'Can’t reach the server. Check the address and that the backend is running.'**
+  String get serverUnreachable;
+
+  /// No description provided for @signIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get signIn;
+
+  /// No description provided for @createAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Create account'**
+  String get createAccount;
+
+  /// No description provided for @email.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get email;
+
+  /// No description provided for @enterEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your email'**
+  String get enterEmail;
+
+  /// No description provided for @password.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get password;
+
+  /// No description provided for @passwordRule.
+  ///
+  /// In en, this message translates to:
+  /// **'At least 8 characters'**
+  String get passwordRule;
+
+  /// No description provided for @showPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Show'**
+  String get showPassword;
+
+  /// No description provided for @hidePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide'**
+  String get hidePassword;
+
+  /// No description provided for @showPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Show password'**
+  String get showPasswordLabel;
+
+  /// No description provided for @hidePasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide password'**
+  String get hidePasswordLabel;
+
+  /// No description provided for @errOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Can’t reach the server at {url}. Check the address and that the backend is running.'**
+  String errOffline(String url);
+
+  /// No description provided for @errWrongPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong email or password.'**
+  String get errWrongPassword;
+
+  /// No description provided for @errAccountExists.
+  ///
+  /// In en, this message translates to:
+  /// **'An account with this email already exists. Sign in instead.'**
+  String get errAccountExists;
+
+  /// No description provided for @errInvalidInput.
+  ///
+  /// In en, this message translates to:
+  /// **'Check the email address; passwords need at least 8 characters.'**
+  String get errInvalidInput;
+
+  /// No description provided for @syncNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync now'**
+  String get syncNow;
+
+  /// No description provided for @processOnServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Process photos on the server'**
+  String get processOnServer;
+
+  /// No description provided for @processOnServerHint.
+  ///
+  /// In en, this message translates to:
+  /// **'For slow devices: page detection, flattening and filters run on the server. The live camera preview still runs on this device.'**
+  String get processOnServerHint;
+
+  /// No description provided for @signOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get signOut;
+
+  /// No description provided for @signOutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out?'**
+  String get signOutTitle;
+
+  /// No description provided for @signOutBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your scans stay on this device. Changes made while signed out sync after you sign in again.'**
+  String get signOutBody;
+
+  /// No description provided for @signedInNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Scans are stored on this device and backed up to your account. They keep working offline.'**
+  String get signedInNote;
+
+  /// No description provided for @syncNever.
+  ///
+  /// In en, this message translates to:
+  /// **'Not synced yet'**
+  String get syncNever;
+
+  /// No description provided for @syncJustNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced just now'**
+  String get syncJustNow;
+
+  /// No description provided for @syncMinutesAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced {minutes} min ago'**
+  String syncMinutesAgo(int minutes);
+
+  /// No description provided for @syncHoursAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced {hours} h ago'**
+  String syncHoursAgo(int hours);
+
+  /// No description provided for @syncNotSignedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Not signed in'**
+  String get syncNotSignedIn;
+
+  /// No description provided for @syncSyncing.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing…'**
+  String get syncSyncing;
+
+  /// No description provided for @syncOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline. Changes are saved on this device and will sync later.'**
+  String get syncOffline;
+
+  /// No description provided for @syncProblem.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync problem: {message}'**
+  String syncProblem(String message);
+
   /// No description provided for @uploadExistingTitle.
   ///
   /// In en, this message translates to:

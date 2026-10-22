@@ -4,20 +4,27 @@ import 'package:flutter/material.dart';
 
 /// Round shutter button with a ring that fills while the page is held steady.
 class ShutterButton extends StatelessWidget {
-  const ShutterButton({super.key, required this.onPressed, required this.progress, this.busy = false});
+  const ShutterButton({super.key, required this.onPressed, required this.progress, this.busy = false, this.label = 'Capture'});
 
   final VoidCallback? onPressed;
   final double progress;
   final bool busy;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    // InkWell: reachable with Tab and Enter/Space, with a visible focus ring.
     return Semantics(
       button: true,
-      label: 'Capture',
-      child: GestureDetector(
+      enabled: onPressed != null,
+      label: label,
+      excludeSemantics: true,
+      child: InkWell(
+        key: const ValueKey('shutter'),
         onTap: onPressed,
+        customBorder: const CircleBorder(),
+        focusColor: scheme.primary.withValues(alpha: 0.5),
         child: SizedBox.square(
           dimension: 78,
           child: CustomPaint(

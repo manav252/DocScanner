@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:docscanner/core/providers.dart';
 import 'package:docscanner/features/capture/capture_controller.dart';
 import 'package:docscanner/imaging/geometry.dart';
@@ -151,6 +153,7 @@ void main() {
     final before = engine.frames;
     await waitFor(() => engine.frames > before + 20);
     expect(camera.pictures, 1, reason: 'same page still in view');
+    expect(read().awaitingNextPage, isTrue, reason: 'the scanner says to show the next page');
     showPage = false;
     await waitFor(() => engine.frames > before + 30);
     showPage = true;
@@ -167,5 +170,32 @@ void main() {
     dx = 12; // ~19% of the 64 px frame
     await waitFor(() => read().status == CaptureStatus.reviewing);
     expect(camera.pictures, 2);
+  });
+
+  test('Retake: the same page can be captured again straight away', () async {
+    engine.frameDetector = (_) => pageDetection();
+    container = makeContainer();
+    await waitFor(() => read().status == CaptureStatus.reviewing);
+    await ctrl().resume(retake: true);
+    await waitFor(() => read().status == CaptureStatus.reviewing);
+    expect(camera.pictures, 2);
+  });
+
+  test('a small page in view asks to move closer', () async {
+    engine.frameDetector = (_) => Detection(pageDetection().corners, found: true, score: 0.05);
+    container = makeContainer();
+    await waitFor(() => read().tooSmall);
+    expect(read().documentFound, isFalse);
+  });
+
+  test('an uploaded photo opens the same review; with no camera it returns to the error screen', () async {
+    camera.failure = const CameraFailure(CameraFailureKind.noCamera);
+    container = makeContainer();
+    await waitFor(() => read().status == CaptureStatus.failed);
+    await ctrl().useUploadedPhoto(Uint8List.fromList([9, 9, 9]));
+    expect(read().status, CaptureStatus.reviewing);
+    expect(read().pendingCapture, isNotNull);
+    await ctrl().resume(retake: true);
+    expect(read().status, CaptureStatus.failed);
   });
 }

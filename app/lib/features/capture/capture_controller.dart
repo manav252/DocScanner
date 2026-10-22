@@ -76,6 +76,9 @@ final captureTuningProvider = Provider<CaptureTuning>((_) => const CaptureTuning
 
 const _unset = Object();
 
+/// Snackbar messages from the scanner (the screen shows them in the user's language).
+enum CaptureMessage { captureFailed, badPhotoFile, noFlashlight }
+
 class CaptureState {
   const CaptureState({
     this.status = CaptureStatus.starting,
@@ -84,8 +87,11 @@ class CaptureState {
     this.steadyProgress = 0,
     this.autoCapture = true,
     this.lowLight = false,
+    this.tooSmall = false,
+    this.awaitingNextPage = false,
     this.torchOn = false,
     this.supportsTorch = false,
+    this.cameraCount = 1,
     this.previewAspectRatio = 3 / 4,
     this.fps = 0,
     this.pendingCapture,
@@ -101,11 +107,20 @@ class CaptureState {
   /// 0..1 while the page is held steady (auto-capture fires at 1).
   final double steadyProgress;
   final bool autoCapture, lowLight, torchOn, supportsTorch;
+
+  /// A page is visible but too small to scan well ("Move closer").
+  final bool tooSmall;
+
+  /// The page in view was just captured; auto-capture waits for a new page.
+  final bool awaitingNextPage;
+
+  /// Cameras available to switch between (1 = no switch button).
+  final int cameraCount;
   final double previewAspectRatio, fps;
   final CaptureResult? pendingCapture;
 
   /// One-off message for a snackbar (e.g. a failed capture).
-  final String? message;
+  final CaptureMessage? message;
 
   bool get documentFound => corners != null;
 
@@ -116,8 +131,11 @@ class CaptureState {
     double? steadyProgress,
     bool? autoCapture,
     bool? lowLight,
+    bool? tooSmall,
+    bool? awaitingNextPage,
     bool? torchOn,
     bool? supportsTorch,
+    int? cameraCount,
     double? previewAspectRatio,
     double? fps,
     Object? pendingCapture = _unset,
@@ -130,12 +148,15 @@ class CaptureState {
         steadyProgress: steadyProgress ?? this.steadyProgress,
         autoCapture: autoCapture ?? this.autoCapture,
         lowLight: lowLight ?? this.lowLight,
+        tooSmall: tooSmall ?? this.tooSmall,
+        awaitingNextPage: awaitingNextPage ?? this.awaitingNextPage,
         torchOn: torchOn ?? this.torchOn,
         supportsTorch: supportsTorch ?? this.supportsTorch,
+        cameraCount: cameraCount ?? this.cameraCount,
         previewAspectRatio: previewAspectRatio ?? this.previewAspectRatio,
         fps: fps ?? this.fps,
         pendingCapture: identical(pendingCapture, _unset) ? this.pendingCapture : pendingCapture as CaptureResult?,
-        message: identical(message, _unset) ? this.message : message as String?,
+        message: identical(message, _unset) ? this.message : message as CaptureMessage?,
       );
 }
 
@@ -196,6 +217,7 @@ class CaptureController extends Notifier<CaptureState> {
       failure: null,
       previewAspectRatio: camera.previewAspectRatio,
       supportsTorch: camera.supportsTorch,
+      cameraCount: camera.cameraCount,
       torchOn: false,
     );
     unawaited(_loop(gen, camera));
@@ -246,9 +268,11 @@ class CaptureController extends Notifier<CaptureState> {
         corners: smoothed,
         steadyProgress: _stability.progress,
         lowLight: _brightness.length >= 5 && meanBrightness < _tuning.lowLightThreshold,
+        tooSmall: detection.found && detection.score < _tuning.minDocumentArea,
         fps: fps,
       );
       _updateArming(upright);
+      if (state.awaitingNextPage != (_lastCaptured != null)) state = state.copyWith(awaitingNextPage: _lastCaptured != null);
       if (steady && state.autoCapture && _lastCaptured == null && _clock.elapsed >= _autoCaptureAllowedAt) {
         await capture();
       }
@@ -316,19 +340,65 @@ class CaptureController extends Notifier<CaptureState> {
       if (gen != _generation) return;
       await camera.resume().catchError((Object _) {});
       _resetTracking();
-      state = state.copyWith(status: CaptureStatus.running, message: 'Could not take the photo. Please try again.');
+      state = state.copyWith(status: CaptureStatus.running, message: CaptureMessage.captureFailed);
+    }
+  }
+
+  /// Status to go back to after reviewing an uploaded photo (the camera may
+  /// have failed or be missing: uploading is the fallback).
+  CaptureStatus? _beforeUpload;
+
+  /// Use a photo file instead of the camera (desktop without a webcam, or a
+  /// photo taken earlier). Opens the same corner review as a capture.
+  Future<void> useUploadedPhoto(Uint8List bytes) async {
+    if (state.status == CaptureStatus.capturing || state.status == CaptureStatus.reviewing) return;
+    _beforeUpload = state.status;
+    final wasRunning = state.status == CaptureStatus.running;
+    state = state.copyWith(status: CaptureStatus.capturing);
+    try {
+      if (wasRunning) await _camera?.pause();
+      final engine = ref.read(scanEngineProvider);
+      await engine.ready;
+      final upright = await engine.normalizeEncoded(bytes);
+      final r = await engine.detectEncoded(upright.bytes);
+      state = state.copyWith(
+        status: CaptureStatus.reviewing,
+        pendingCapture: CaptureResult(
+          bytes: upright.bytes,
+          width: r.width,
+          height: r.height,
+          corners: r.detection.corners,
+          detected: r.detection.found,
+        ),
+      );
+    } catch (e) {
+      state = state.copyWith(status: CaptureStatus.reviewing);
+      await resume();
+      state = state.copyWith(message: CaptureMessage.badPhotoFile);
     }
   }
 
   /// Back from the corner editor: clear the capture and continue scanning.
-  Future<void> resume() async {
+  /// [retake]: the capture was discarded, so the same page may be captured again.
+  Future<void> resume({bool retake = false}) async {
     if (state.status != CaptureStatus.reviewing) return;
+    if (retake) _lastCaptured = null;
+    final before = _beforeUpload;
+    _beforeUpload = null;
+    if (before != null && before != CaptureStatus.running) {
+      // No live camera to go back to: return to the failure/start screen.
+      state = state.copyWith(status: before, pendingCapture: null);
+      return;
+    }
     _resetTracking();
     state = state.copyWith(status: CaptureStatus.running, pendingCapture: null, corners: null, steadyProgress: 0);
     await _camera?.resume();
   }
 
   void clearMessage() => state = state.copyWith(message: null);
+
+  /// Open the next camera (the scanner restarts with it).
+  void switchCamera() => ref.read(cameraIndexProvider.notifier).next(state.cameraCount);
 
   void setAutoCapture(bool on) {
     _autoCaptureAllowedAt = _clock.elapsed + _tuning.autoCaptureCooldown;
@@ -340,7 +410,7 @@ class CaptureController extends Notifier<CaptureState> {
       await _camera?.setTorch(on);
       state = state.copyWith(torchOn: on);
     } catch (_) {
-      state = state.copyWith(supportsTorch: false, message: 'This camera has no flashlight.');
+      state = state.copyWith(supportsTorch: false, message: CaptureMessage.noFlashlight);
     }
   }
 

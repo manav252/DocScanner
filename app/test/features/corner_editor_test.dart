@@ -2,6 +2,7 @@ import 'package:docscanner/features/corners/corner_adjust_page.dart';
 import 'package:docscanner/features/corners/corner_editor.dart';
 import 'package:docscanner/imaging/geometry.dart';
 import 'package:docscanner/core/providers.dart';
+import 'package:docscanner/core/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,6 +22,8 @@ const imageSize = Size(1000, 1000);
 const start = [Pt(100, 100), Pt(900, 100), Pt(900, 900), Pt(100, 900)];
 
 Widget editor(ValueNotifier<List<Pt>> corners) => MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         body: SizedBox(
           width: 500,
@@ -119,6 +122,8 @@ void main() {
   testWidgets('the photo is drawn centred and fully inside the editor (portrait photo, wide editor)', (tester) async {
     final corners = ValueNotifier<List<Pt>>(const [Pt(0, 0), Pt(1199, 0), Pt(1199, 1599), Pt(0, 1599)]);
     await tester.pumpWidget(MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         body: Center(
           child: SizedBox(
@@ -196,6 +201,8 @@ void main() {
       await tester.pumpWidget(ProviderScope(
         overrides: [scanEngineProvider.overrideWithValue(FakeEngine(frameDetector: (_) => noPage))],
         child: MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
           home: Builder(
             builder: (context) => TextButton(
               onPressed: () async {
@@ -230,6 +237,8 @@ void main() {
       await tester.pumpWidget(ProviderScope(
         overrides: [scanEngineProvider.overrideWithValue(FakeEngine(frameDetector: (_) => noPage))],
         child: MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
           home: Builder(
             builder: (context) => TextButton(
               onPressed: () async => result = await Navigator.of(context).push<CornerAdjustResult>(MaterialPageRoute(
@@ -257,6 +266,8 @@ void main() {
       await tester.pumpWidget(ProviderScope(
         overrides: [scanEngineProvider.overrideWithValue(engine)],
         child: MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
           home: Builder(
             builder: (context) => TextButton(
               onPressed: () async => result = await Navigator.of(context).push<CornerAdjustResult>(MaterialPageRoute(
@@ -289,6 +300,8 @@ void main() {
       await tester.pumpWidget(ProviderScope(
         overrides: [scanEngineProvider.overrideWithValue(FakeEngine(frameDetector: (_) => noPage))],
         child: MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
           home: CornerAdjustPage(bytes: _png, width: 1000, height: 1000, corners: fullBounds(1000, 1000), detected: false),
         ),
       ));

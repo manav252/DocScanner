@@ -12,9 +12,17 @@ import 'package:web/web.dart' as web;
 import '../../imaging/scan_engine.dart';
 import 'scanner_camera.dart';
 
-ScannerCamera createDeviceCamera() => WebScannerCamera();
+ScannerCamera createDeviceCamera([int index = 0]) => WebScannerCamera(index);
 
 class WebScannerCamera implements ScannerCamera {
+  WebScannerCamera([this.index = 0]);
+
+  /// Which camera to open (0 = the browser's choice, rear camera preferred).
+  final int index;
+
+  @override
+  int cameraCount = 1;
+
   /// Analysis frames are downscaled to this longest side (the detector works at 500 px).
   static const analysisMaxSide = 640;
 
@@ -36,10 +44,13 @@ class WebScannerCamera implements ScannerCamera {
       throw const CameraFailure(CameraFailureKind.unsupported, 'Camera needs HTTPS (or localhost).');
     }
     final devices = web.window.navigator.mediaDevices;
+    // Camera names/ids are only listed after permission was granted once.
+    final known = index > 0 ? await _videoInputs(devices) : const <web.MediaDeviceInfo>[];
     final constraints = web.MediaStreamConstraints(
       audio: false.toJS,
       video: {
-        'facingMode': {'ideal': 'environment'},
+        if (known.isEmpty) 'facingMode': {'ideal': 'environment'},
+        if (known.isNotEmpty) 'deviceId': {'exact': known[index % known.length].deviceId},
         'width': {'ideal': 1920},
         'height': {'ideal': 1080},
       }.jsify()!,
@@ -70,8 +81,16 @@ class WebScannerCamera implements ScannerCamera {
     await _video.play().toDart;
     if (_video.videoWidth == 0) await loaded.future.timeout(const Duration(seconds: 10));
     ui_web.platformViewRegistry.registerViewFactory(_viewType, (int _) => _video);
+    try {
+      cameraCount = (await _videoInputs(devices)).length.clamp(1, 16);
+    } catch (_) {
+      cameraCount = 1;
+    }
     _sinceLastFrame.start();
   }
+
+  static Future<List<web.MediaDeviceInfo>> _videoInputs(web.MediaDevices devices) async =>
+      [for (final d in (await devices.enumerateDevices().toDart).toDart) if (d.kind == 'videoinput' && d.deviceId.isNotEmpty) d];
 
   /// DOMException name from a caught JS error (works under dart2js and dart2wasm).
   static String _domErrorName(Object e) {

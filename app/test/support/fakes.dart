@@ -28,6 +28,9 @@ class FakeCamera implements ScannerCamera {
   double get previewAspectRatio => 0.75;
 
   @override
+  int cameraCount = 1;
+
+  @override
   Widget buildPreview() => const SizedBox.expand();
 
   @override

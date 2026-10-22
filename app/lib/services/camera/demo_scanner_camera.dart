@@ -66,6 +66,9 @@ class DemoScannerCamera implements ScannerCamera {
   bool get supportsTorch => false;
 
   @override
+  int get cameraCount => 1;
+
+  @override
   Future<void> setTorch(bool on) async {}
 
   @override

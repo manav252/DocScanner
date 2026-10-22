@@ -68,8 +68,9 @@ class CameraFailure implements Exception {
 }
 
 abstract interface class ScannerCamera {
-  /// The device camera for this platform.
-  factory ScannerCamera.device() => createDeviceCamera();
+  /// The device camera for this platform; [index] picks among several
+  /// cameras (0 = the default: rear camera on phones).
+  factory ScannerCamera.device({int index = 0}) => createDeviceCamera(index);
 
   /// Opens the camera. Throws [CameraFailure].
   Future<void> initialize();
@@ -85,6 +86,9 @@ abstract interface class ScannerCamera {
 
   /// Full-resolution capture.
   Future<CapturedPhoto> takePicture();
+
+  /// How many cameras can be switched between (known after [initialize]).
+  int get cameraCount;
 
   bool get supportsTorch;
   Future<void> setTorch(bool on);

@@ -9,9 +9,18 @@ import 'package:flutter/widgets.dart';
 import '../../imaging/scan_engine.dart';
 import 'scanner_camera.dart';
 
-ScannerCamera createDeviceCamera() => MobileScannerCamera();
+ScannerCamera createDeviceCamera([int index = 0]) => MobileScannerCamera(index);
 
 class MobileScannerCamera implements ScannerCamera {
+  MobileScannerCamera([this.index = 0]);
+
+  /// Which camera to open: rear cameras first, then the others.
+  final int index;
+  bool _front = false;
+
+  @override
+  int cameraCount = 1;
+
   CameraController? _controller;
   Completer<AnalysisFrame>? _waiter;
   bool _streaming = false;
@@ -27,9 +36,15 @@ class MobileScannerCamera implements ScannerCamera {
       throw _map(e);
     }
     if (cameras.isEmpty) throw const CameraFailure(CameraFailureKind.noCamera);
-    final back = cameras.firstWhere((c) => c.lensDirection == CameraLensDirection.back, orElse: () => cameras.first);
+    final ordered = [
+      ...cameras.where((c) => c.lensDirection == CameraLensDirection.back),
+      ...cameras.where((c) => c.lensDirection != CameraLensDirection.back),
+    ];
+    cameraCount = ordered.length;
+    final chosen = ordered[index % ordered.length];
+    _front = chosen.lensDirection == CameraLensDirection.front;
     final controller = CameraController(
-      back,
+      chosen,
       // 720p stream: plenty for detection (it downsamples to 500 px) and keeps
       // frame conversion cheap. takePicture still returns full sensor resolution.
       ResolutionPreset.high,
@@ -94,7 +109,11 @@ class MobileScannerCamera implements ScannerCamera {
   }
 
   @override
-  Widget buildPreview() => CameraPreview(_c);
+  // The plugin mirrors the front camera's preview but not its frames; un-mirror
+  // so the outline lines up (and text on the page reads the right way round).
+  Widget buildPreview() => _front
+      ? Transform(alignment: Alignment.center, transform: Matrix4.diagonal3Values(-1, 1, 1), child: CameraPreview(_c))
+      : CameraPreview(_c);
 
   @override
   Future<AnalysisFrame> nextFrame() => (_waiter ??= Completer<AnalysisFrame>()).future;

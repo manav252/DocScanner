@@ -65,13 +65,17 @@ class _DocumentsPageState extends ConsumerState<DocumentsPage> {
                   prefixIcon: const Icon(Icons.search),
                   suffixIcon: query.isEmpty
                       ? null
-                      : IconButton(
-                          tooltip: l.clearSearch,
-                          icon: const Icon(Icons.clear),
-                          onPressed: () {
-                            _search.clear();
-                            _setQuery('');
-                          },
+                      : Padding(
+                          padding: const EdgeInsets.only(right: 4),
+                          child: TextButton.icon(
+                            key: const ValueKey('clear-search'),
+                            icon: const Icon(Icons.clear),
+                            label: Text(l.clearSearch),
+                            onPressed: () {
+                              _search.clear();
+                              _setQuery('');
+                            },
+                          ),
                         ),
                 ),
               ),

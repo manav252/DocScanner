@@ -85,6 +85,17 @@ class DocumentRepository {
 
   Future<void> deletePageImages(String pageId) => _store.deletePrefix('page/$pageId/');
 
+  /// Every stored file of a page (images, OCR boxes), keyed by storage key; used to undo a delete.
+  Future<Map<String, Uint8List>> pageFiles(String pageId) async => {
+        for (final k in await _store.keys('page/$pageId/')) k: ?await _store.get(k),
+      };
+
+  Future<void> putFiles(Map<String, Uint8List> files) async {
+    for (final e in files.entries) {
+      await _store.put(e.key, e.value);
+    }
+  }
+
   /// OCR line boxes (JSON) for the searchable-PDF text layer; text lives in the page.
   Future<Uint8List?> pageOcr(String pageId) => _store.get('page/$pageId/ocr.json');
 

@@ -6,6 +6,7 @@ import 'package:flutter/gestures.dart' show DragStartBehavior;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/l10n.dart';
 import '../../core/providers.dart';
 import '../../data/models.dart';
 import '../../imaging/page_edits.dart';
@@ -38,7 +39,7 @@ class _CropPageState extends ConsumerState<CropPage> {
     final size = w > 0 && h > 0 ? Size(w.toDouble(), h.toDouble()) : (turned ? const Size(4, 3) : const Size(3, 4));
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(backgroundColor: Colors.black, foregroundColor: Colors.white, title: const Text('Crop')),
+      appBar: AppBar(backgroundColor: Colors.black, foregroundColor: Colors.white, title: Text(context.l10n.cropTitle)),
       body: Column(children: [
         Expanded(
           child: Padding(
@@ -50,7 +51,7 @@ class _CropPageState extends ConsumerState<CropPage> {
                   crop: _crop,
                   onChanged: (c) => setState(() => _crop = c),
                 ),
-              AsyncError(:final error) => Center(child: Text('$error', style: const TextStyle(color: Colors.white))),
+              AsyncError() => Center(child: Text(context.l10n.previewFailed, style: const TextStyle(color: Colors.white))),
               _ => const Center(child: CircularProgressIndicator()),
             },
           ),
@@ -59,25 +60,29 @@ class _CropPageState extends ConsumerState<CropPage> {
           top: false,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-            child: Row(children: [
-              TextButton(
-                style: TextButton.styleFrom(foregroundColor: Colors.white),
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Cancel'),
-              ),
-              const Spacer(),
-              TextButton(
-                style: TextButton.styleFrom(foregroundColor: Colors.white),
-                onPressed: () => setState(() => _crop = CropRect.full),
-                child: const Text('Reset'),
-              ),
-              const SizedBox(width: 8),
-              FilledButton.icon(
-                key: const ValueKey('apply-crop'),
-                onPressed: () => Navigator.of(context).pop(_crop),
-                icon: const Icon(Icons.check),
-                label: const Text('Apply'),
-              ),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: [
+              Text(context.l10n.cropHint, style: const TextStyle(color: Colors.white)),
+              const SizedBox(height: 8),
+              Wrap(spacing: 8, runSpacing: 8, alignment: WrapAlignment.end, children: [
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(foregroundColor: Colors.white, side: const BorderSide(color: Colors.white70)),
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.close),
+                  label: Text(context.l10n.cancel),
+                ),
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(foregroundColor: Colors.white, side: const BorderSide(color: Colors.white70)),
+                  onPressed: () => setState(() => _crop = CropRect.full),
+                  icon: const Icon(Icons.restart_alt),
+                  label: Text(context.l10n.reset),
+                ),
+                FilledButton.icon(
+                  key: const ValueKey('apply-crop'),
+                  onPressed: () => Navigator.of(context).pop(_crop),
+                  icon: const Icon(Icons.check),
+                  label: Text(context.l10n.apply),
+                ),
+              ]),
             ]),
           ),
         ),

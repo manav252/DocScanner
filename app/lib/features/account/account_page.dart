@@ -54,10 +54,11 @@ class _SignedIn extends ConsumerWidget {
           child: Row(children: [
             SyncIcon(status: status),
             const SizedBox(width: 12),
-            Expanded(child: Text(describeSync(status), key: const ValueKey('sync-status'))),
-            TextButton(
+            Expanded(child: Text(describeSync(context, status), key: const ValueKey('sync-status'))),
+            TextButton.icon(
               onPressed: status.phase == SyncPhase.syncing ? null : () => ref.read(syncControllerProvider.notifier).syncNow(),
-              child: const Text('Sync now'),
+              icon: const Icon(Icons.sync),
+              label: Text(context.l10n.syncNow),
             ),
           ]),
         ),
@@ -65,25 +66,25 @@ class _SignedIn extends ConsumerWidget {
       const SizedBox(height: 8),
       SwitchListTile(
         contentPadding: EdgeInsets.zero,
-        title: const Text('Process photos on the server'),
-        subtitle: const Text('For slow devices: page detection, flattening and filters run on the server. '
-            'The live camera preview still runs on this device.'),
+        title: Text(context.l10n.processOnServer),
+        subtitle: Text(context.l10n.processOnServerHint),
         value: settings.processOnServer,
         onChanged: (v) => ref.read(appSettingsProvider.notifier).update(settings.copyWith(processOnServer: v)),
       ),
       const SizedBox(height: 24),
       OutlinedButton.icon(
         icon: const Icon(Icons.logout),
-        label: const Text('Sign out'),
+        label: Text(context.l10n.signOut),
         onPressed: () async {
+          final l = context.l10n;
           final ok = await showDialog<bool>(
             context: context,
             builder: (c) => AlertDialog(
-              title: const Text('Sign out?'),
-              content: const Text('Your scans stay on this device. Changes made while signed out sync after you sign in again.'),
+              title: Text(l.signOutTitle),
+              content: Text(l.signOutBody),
               actions: [
-                TextButton(onPressed: () => Navigator.of(c).pop(false), child: const Text('Cancel')),
-                FilledButton(onPressed: () => Navigator.of(c).pop(true), child: const Text('Sign out')),
+                TextButton.icon(onPressed: () => Navigator.of(c).pop(false), icon: const Icon(Icons.close), label: Text(l.cancel)),
+                FilledButton.icon(onPressed: () => Navigator.of(c).pop(true), icon: const Icon(Icons.logout), label: Text(l.signOut)),
               ],
             ),
           );
@@ -91,27 +92,27 @@ class _SignedIn extends ConsumerWidget {
         },
       ),
       const SizedBox(height: 12),
-      Text('Scans are stored on this device and backed up to your account. They keep working offline.',
-          style: theme.textTheme.bodySmall),
+      Text(context.l10n.signedInNote, style: theme.textTheme.bodySmall),
     ]);
   }
 }
 
-String describeSync(SyncStatus s) {
-  String ago(DateTime? t) {
-    if (t == null) return 'never';
+String describeSync(BuildContext context, SyncStatus s) {
+  final l = context.l10n;
+  String synced(DateTime? t) {
+    if (t == null) return l.syncNever;
     final d = DateTime.now().difference(t);
-    if (d.inSeconds < 60) return 'just now';
-    if (d.inMinutes < 60) return '${d.inMinutes} min ago';
-    return '${d.inHours} h ago';
+    if (d.inSeconds < 60) return l.syncJustNow;
+    if (d.inMinutes < 60) return l.syncMinutesAgo(d.inMinutes);
+    return l.syncHoursAgo(d.inHours);
   }
 
   return switch (s.phase) {
-    SyncPhase.signedOut => 'Not signed in',
-    SyncPhase.syncing => 'Syncing…',
-    SyncPhase.idle => 'Synced ${ago(s.lastSynced)}',
-    SyncPhase.offline => 'Offline. Changes are saved on this device and will sync later.',
-    SyncPhase.error => 'Sync problem: ${s.message ?? 'unknown error'}',
+    SyncPhase.signedOut => l.syncNotSignedIn,
+    SyncPhase.syncing => l.syncSyncing,
+    SyncPhase.idle => synced(s.lastSynced),
+    SyncPhase.offline => l.syncOffline,
+    SyncPhase.error => l.syncProblem(s.message ?? '?'),
   };
 }
 
@@ -218,14 +219,17 @@ class _SignInFormState extends ConsumerState<_SignInForm> {
       }
       ref.read(syncControllerProvider.notifier).syncNow();
     } on OfflineException {
-      _error = "Can't reach the server at ${_server.text.trim()}. Check the address and that the backend is running.";
+      if (mounted) _error = context.l10n.errOffline(_server.text.trim());
     } on ApiException catch (e) {
-      _error = switch (e.status) {
-        401 => 'Wrong email or password.',
-        409 => 'An account with this email already exists. Sign in instead.',
-        422 => 'Check the email address; passwords need at least 8 characters.',
-        _ => e.message,
-      };
+      if (mounted) {
+        final l = context.l10n;
+        _error = switch (e.status) {
+          401 => l.errWrongPassword,
+          409 => l.errAccountExists,
+          422 => l.errInvalidInput,
+          _ => e.message,
+        };
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -233,46 +237,49 @@ class _SignInFormState extends ConsumerState<_SignInForm> {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
     return Form(
       key: _form,
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Text('Back up and sync your scans', style: Theme.of(context).textTheme.titleLarge),
+        Semantics(header: true, child: Text(l.backUpYourScans, style: Theme.of(context).textTheme.titleLarge)),
         const SizedBox(height: 8),
-        const Text('Without an account everything stays on this device. Sign in to sync between your phone and the web app.'),
+        Text(l.backUpIntro),
         const SizedBox(height: 20),
         TextFormField(
           key: const ValueKey('server-url'),
           controller: _server,
           keyboardType: TextInputType.url,
-          decoration: InputDecoration(
-            labelText: 'Server',
-            border: const OutlineInputBorder(),
-            suffixIcon: IconButton(
-              tooltip: 'Test connection',
-              onPressed: _testServer,
-              icon: Icon(switch (_serverOk) {
-                true => Icons.check_circle,
-                false => Icons.error_outline,
-                null => Icons.wifi_tethering,
-              }, color: switch (_serverOk) {
-                true => Colors.green,
-                false => Theme.of(context).colorScheme.error,
-                null => null,
-              }),
-            ),
-          ),
+          decoration: InputDecoration(labelText: l.server, border: const OutlineInputBorder()),
           validator: (v) {
             final u = Uri.tryParse(v?.trim() ?? '');
-            return u == null || !(u.isScheme('http') || u.isScheme('https')) || u.host.isEmpty
-                ? 'Enter a URL like http://192.168.1.20:8000'
-                : null;
+            return u == null || !(u.isScheme('http') || u.isScheme('https')) || u.host.isEmpty ? l.serverHint : null;
           },
         ),
+        const SizedBox(height: 8),
+        Wrap(spacing: 12, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
+          OutlinedButton.icon(
+            key: const ValueKey('test-connection'),
+            onPressed: _testServer,
+            icon: const Icon(Icons.wifi_tethering),
+            label: Text(l.testConnection),
+          ),
+          if (_serverOk != null)
+            Semantics(
+              liveRegion: true,
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                Icon(_serverOk! ? Icons.check_circle : Icons.error_outline,
+                    color: _serverOk! ? Colors.green.shade800 : scheme.error),
+                const SizedBox(width: 6),
+                Flexible(child: Text(_serverOk! ? l.serverReachable : l.serverUnreachable)),
+              ]),
+            ),
+        ]),
         const SizedBox(height: 16),
         SegmentedButton<bool>(
-          segments: const [
-            ButtonSegment(value: false, label: Text('Sign in')),
-            ButtonSegment(value: true, label: Text('Create account')),
+          segments: [
+            ButtonSegment(value: false, label: Text(l.signIn)),
+            ButtonSegment(value: true, label: Text(l.createAccount)),
           ],
           selected: {_create},
           onSelectionChanged: (s) => setState(() => _create = s.first),
@@ -283,8 +290,8 @@ class _SignInFormState extends ConsumerState<_SignInForm> {
           controller: _email,
           keyboardType: TextInputType.emailAddress,
           autofillHints: const [AutofillHints.email],
-          decoration: const InputDecoration(labelText: 'Email', border: OutlineInputBorder()),
-          validator: (v) => (v ?? '').contains('@') ? null : 'Enter your email',
+          decoration: InputDecoration(labelText: l.email, border: const OutlineInputBorder()),
+          validator: (v) => (v ?? '').contains('@') ? null : l.enterEmail,
         ),
         const SizedBox(height: 12),
         TextFormField(
@@ -293,16 +300,21 @@ class _SignInFormState extends ConsumerState<_SignInForm> {
           obscureText: _obscure,
           autofillHints: [_create ? AutofillHints.newPassword : AutofillHints.password],
           decoration: InputDecoration(
-            labelText: 'Password',
-            helperText: _create ? 'At least 8 characters' : null,
+            labelText: l.password,
+            helperText: _create ? l.passwordRule : null,
             border: const OutlineInputBorder(),
-            suffixIcon: IconButton(
-              tooltip: _obscure ? 'Show password' : 'Hide password',
-              icon: Icon(_obscure ? Icons.visibility : Icons.visibility_off),
-              onPressed: () => setState(() => _obscure = !_obscure),
+            suffixIcon: Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: TextButton.icon(
+                key: const ValueKey('toggle-password'),
+                onPressed: () => setState(() => _obscure = !_obscure),
+                icon: Icon(_obscure ? Icons.visibility : Icons.visibility_off),
+                label: Text(_obscure ? l.showPassword : l.hidePassword,
+                    semanticsLabel: _obscure ? l.showPasswordLabel : l.hidePasswordLabel),
+              ),
             ),
           ),
-          validator: (v) => (v ?? '').length < 8 ? 'At least 8 characters' : null,
+          validator: (v) => (v ?? '').length < 8 ? l.passwordRule : null,
           onFieldSubmitted: (_) => _submit(),
         ),
         if (_error != null) ...[
@@ -315,7 +327,7 @@ class _SignInFormState extends ConsumerState<_SignInForm> {
           onPressed: _busy ? null : _submit,
           child: _busy
               ? const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2))
-              : Text(_create ? 'Create account' : 'Sign in'),
+              : Text(_create ? l.createAccount : l.signIn),
         ),
       ]),
     );

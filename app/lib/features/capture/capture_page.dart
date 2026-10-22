@@ -7,6 +7,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart' show openAppSettings;
 
+import '../../core/app_settings.dart';
+import '../../core/l10n.dart';
 import '../../core/providers.dart';
 import '../../data/models.dart';
 import '../../services/camera/demo_scanner_camera.dart';
@@ -19,6 +21,7 @@ import '../editor/document_editor_page.dart';
 import '../library/library_controller.dart';
 import 'capture_controller.dart';
 import 'widgets/live_quad_overlay.dart';
+import 'scan_guidance.dart';
 import 'widgets/shutter_button.dart';
 
 class CapturePage extends ConsumerStatefulWidget {
@@ -83,6 +86,7 @@ class _CapturePageState extends ConsumerState<CapturePage> with WidgetsBindingOb
   }
 
   Future<void> _openEditor(CaptureResult capture) async {
+    final l = context.l10n;
     final result = await Navigator.of(context).push<CornerAdjustResult>(MaterialPageRoute(
       builder: (_) => CornerAdjustPage(
         bytes: capture.bytes,
@@ -90,14 +94,14 @@ class _CapturePageState extends ConsumerState<CapturePage> with WidgetsBindingOb
         height: capture.height,
         corners: capture.corners,
         detected: capture.detected,
-        cancelLabel: 'Retake',
-        confirmLabel: _replacing ? 'Replace page' : 'Keep scan',
+        cancelLabel: l.retake,
+        confirmLabel: _replacing ? l.replacePage : l.keepScan,
       ),
     ));
     if (!mounted) return;
     final controller = ref.read(captureControllerProvider.notifier);
     if (result == null) {
-      await controller.resume();
+      await controller.resume(retake: true);
       return;
     }
     if (_replacing) {
@@ -108,7 +112,7 @@ class _CapturePageState extends ConsumerState<CapturePage> with WidgetsBindingOb
             .replaceImage(widget.replacePageId!, result.bytes, result.width, result.height, result.corners);
         if (mounted) Navigator.of(context).pop(true);
       } catch (e) {
-        _showError('Could not save the page: $e');
+        _showError(l.couldNotSavePage);
         if (mounted) setState(() => _saving--);
         await controller.resume();
       }
@@ -119,20 +123,28 @@ class _CapturePageState extends ConsumerState<CapturePage> with WidgetsBindingOb
       _docId = _createdId = doc.id;
       _keepDocumentAlive(doc.id);
     }
+    final pageNumber = (ref.read(documentProvider(_docId!)).value?.pages.length ?? 0) + _saving + 1;
     setState(() => _saving++);
     // Process the page in the background and keep scanning.
     unawaited(ref
         .read(documentProvider(_docId!).notifier)
         .addImage(result.bytes, result.width, result.height, result.corners)
-        .catchError((Object e) => _showError('Could not save the page: $e'))
+        .catchError((Object e) => _showError(l.couldNotSavePage))
         .whenComplete(() {
       if (mounted) setState(() => _saving--);
     }));
+    if (mounted) ref.read(scanGuidanceProvider).captured(context, pageNumber);
     await controller.resume();
   }
 
   void _showError(String msg) {
     if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
+
+  Future<void> _uploadPhoto() async {
+    final files = await ref.read(importServiceProvider).pickImages();
+    if (files.isEmpty || !mounted) return;
+    await ref.read(captureControllerProvider.notifier).useUploadedPhoto(files.first.bytes);
   }
 
   Future<void> _done() async {
@@ -145,190 +157,299 @@ class _CapturePageState extends ConsumerState<CapturePage> with WidgetsBindingOb
     }
   }
 
+  /// Thumbnail of the last page with a "Review N pages" label.
   Widget _pagesButton(ScanDocument? doc) {
+    final l = context.l10n;
     final pages = doc?.pages ?? const <ScanPage>[];
     final count = pages.length + _saving;
-    if (count == 0 || _replacing) return const SizedBox(width: 88);
-    return Semantics(
-      button: true,
-      label: '$count pages, review',
-      child: GestureDetector(
-        onTap: _saving > 0 ? null : _done,
-        child: SizedBox(
-          width: 88,
-          height: 72,
-          child: Stack(clipBehavior: Clip.none, children: [
-            Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(border: Border.all(color: Colors.white, width: 2), color: Colors.white10),
-                child: pages.isEmpty ? null : StoredPageImage(page: pages.last, fit: BoxFit.cover),
+    if (count == 0 || _replacing) return const SizedBox(width: _sideWidth);
+    final label = _saving > 0 ? l.savingPages : l.reviewPages(count);
+    return SizedBox(
+      width: _sideWidth,
+      child: Semantics(
+        button: true,
+        label: label,
+        excludeSemantics: true,
+        child: InkWell(
+          key: const ValueKey('review-pages'),
+          onTap: _saving > 0 ? null : _done,
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.all(4),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              SizedBox(
+                width: 52,
+                height: 64,
+                child: Stack(clipBehavior: Clip.none, children: [
+                  Positioned.fill(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(border: Border.all(color: Colors.white, width: 2), color: Colors.white10),
+                      child: pages.isEmpty ? null : StoredPageImage(page: pages.last, fit: BoxFit.cover),
+                    ),
+                  ),
+                  if (_saving > 0) const Positioned.fill(child: Center(child: CircularProgressIndicator(strokeWidth: 2))),
+                ]),
               ),
-            ),
-            if (_saving > 0)
-              const Positioned.fill(child: Center(child: CircularProgressIndicator(strokeWidth: 2))),
-            Positioned(
-              right: -8,
-              top: -8,
-              child: CircleAvatar(
-                radius: 13,
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                child: Text('$count', style: const TextStyle(color: Colors.white, fontSize: 12)),
-              ),
-            ),
-          ]),
+              const SizedBox(height: 4),
+              Text(label, textAlign: TextAlign.center, maxLines: 2, style: const TextStyle(color: Colors.white)),
+            ]),
+          ),
         ),
       ),
     );
   }
 
+  static const _sideWidth = 112.0;
+
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     ref.listen(captureControllerProvider.select((s) => s.pendingCapture), (prev, next) {
       if (next != null && prev == null) _openEditor(next);
     });
     ref.listen(captureControllerProvider.select((s) => s.message), (_, msg) {
       if (msg == null) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      final text = switch (msg) {
+        CaptureMessage.captureFailed => l.msgCaptureFailed,
+        CaptureMessage.badPhotoFile => l.msgBadPhotoFile,
+        CaptureMessage.noFlashlight => l.msgNoFlashlight,
+      };
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
       ref.read(captureControllerProvider.notifier).clearMessage();
     });
+    ref.listen(captureControllerProvider.select(ScanHint.of), (_, hint) => ref.read(scanGuidanceProvider).hint(context, hint));
 
+    ref.watch(scanGuidanceProvider); // keep guidance (and its timers) alive while scanning
     final state = ref.watch(captureControllerProvider);
     final controller = ref.read(captureControllerProvider.notifier);
     final demo = ref.watch(cameraModeProvider) == CameraMode.demo;
+    final simple = ref.watch(appSettingsProvider.select((s) => s.simpleMode));
     final doc = _docId == null ? null : ref.watch(documentProvider(_docId!)).value;
     final cam = controller.camera;
+    final busy = state.status == CaptureStatus.capturing || state.status == CaptureStatus.reviewing;
+
+    // Every control is an icon with a text label.
+    final controls = <Widget>[
+      if (state.status == CaptureStatus.running && state.supportsTorch)
+        _ControlButton(
+          key: const ValueKey('torch'),
+          icon: state.torchOn ? Icons.flash_on : Icons.flash_off,
+          label: state.torchOn ? l.flashOn : l.flashOff,
+          selected: state.torchOn,
+          onPressed: () => controller.setTorch(!state.torchOn),
+        ),
+      if (state.status == CaptureStatus.running && state.cameraCount > 1 && !demo)
+        _ControlButton(
+          key: const ValueKey('switch-camera'),
+          icon: Icons.cameraswitch_outlined,
+          label: l.switchCamera,
+          onPressed: controller.switchCamera,
+        ),
+      if (state.status == CaptureStatus.running)
+        _ControlButton(
+          key: const ValueKey('auto-capture'),
+          icon: state.autoCapture ? Icons.motion_photos_auto_outlined : Icons.touch_app_outlined,
+          label: state.autoCapture ? l.autoCaptureOn : l.autoCaptureOff,
+          selected: state.autoCapture,
+          onPressed: () => controller.setAutoCapture(!state.autoCapture),
+        ),
+      if (cam is DemoScannerCamera && state.status == CaptureStatus.running)
+        _ControlButton(icon: Icons.skip_next, label: l.nextSample, onPressed: cam.nextSample),
+      if (state.status != CaptureStatus.failed)
+        _ControlButton(
+          key: const ValueKey('upload-photo'),
+          icon: Icons.upload_file,
+          label: l.uploadPhoto,
+          onPressed: busy ? null : _uploadPhoto,
+        ),
+      if (!simple || demo)
+        _ControlButton(
+          icon: demo ? Icons.videocam_outlined : Icons.slideshow_outlined,
+          label: demo ? l.useDeviceCamera : l.useDemoCamera,
+          onPressed: () => ref.read(cameraModeProvider.notifier).set(demo ? CameraMode.device : CameraMode.demo),
+        ),
+      if (!simple)
+        _ControlButton(
+          icon: Icons.query_stats,
+          label: l.diagnostics,
+          onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const DetectorDiagnosticsPage())),
+        ),
+    ];
 
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
-        title: Text(_replacing ? 'Retake page' : (demo ? 'Scan (demo)' : 'Scan')),
-        actions: [
-          if (cam is DemoScannerCamera)
-            IconButton(tooltip: 'Next sample page', icon: const Icon(Icons.skip_next), onPressed: cam.nextSample),
-          if (state.supportsTorch)
-            IconButton(
-              tooltip: state.torchOn ? 'Flashlight off' : 'Flashlight on',
-              icon: Icon(state.torchOn ? Icons.flash_on : Icons.flash_off),
-              onPressed: () => controller.setTorch(!state.torchOn),
-            ),
-          _AutoChip(on: state.autoCapture, onChanged: controller.setAutoCapture),
-          PopupMenuButton<String>(
-            onSelected: (v) {
-              switch (v) {
-                case 'demo':
-                  ref.read(cameraModeProvider.notifier).set(demo ? CameraMode.device : CameraMode.demo);
-                case 'diag':
-                  Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const DetectorDiagnosticsPage()));
-              }
-            },
-            itemBuilder: (_) => [
-              PopupMenuItem(value: 'demo', child: Text(demo ? 'Use device camera' : 'Use demo camera')),
-              const PopupMenuItem(value: 'diag', child: Text('Detector diagnostics')),
-            ],
-          ),
-        ],
+        automaticallyImplyLeading: false,
+        leadingWidth: 132,
+        leading: TextButton.icon(
+          key: const ValueKey('cancel-scan'),
+          style: TextButton.styleFrom(foregroundColor: Colors.white),
+          onPressed: () => Navigator.of(context).maybePop(),
+          icon: const Icon(Icons.close),
+          label: Text(l.cancel),
+        ),
+        title: Text(_replacing ? l.retakeTitle : (demo ? l.scanDemoTitle : l.scanTitle)),
       ),
-      body: switch (state.status) {
-        CaptureStatus.failed => _FailureView(
-            failure: state.failure!,
-            onRetry: controller.restart,
-            onDemo: () => ref.read(cameraModeProvider.notifier).set(CameraMode.demo),
-          ),
-        CaptureStatus.starting || CaptureStatus.suspended => const _Starting(),
-        _ => _Viewfinder(
-            state: state,
-            camera: cam,
-            onCapture: controller.capture,
-            leading: _pagesButton(doc),
-            trailing: (doc?.pages.isNotEmpty ?? false) && _saving == 0 && !_replacing
-                ? FilledButton(
-                    key: const ValueKey('capture-done'),
-                    style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 12)),
-                    onPressed: _done,
-                    child: const Text('Done', maxLines: 1),
-                  )
-                : null,
-          ),
-      },
-    );
-  }
-}
-
-class _Viewfinder extends StatelessWidget {
-  const _Viewfinder({
-    required this.state,
-    required this.camera,
-    required this.onCapture,
-    required this.leading,
-    this.trailing,
-  });
-  final CaptureState state;
-  final ScannerCamera? camera;
-  final Future<void> Function() onCapture;
-  final Widget leading;
-  final Widget? trailing;
-
-  String get _hint {
-    if (state.status == CaptureStatus.capturing) return 'Capturing…';
-    if (state.lowLight) return state.supportsTorch ? 'Too dark: turn on the flashlight' : 'Too dark: add more light';
-    if (!state.documentFound) return 'Point the camera at a document';
-    if (state.autoCapture) return state.steadyProgress > 0.2 ? 'Hold steady…' : 'Document found';
-    return 'Document found: tap the shutter';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final cam = camera;
-    const accent = Color(0xFF29B6F6); // bright blue that reads on any camera image
-    return Column(children: [
-      Expanded(
-        child: Center(
-          child: AspectRatio(
-            aspectRatio: state.previewAspectRatio,
-            child: Stack(fit: StackFit.expand, children: [
-              if (cam != null) cam.buildPreview(),
-              LiveQuadOverlay(corners: state.corners, progress: state.steadyProgress, color: accent),
-              Positioned(
-                left: 0,
-                right: 0,
-                top: 12,
-                child: Center(child: _HintPill(text: _hint, warning: state.lowLight)),
+      body: Column(children: [
+        Expanded(
+          child: switch (state.status) {
+            CaptureStatus.failed => _FailureView(
+                failure: state.failure!,
+                onRetry: controller.restart,
+                onDemo: () => ref.read(cameraModeProvider.notifier).set(CameraMode.demo),
+                onUpload: _uploadPhoto,
               ),
-              // Shutter flash.
-              IgnorePointer(
-                child: AnimatedOpacity(
-                  opacity: state.status == CaptureStatus.capturing ? 0.6 : 0,
-                  duration: const Duration(milliseconds: 150),
-                  child: const ColoredBox(color: Colors.white),
-                ),
+            CaptureStatus.starting || CaptureStatus.suspended => const _Starting(),
+            _ => _Viewfinder(state: state, camera: cam),
+          },
+        ),
+        if (demo)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(l.demoCameraNote, style: const TextStyle(color: Colors.white)),
+          ),
+        if (controls.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+            child: Wrap(spacing: 8, runSpacing: 8, alignment: WrapAlignment.center, children: controls),
+          ),
+        SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+            child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+              _pagesButton(doc),
+              if (state.status != CaptureStatus.failed)
+                Column(mainAxisSize: MainAxisSize.min, children: [
+                  ShutterButton(
+                    label: l.capture,
+                    progress: state.autoCapture ? state.steadyProgress : 0,
+                    busy: state.status == CaptureStatus.capturing,
+                    onPressed: state.status == CaptureStatus.running ? controller.capture : null,
+                  ),
+                  const SizedBox(height: 4),
+                  ExcludeSemantics(child: Text(l.capture, style: const TextStyle(color: Colors.white))),
+                ]),
+              SizedBox(
+                width: _sideWidth,
+                child: (doc?.pages.isNotEmpty ?? false) && _saving == 0 && !_replacing
+                    ? FilledButton.icon(
+                        key: const ValueKey('capture-done'),
+                        style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 12)),
+                        onPressed: _done,
+                        icon: const Icon(Icons.check),
+                        label: Text(l.done, maxLines: 1),
+                      )
+                    : null,
               ),
             ]),
           ),
         ),
-      ),
-      Padding(
-        padding: const EdgeInsets.fromLTRB(24, 16, 24, 28),
-        child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          leading,
-          ShutterButton(
-            progress: state.autoCapture ? state.steadyProgress : 0,
-            busy: state.status == CaptureStatus.capturing,
-            onPressed: state.status == CaptureStatus.running ? onCapture : null,
-          ),
-          SizedBox(
-            width: 88,
-            child: trailing ??
-                Text(
-                  state.fps > 0 ? '${state.fps.toStringAsFixed(0)} fps' : '',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.white54, fontSize: 12),
+      ]),
+    );
+  }
+}
+
+class _ControlButton extends StatelessWidget {
+  const _ControlButton({super.key, required this.icon, required this.label, required this.onPressed, this.selected = false});
+  final IconData icon;
+  final String label;
+  final VoidCallback? onPressed;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) => OutlinedButton.icon(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: selected ? Colors.black : Colors.white,
+          backgroundColor: selected ? Colors.white : Colors.white12,
+          disabledForegroundColor: Colors.white60,
+          side: const BorderSide(color: Colors.white70),
+        ),
+        onPressed: onPressed,
+        icon: Icon(icon),
+        label: Text(label),
+      );
+}
+
+/// What the scanner tells the user right now (shown, and optionally spoken).
+enum ScanHint {
+  capturing,
+  tooDarkFlash,
+  tooDark,
+  pointCamera,
+  moveCloser,
+  holdStill,
+  found,
+  nextPage,
+  tapShutter,
+  none;
+
+  static ScanHint of(CaptureState s) {
+    if (s.status == CaptureStatus.capturing) return capturing;
+    if (s.status != CaptureStatus.running) return none;
+    if (s.lowLight) return s.supportsTorch ? tooDarkFlash : tooDark;
+    if (!s.documentFound) return s.tooSmall ? moveCloser : pointCamera;
+    if (s.autoCapture && s.awaitingNextPage) return nextPage;
+    if (s.autoCapture) return s.steadyProgress > 0.2 ? holdStill : found;
+    return tapShutter;
+  }
+
+  String text(AppLocalizations l) => switch (this) {
+        capturing => l.capturing,
+        tooDarkFlash => l.hintTooDarkFlash,
+        tooDark => l.hintTooDark,
+        pointCamera => l.hintPointCamera,
+        moveCloser => l.hintMoveCloser,
+        holdStill => l.hintHoldStill,
+        found => l.hintFound,
+        nextPage => l.hintNextPage,
+        tapShutter => l.hintTapShutter,
+        none => '',
+      };
+}
+
+class _Viewfinder extends StatelessWidget {
+  const _Viewfinder({required this.state, required this.camera});
+  final CaptureState state;
+  final ScannerCamera? camera;
+
+  @override
+  Widget build(BuildContext context) {
+    final cam = camera;
+    final hint = ScanHint.of(state);
+    const accent = Color(0xFF29B6F6); // bright blue that reads on any camera image
+    return Center(
+      child: AspectRatio(
+        aspectRatio: state.previewAspectRatio,
+        child: Stack(fit: StackFit.expand, children: [
+          if (cam != null) ExcludeSemantics(child: cam.buildPreview()),
+          LiveQuadOverlay(corners: state.corners, progress: state.steadyProgress, color: accent),
+          if (hint != ScanHint.none)
+            Positioned(
+              left: 0,
+              right: 0,
+              top: 12,
+              child: Center(
+                child: Semantics(
+                  liveRegion: true,
+                  child: _HintPill(text: hint.text(context.l10n), warning: state.lowLight),
                 ),
-          ),
+              ),
+            ),
+          // Shutter flash (skipped when the system asks for reduced motion).
+          if (!MediaQuery.disableAnimationsOf(context))
+            IgnorePointer(
+              child: AnimatedOpacity(
+                opacity: state.status == CaptureStatus.capturing ? 0.6 : 0,
+                duration: const Duration(milliseconds: 150),
+                child: const ColoredBox(color: Colors.white),
+              ),
+            ),
         ]),
       ),
-    ]);
+    );
   }
 }
 
@@ -350,80 +471,77 @@ class _HintPill extends StatelessWidget {
       );
 }
 
-class _AutoChip extends StatelessWidget {
-  const _AutoChip({required this.on, required this.onChanged});
-  final bool on;
-  final ValueChanged<bool> onChanged;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4),
-        child: FilterChip(
-          label: Text(on ? 'Auto' : 'Manual'),
-          avatar: Icon(on ? Icons.auto_awesome : Icons.touch_app, size: 18),
-          selected: on,
-          showCheckmark: false,
-          onSelected: onChanged,
-        ),
-      );
-}
-
 class _Starting extends StatelessWidget {
   const _Starting();
 
   @override
-  Widget build(BuildContext context) => const Center(
+  Widget build(BuildContext context) => Center(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          CircularProgressIndicator(),
-          SizedBox(height: 16),
-          Text('Starting camera…', style: TextStyle(color: Colors.white70)),
+          const CircularProgressIndicator(),
+          const SizedBox(height: 16),
+          Text(context.l10n.startingCamera, style: const TextStyle(color: Colors.white)),
         ]),
       );
 }
 
 class _FailureView extends StatelessWidget {
-  const _FailureView({required this.failure, required this.onRetry, required this.onDemo});
+  const _FailureView({required this.failure, required this.onRetry, required this.onDemo, required this.onUpload});
   final CameraFailure failure;
-  final VoidCallback onRetry, onDemo;
+  final VoidCallback onRetry, onDemo, onUpload;
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final (icon, title, body) = switch (failure.kind) {
-      CameraFailureKind.permissionDenied => (
-          Icons.no_photography,
-          'Camera access is off',
-          kIsWeb
-              ? 'Allow camera access for this site (camera icon in the address bar), then try again.'
-              : 'Allow camera access for DocScanner in Settings, then try again.',
-        ),
-      CameraFailureKind.noCamera => (Icons.videocam_off, 'No camera found', 'Connect a camera, or try the demo camera.'),
-      CameraFailureKind.inUse => (
-          Icons.videocam_off,
-          'Camera is busy',
-          'Another app or browser tab is using the camera. Close it and try again.',
-        ),
-      CameraFailureKind.unsupported => (
-          Icons.lock,
-          'Camera not available here',
-          kIsWeb ? 'Browsers only allow the camera on https:// pages or localhost.' : failure.message,
-        ),
-      CameraFailureKind.other => (Icons.error_outline, 'Could not start the camera', failure.message),
+      CameraFailureKind.permissionDenied => (Icons.no_photography, l.camOffTitle, kIsWeb ? l.camOffWeb : l.camOffApp),
+      CameraFailureKind.noCamera => (Icons.videocam_off, l.noCameraTitle, l.noCameraBody),
+      CameraFailureKind.inUse => (Icons.videocam_off, l.cameraBusyTitle, l.cameraBusyBody),
+      CameraFailureKind.unsupported => (Icons.lock, l.cameraHttpsTitle, kIsWeb ? l.cameraHttpsBody : failure.message),
+      CameraFailureKind.other => (Icons.error_outline, l.cameraErrorTitle, failure.message),
     };
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(32),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Icon(icon, color: Colors.white70, size: 56),
+          Icon(icon, color: Colors.white, size: 56),
           const SizedBox(height: 16),
-          Text(title, style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white)),
+          Semantics(
+            header: true,
+            child: Text(title,
+                textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white)),
+          ),
           const SizedBox(height: 8),
-          Text(body, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white70)),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 520),
+            child: Text(body, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white)),
+          ),
           const SizedBox(height: 24),
           Wrap(spacing: 12, runSpacing: 12, alignment: WrapAlignment.center, children: [
-            FilledButton(onPressed: onRetry, child: const Text('Try again')),
+            FilledButton.icon(
+              key: const ValueKey('failure-upload'),
+              onPressed: onUpload,
+              icon: const Icon(Icons.upload_file),
+              label: Text(l.uploadPhoto),
+            ),
+            OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(foregroundColor: Colors.white, side: const BorderSide(color: Colors.white70)),
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh),
+              label: Text(l.tryAgain),
+            ),
             if (failure.kind == CameraFailureKind.permissionDenied && !kIsWeb)
-              OutlinedButton(onPressed: openAppSettings, child: const Text('Open Settings')),
-            OutlinedButton(onPressed: onDemo, child: const Text('Use demo camera')),
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(foregroundColor: Colors.white, side: const BorderSide(color: Colors.white70)),
+                onPressed: openAppSettings,
+                icon: const Icon(Icons.settings_outlined),
+                label: Text(l.openSettings),
+              ),
+            OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(foregroundColor: Colors.white, side: const BorderSide(color: Colors.white70)),
+              onPressed: onDemo,
+              icon: const Icon(Icons.slideshow_outlined),
+              label: Text(l.useDemoCamera),
+            ),
           ]),
         ]),
       ),

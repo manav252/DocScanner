@@ -256,6 +256,322 @@
   "itemLine": "Line",
   "itemWhiteout": "Whiteout box",
   "selected": "selected",
+  "scanTitle": "Scan",
+  "scanDemoTitle": "Scan (demo camera)",
+  "retakeTitle": "Retake page",
+  "flashOn": "Flashlight on",
+  "flashOff": "Flashlight off",
+  "switchCamera": "Switch camera",
+  "autoCaptureOn": "Auto capture: on",
+  "autoCaptureOff": "Auto capture: off",
+  "uploadPhoto": "Upload a photo",
+  "nextSample": "Next sample page",
+  "useDemoCamera": "Use demo camera",
+  "useDeviceCamera": "Use device camera",
+  "demoCameraNote": "Demo camera: shows sample pages, not your camera.",
+  "diagnostics": "Detector diagnostics",
+  "startingCamera": "Starting camera…",
+  "capturing": "Capturing…",
+  "hintTooDarkFlash": "Too dark: turn on the flashlight",
+  "hintTooDark": "Too dark: add more light",
+  "hintPointCamera": "Point the camera at a document",
+  "hintMoveCloser": "Move closer",
+  "hintHoldStill": "Hold still",
+  "hintFound": "Document found",
+  "hintNextPage": "Page captured. Show the next page.",
+  "hintTapShutter": "Document found: tap Capture",
+  "capture": "Capture",
+  "capturedPage": "Captured, page {page}",
+  "@capturedPage": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      }
+    }
+  },
+  "reviewPages": "{count, plural, =1{Review 1 page} other{Review {count} pages}}",
+  "@reviewPages": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "savingPages": "Saving…",
+  "keepScan": "Keep scan",
+  "replacePage": "Replace page",
+  "retake": "Retake",
+  "couldNotSavePage": "Could not save the page. Please try again.",
+  "camOffTitle": "Camera access is off",
+  "camOffWeb": "Allow camera access for this site (camera icon in the address bar), then try again. You can also upload a photo instead.",
+  "camOffApp": "Allow camera access for DocScanner in Settings, then try again. You can also upload a photo instead.",
+  "noCameraTitle": "No camera found",
+  "noCameraBody": "This computer has no camera we can use. Upload a photo of the page, or try the demo camera.",
+  "cameraBusyTitle": "Camera is busy",
+  "cameraBusyBody": "Another app or browser tab is using the camera. Close it and try again.",
+  "cameraHttpsTitle": "Camera not available here",
+  "cameraHttpsBody": "Browsers only allow the camera on https:// pages or localhost. Upload a photo instead.",
+  "cameraErrorTitle": "Could not start the camera",
+  "openSettings": "Open Settings",
+  "msgCaptureFailed": "Could not take the photo. Please try again.",
+  "msgBadPhotoFile": "That file could not be opened as a photo.",
+  "msgNoFlashlight": "This camera has no flashlight.",
+  "pageOf": "Page {page} of {total}",
+  "@pageOf": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "previousPage": "Previous page",
+  "nextPage": "Next page",
+  "addPages": "Add pages",
+  "scanMore": "Scan more",
+  "importPdfOrFiles": "Import PDF or files",
+  "toolFilters": "Filters",
+  "toolRotate": "Rotate",
+  "toolCrop": "Crop",
+  "toolCorners": "Corners",
+  "toolPageText": "Text",
+  "toolRetake": "Retake",
+  "moveEarlier": "Move earlier",
+  "moveLater": "Move later",
+  "deletePage": "Delete page",
+  "deleteDocument": "Delete document",
+  "pageDeleted": "Page {page} deleted",
+  "@pageDeleted": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      }
+    }
+  },
+  "pageMoved": "Page moved to position {page}",
+  "@pageMoved": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      }
+    }
+  },
+  "deleteDocTitle": "Delete “{title}”?",
+  "@deleteDocTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteDocBody": "{count, plural, =1{Its page will be removed.} other{All {count} pages will be removed.}}",
+  "@deleteDocBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recognizingText": "Recognising text…",
+  "recognizingTextOf": "Recognising text {done} of {total}…",
+  "@recognizingTextOf": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "somethingWentWrong": "Something went wrong: {message}",
+  "@somethingWentWrong": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "noPagesYet": "No pages yet",
+  "noPagesHint": "Scan a page or import photos or a PDF to add pages.",
+  "pageThumbLabel": "Page {page}. Drag to reorder, or use Move earlier and Move later.",
+  "@pageThumbLabel": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      }
+    }
+  },
+  "documentNotFound": "This document could not be opened.",
+  "filterOriginal": "Original",
+  "filterGrayscale": "Grayscale",
+  "filterBw": "Black & White",
+  "filterMagic": "Magic Color",
+  "showOriginal": "Compare with original",
+  "before": "Before",
+  "after": "After",
+  "applying": "Applying…",
+  "applyToAll": "Apply {filter} to all pages",
+  "@applyToAll": {
+    "placeholders": {
+      "filter": {
+        "type": "String"
+      }
+    }
+  },
+  "previewFailed": "Preview not available",
+  "exportTitle": "Export “{title}”",
+  "@exportTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "formatPdf": "PDF",
+  "formatJpg": "{count, plural, =1{JPG} other{JPG ({count} files)}}",
+  "@formatJpg": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pageSize": "Page size",
+  "pageSizeFit": "Fit to page",
+  "pageSizeA4": "A4",
+  "pageSizeLetter": "US Letter",
+  "searchablePdf": "Searchable PDF",
+  "searchablePdfHint": "Recognise text so it can be searched and copied",
+  "download": "Download",
+  "share": "Share",
+  "shareOrSave": "Share or save",
+  "creatingPdf": "Creating PDF…",
+  "creatingImages": "Creating images…",
+  "savedFile": "Saved {name} to your Downloads folder",
+  "@savedFile": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "savedImages": "Saved {count} images to your Downloads folder",
+  "@savedImages": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "exportFailed": "Export failed: {message}",
+  "@exportFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "exportHelpWeb": "Download saves the file to your Downloads folder. Share opens your device’s share menu in browsers that support it (for example Safari and Chrome on phones); elsewhere it downloads the file.",
+  "exportHelpIos": "To save the file, tap Share or save, then “Save to Files”.",
+  "exportHelpAndroid": "To save the file, tap Share or save, then pick Files, Drive or another app.",
+  "markupBurnedIn": "Markup will be part of the exported pages.",
+  "adjustCorners": "Adjust corners",
+  "noEdgesFound": "No page edges found. Adjust the corners or keep the full photo.",
+  "cornersHint": "Drag the corners or edges onto the page. Keyboard: Tab picks a corner, arrow keys move it.",
+  "cornersCrossed": "The corners cross over. Drag them back around the page.",
+  "resetCorners": "Reset corners",
+  "useFullPhoto": "Use full photo",
+  "rotate": "Rotate",
+  "confirm": "Confirm",
+  "couldNotRotate": "Could not rotate the photo.",
+  "cornerTopLeft": "top-left",
+  "cornerTopRight": "top-right",
+  "cornerBottomRight": "bottom-right",
+  "cornerBottomLeft": "bottom-left",
+  "cornersSemantics": "Page corners. Selected: {corner} corner. Use the move actions, or drag the corners.",
+  "@cornersSemantics": {
+    "placeholders": {
+      "corner": {
+        "type": "String"
+      }
+    }
+  },
+  "nextCorner": "Next corner",
+  "moveCornerLeft": "Move corner left",
+  "moveCornerRight": "Move corner right",
+  "moveCornerUp": "Move corner up",
+  "moveCornerDown": "Move corner down",
+  "cropTitle": "Crop",
+  "reset": "Reset",
+  "apply": "Apply",
+  "cropHint": "Drag the edges or corners of the box. Drag inside it to move it.",
+  "backUpYourScans": "Back up and sync your scans",
+  "backUpIntro": "Optional. Without an account everything stays on this device and every feature still works. Sign in to back up and use your scans on other devices.",
+  "server": "Server",
+  "serverHint": "Enter a URL like http://192.168.1.20:8000",
+  "testConnection": "Test connection",
+  "serverReachable": "Connected to the server.",
+  "serverUnreachable": "Can’t reach the server. Check the address and that the backend is running.",
+  "signIn": "Sign in",
+  "createAccount": "Create account",
+  "email": "Email",
+  "enterEmail": "Enter your email",
+  "password": "Password",
+  "passwordRule": "At least 8 characters",
+  "showPassword": "Show",
+  "hidePassword": "Hide",
+  "showPasswordLabel": "Show password",
+  "hidePasswordLabel": "Hide password",
+  "errOffline": "Can’t reach the server at {url}. Check the address and that the backend is running.",
+  "@errOffline": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "errWrongPassword": "Wrong email or password.",
+  "errAccountExists": "An account with this email already exists. Sign in instead.",
+  "errInvalidInput": "Check the email address; passwords need at least 8 characters.",
+  "syncNow": "Sync now",
+  "processOnServer": "Process photos on the server",
+  "processOnServerHint": "For slow devices: page detection, flattening and filters run on the server. The live camera preview still runs on this device.",
+  "signOut": "Sign out",
+  "signOutTitle": "Sign out?",
+  "signOutBody": "Your scans stay on this device. Changes made while signed out sync after you sign in again.",
+  "signedInNote": "Scans are stored on this device and backed up to your account. They keep working offline.",
+  "syncNever": "Not synced yet",
+  "syncJustNow": "Synced just now",
+  "syncMinutesAgo": "Synced {minutes} min ago",
+  "@syncMinutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "syncHoursAgo": "Synced {hours} h ago",
+  "@syncHoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "syncNotSignedIn": "Not signed in",
+  "syncSyncing": "Syncing…",
+  "syncOffline": "Offline. Changes are saved on this device and will sync later.",
+  "syncProblem": "Sync problem: {message}",
+  "@syncProblem": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
   "uploadExistingTitle": "Upload your scans?",
   "uploadExistingBody": "{count, plural, =1{You have 1 document on this device. Upload it to your account so it is backed up and available on your other devices?} other{You have {count} documents on this device. Upload them to your account so they are backed up and available on your other devices?}}",
   "@uploadExistingBody": {

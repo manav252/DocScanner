@@ -1,3 +1,3 @@
 import 'scanner_camera.dart';
 
-ScannerCamera createDeviceCamera() => throw const CameraFailure(CameraFailureKind.unsupported);
+ScannerCamera createDeviceCamera([int index = 0]) => throw const CameraFailure(CameraFailureKind.unsupported);

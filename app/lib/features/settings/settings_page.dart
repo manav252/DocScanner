@@ -116,7 +116,7 @@ class SettingsPage extends ConsumerWidget {
                     onPressed: () => Navigator.of(context)
                         .push(MaterialPageRoute<void>(builder: (_) => const DetectorDiagnosticsPage())),
                     icon: const Icon(Icons.biotech_outlined),
-                    label: const Text('Detector diagnostics'),
+                    label: Text(l.diagnostics),
                   ),
                 ),
               ],
@@ -157,7 +157,7 @@ class _BackupCard extends ConsumerWidget {
             Row(children: [
               SyncIcon(status: status),
               const SizedBox(width: 8),
-              Expanded(child: Text(describeSync(status))),
+              Expanded(child: Text(describeSync(context, status))),
             ]),
             if ((summary?.pending ?? 0) > 0) ...[const SizedBox(height: 4), Text(l.pendingChanges(summary!.pending))],
             if (status.conflicts.isNotEmpty) ...[

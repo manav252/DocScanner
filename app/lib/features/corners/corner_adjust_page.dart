@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/l10n.dart';
+
 import '../../core/providers.dart';
 import '../../imaging/geometry.dart';
 import '../../imaging/page_edits.dart';
@@ -95,7 +97,7 @@ class _CornerAdjustPageState extends ConsumerState<CornerAdjustPage> {
         _rotated = true;
       });
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not rotate the photo: $e')));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.couldNotRotate)));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -111,10 +113,11 @@ class _CornerAdjustPageState extends ConsumerState<CornerAdjustPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final valid = isValidQuad(_corners, _size);
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(title: const Text('Adjust corners')),
+      appBar: AppBar(title: Text(l.adjustCorners)),
       body: SafeArea(
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           if (!widget.detected)
@@ -122,7 +125,7 @@ class _CornerAdjustPageState extends ConsumerState<CornerAdjustPage> {
               liveRegion: true,
               child: MaterialBanner(
                 key: const ValueKey('no-edges-banner'),
-                content: const Text(CornerAdjustPage.noEdgesMessage),
+                content: Text(l.noEdgesFound),
                 leading: const Icon(Icons.info_outline),
                 actions: const [SizedBox.shrink()],
               ),
@@ -146,9 +149,7 @@ class _CornerAdjustPageState extends ConsumerState<CornerAdjustPage> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
             child: Text(
-              valid
-                  ? 'Drag the corners or edges onto the page. Keyboard: Tab picks a corner, arrow keys move it.'
-                  : 'The corners cross over. Drag them back around the page.',
+              valid ? l.cornersHint : l.cornersCrossed,
               style: TextStyle(color: valid ? null : scheme.error),
             ),
           ),
@@ -170,13 +171,13 @@ class _CornerAdjustPageState extends ConsumerState<CornerAdjustPage> {
                   key: const ValueKey('reset-corners'),
                   onPressed: _busy || listEquals(_corners, _detected) ? null : () => setState(() => _corners = _detected),
                   icon: const Icon(Icons.restart_alt),
-                  label: const Text('Reset corners'),
+                  label: Text(l.resetCorners),
                 ),
                 OutlinedButton.icon(
                   key: const ValueKey('full-photo'),
                   onPressed: _busy || listEquals(_corners, _full) ? null : () => setState(() => _corners = _full),
                   icon: const Icon(Icons.fullscreen),
-                  label: const Text('Use full photo'),
+                  label: Text(l.useFullPhoto),
                 ),
                 OutlinedButton.icon(
                   key: const ValueKey('rotate-photo'),
@@ -184,7 +185,7 @@ class _CornerAdjustPageState extends ConsumerState<CornerAdjustPage> {
                   icon: _busy
                       ? const SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2))
                       : const Icon(Icons.rotate_right),
-                  label: const Text('Rotate'),
+                  label: Text(l.rotate),
                 ),
                 FilledButton.icon(
                   key: const ValueKey('confirm-corners'),

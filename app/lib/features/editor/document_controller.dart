@@ -131,9 +131,28 @@ class DocumentController extends AsyncNotifier<ScanDocument> {
         return d.edit(pages: pages);
       });
 
-  Future<void> deletePage(String pageId) => _mutate((d) async {
-        await ref.read(documentRepositoryProvider).deletePageImages(pageId);
-        return d.edit(pages: [for (final p in d.pages) if (p.id != pageId) p]);
+  Future<void> deletePage(String pageId) => removePage(pageId);
+
+  /// Delete a page, returning what [restorePage] needs to undo it.
+  Future<RemovedPage?> removePage(String pageId) async {
+    RemovedPage? removed;
+    await _mutate((d) async {
+      final i = d.pages.indexWhere((p) => p.id == pageId);
+      if (i < 0) return d;
+      final repo = ref.read(documentRepositoryProvider);
+      removed = RemovedPage(d.pages[i], i, await repo.pageFiles(pageId));
+      await repo.deletePageImages(pageId);
+      return d.edit(pages: [for (final p in d.pages) if (p.id != pageId) p]);
+    });
+    return removed;
+  }
+
+  /// Undo [removePage]: the page returns to its old position with its images.
+  Future<void> restorePage(RemovedPage r) => _mutate((d) async {
+        if (d.pages.any((p) => p.id == r.page.id)) return d;
+        await ref.read(documentRepositoryProvider).putFiles(r.files);
+        final pages = [...d.pages]..insert(math.min(r.index, d.pages.length), r.page);
+        return d.edit(pages: pages);
       });
 
   /// Move the page at [oldIndex] so it ends up at [newIndex] (onReorderItem semantics).
@@ -162,6 +181,14 @@ class DocumentController extends AsyncNotifier<ScanDocument> {
 
   /// Wait for queued operations (tests, export).
   Future<void> settle() => _queue;
+}
+
+/// A deleted page kept in memory so the delete can be undone.
+class RemovedPage {
+  const RemovedPage(this.page, this.index, this.files);
+  final ScanPage page;
+  final int index;
+  final Map<String, Uint8List> files;
 }
 
 final documentProvider =
