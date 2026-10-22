@@ -11,7 +11,9 @@ import '../../data/document_repository.dart';
 import '../../data/models.dart';
 import '../../services/export/pdf_builder.dart';
 import '../../services/export/share_service.dart';
+import '../../imaging/markup.dart';
 import '../../services/ocr/ocr_result.dart';
+import '../markup/markup_painter.dart';
 
 enum ExportFormat { pdf, jpg }
 
@@ -40,8 +42,18 @@ class Exporter {
   const Exporter(this._ref);
   final Ref _ref;
 
-  Future<List<ExportFile>> build(ScanDocument doc, {required ExportFormat format, PdfPageSize pageSize = PdfPageSize.fit}) =>
-      buildExport(_ref.read(documentRepositoryProvider), doc, format: format, pageSize: pageSize);
+  Future<List<ExportFile>> build(ScanDocument doc, {required ExportFormat format, PdfPageSize pageSize = PdfPageSize.fit}) {
+    final engine = _ref.read(scanEngineProvider);
+    return buildExport(
+      _ref.read(documentRepositoryProvider),
+      doc,
+      format: format,
+      pageSize: pageSize,
+      // Markup is burned in, then re-encoded as JPEG (full size).
+      flatten: (jpeg, items) async =>
+          (await engine.normalizeEncoded(await flattenMarkup(jpeg, items), maxSide: 100000, quality: 92)).bytes,
+    );
+  }
 }
 
 final exporterProvider = Provider<Exporter>(Exporter.new);
@@ -51,12 +63,16 @@ Future<List<ExportFile>> buildExport(
   ScanDocument doc, {
   required ExportFormat format,
   PdfPageSize pageSize = PdfPageSize.fit,
+  Future<Uint8List> Function(Uint8List jpeg, List<MarkupItem> items)? flatten,
 }) async {
   final name = safeFileName(doc.title);
   final images = <(ScanPage, Uint8List)>[];
   for (final p in doc.pages) {
-    final bytes = await repo.pageImage(p.id, PageImage.render);
-    if (bytes != null) images.add((p, bytes));
+    var bytes = await repo.pageImage(p.id, PageImage.render);
+    if (bytes == null) continue;
+    // Editable markup becomes part of the exported image.
+    if (p.markup.isNotEmpty && flatten != null) bytes = await flatten(bytes, p.markup);
+    images.add((p, bytes));
   }
   if (images.isEmpty) throw StateError('This document has no pages');
   return switch (format) {

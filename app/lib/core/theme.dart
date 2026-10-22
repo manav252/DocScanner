@@ -31,7 +31,14 @@ ThemeData buildTheme({required Brightness brightness, bool highContrast = false,
   const minSize = Size(48, 48);
   const padding = EdgeInsets.symmetric(horizontal: 16, vertical: 12);
 
-  final base = ThemeData(colorScheme: scheme, useMaterial3: true, visualDensity: VisualDensity.standard);
+  final base = ThemeData(
+    colorScheme: scheme,
+    useMaterial3: true,
+    visualDensity: VisualDensity.standard,
+    // Bundled fonts: no runtime font downloads (offline web), Hindi included.
+    fontFamily: 'NotoSans',
+    fontFamilyFallback: const ['NotoSansDevanagari'],
+  );
   return base.copyWith(
     materialTapTargetSize: MaterialTapTargetSize.padded,
     scaffoldBackgroundColor: scheme.surface,

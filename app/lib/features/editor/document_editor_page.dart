@@ -13,6 +13,7 @@ import '../capture/capture_page.dart';
 import '../common/dialogs.dart';
 import '../common/page_image.dart';
 import '../corners/corner_adjust_page.dart';
+import '../markup/markup_editor_page.dart';
 import '../library/import_flow.dart';
 import '../library/library_controller.dart';
 import 'crop_page.dart';
@@ -248,6 +249,9 @@ class _DocumentEditorPageState extends ConsumerState<DocumentEditorPage> {
                 ),
                 onRotate: () => _run(() => _doc.rotate(current!.id)),
                 onText: () => showTextSheet(context, documentId: widget.documentId, pageId: current!.id),
+                onMarkup: () => Navigator.of(context).push(MaterialPageRoute<void>(
+                  builder: (_) => MarkupEditorPage(documentId: widget.documentId, pageId: current!.id),
+                )),
                 onCrop: () => _crop(current!),
                 onCorners: () => _adjustCorners(current!),
                 onRetake: () => Navigator.of(context).push(MaterialPageRoute<void>(
@@ -351,9 +355,10 @@ class _Toolbar extends StatelessWidget {
     required this.onRetake,
     required this.onDelete,
     required this.onText,
+    required this.onMarkup,
   });
   final bool enabled;
-  final VoidCallback onFilters, onRotate, onCrop, onCorners, onRetake, onDelete, onText;
+  final VoidCallback onFilters, onRotate, onCrop, onCorners, onRetake, onDelete, onText, onMarkup;
 
   @override
   Widget build(BuildContext context) {
@@ -380,6 +385,7 @@ class _Toolbar extends StatelessWidget {
         tool(Icons.rotate_right, 'Rotate', onRotate),
         tool(Icons.crop, 'Crop', onCrop),
         tool(Icons.crop_rotate, 'Corners', onCorners),
+        tool(Icons.draw_outlined, 'Markup', onMarkup),
         tool(Icons.text_snippet_outlined, 'Text', onText),
         tool(Icons.replay, 'Retake', onRetake),
         tool(Icons.delete_outline, 'Delete', onDelete),

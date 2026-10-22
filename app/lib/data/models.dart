@@ -2,6 +2,7 @@
 // every step (corners, filter, rotation, crop) stays editable; the rendered
 // image is derived from them.
 import '../imaging/geometry.dart';
+import '../imaging/markup.dart';
 import '../imaging/page_edits.dart';
 
 /// Images stored per page.
@@ -33,6 +34,7 @@ class ScanPage {
     this.sourceVersion = 0,
     this.ocrRevision = -1,
     this.ocrLanguage,
+    this.markup = const [],
   });
 
   final String id;
@@ -58,6 +60,9 @@ class ScanPage {
   /// Language [ocrText] was read in ('eng' / 'hin').
   final String? ocrLanguage;
 
+  /// Editable annotations (text, ink, signature, shapes), flattened on export.
+  final List<MarkupItem> markup;
+
   /// OCR is missing or outdated (the page was re-rendered since).
   bool get needsOcr => ocrRevision != revision;
 
@@ -73,6 +78,7 @@ class ScanPage {
     Object? ocrText = _keep,
     int? ocrRevision,
     String? ocrLanguage,
+    List<MarkupItem>? markup,
   }) =>
       ScanPage(
         id: id,
@@ -87,6 +93,7 @@ class ScanPage {
         sourceVersion: sourceVersion,
         ocrRevision: ocrRevision ?? this.ocrRevision,
         ocrLanguage: ocrLanguage ?? this.ocrLanguage,
+        markup: markup ?? this.markup,
       );
 
   Map<String, Object?> toJson() => {
@@ -102,6 +109,7 @@ class ScanPage {
         'srcVer': sourceVersion,
         'ocrRev': ocrRevision,
         if (ocrLanguage != null) 'ocrLang': ocrLanguage,
+        if (markup.isNotEmpty) 'markup': markupToJson(markup),
       };
 
   static ScanPage fromJson(Map<String, dynamic> j) => ScanPage(
@@ -117,6 +125,7 @@ class ScanPage {
         sourceVersion: j['srcVer'] as int? ?? 0,
         ocrRevision: j['ocrRev'] as int? ?? -1,
         ocrLanguage: j['ocrLang'] as String?,
+        markup: markupFromJson(j['markup'] as List?),
       );
 }
 

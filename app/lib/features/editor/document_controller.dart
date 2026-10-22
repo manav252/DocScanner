@@ -3,6 +3,7 @@
 // revision (so it gets synced). Operations are serialised.
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,6 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers.dart';
 import '../../data/models.dart';
 import '../../imaging/geometry.dart';
+import '../../imaging/markup.dart';
 import '../../imaging/page_edits.dart';
 import '../../services/ocr/ocr_result.dart';
 
@@ -92,9 +94,33 @@ class DocumentController extends AsyncNotifier<ScanDocument> {
 
   Future<void> setFilter(String pageId, PageFilter f) => _setEdits(pageId, (e) => e.copyWith(filter: f));
 
-  Future<void> rotate(String pageId) => _setEdits(pageId, (e) => e.rotatedClockwise());
+  /// Rotate 90 degrees clockwise; markup turns with the page.
+  Future<void> rotate(String pageId) => _mutate((d) async {
+        final p = _page(d, pageId);
+        final page = await ref.read(pageRendererProvider).render(p.copyWith(
+              edits: p.edits.rotatedClockwise(),
+              markup: [for (final m in p.markup) m.rotatedClockwise()],
+            ));
+        return d.edit(pages: _replace(d, page));
+      });
 
-  Future<void> setCrop(String pageId, CropRect crop) => _setEdits(pageId, (e) => e.copyWith(crop: crop.normalized()));
+  /// Crop; markup keeps its place on the page content.
+  Future<void> setCrop(String pageId, CropRect crop) => _mutate((d) async {
+        final p = _page(d, pageId);
+        final next = crop.normalized();
+        if (next == p.edits.crop) return d;
+        var page = await ref.read(pageRendererProvider).render(p.copyWith(edits: p.edits.copyWith(crop: next)));
+        if (p.markup.isNotEmpty && page.renderWidth > 0 && p.renderWidth > 0) {
+          final oldUnit = math.min(p.renderWidth, p.renderHeight), newUnit = math.min(page.renderWidth, page.renderHeight);
+          final from = p.edits.crop.toJson(), to = next.toJson();
+          page = page.copyWith(markup: [for (final m in p.markup) m.recropped(from, to, oldUnit / newUnit)]);
+        }
+        return d.edit(pages: _replace(d, page));
+      });
+
+  /// Replace a page's markup (from the markup editor).
+  Future<void> setMarkup(String pageId, List<MarkupItem> markup) =>
+      _mutate((d) async => d.edit(pages: _replace(d, _page(d, pageId).copyWith(markup: markup))));
 
   Future<void> applyFilterToAll(PageFilter f) => _mutate((d) async {
         final renderer = ref.read(pageRendererProvider);

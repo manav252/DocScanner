@@ -1,5 +1,6 @@
+import json
 from datetime import datetime
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
 
@@ -61,6 +62,17 @@ class Page(BaseModel):
     render_width: int = Field(0, ge=0, le=30000)
     render_height: int = Field(0, ge=0, le=30000)
     ocr_text: str | None = Field(None, max_length=200_000)
+    # Editable annotations from the app's markup editor (opaque to the server).
+    markup: list[dict[str, Any]] = Field(default_factory=list, max_length=2_000)
+
+    @field_validator("markup")
+    @classmethod
+    def _markup_size(cls, v: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        if len(json.dumps(v)) > 1_000_000:
+            raise ValueError("markup too large (max 1 MB per page)")
+        if any(not isinstance(m.get("k"), str) or not isinstance(m.get("id"), str) for m in v):
+            raise ValueError("each markup item needs a kind 'k' and an 'id'")
+        return v
 
     @field_validator("corners")
     @classmethod

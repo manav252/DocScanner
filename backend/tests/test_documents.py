@@ -168,3 +168,15 @@ async def test_upload_rejects_bad_files(client, user):
     assert r.status_code == 415
     r = await client.post("/documents/upload", files=[("files", ("x.pdf", b"%PDF-1.4 broken", "application/pdf"))], headers=h)
     assert r.status_code == 422
+
+
+async def test_markup_round_trip_and_limits(client, user, small_jpeg):
+    h = user["headers"]
+    await upload_page(client, h, "mk", "p", small_jpeg)
+    item = {"k": "text", "id": "t1", "text": "Approved", "x": 0.5, "y": 0.1}
+    r = await client.put("/documents/mk", json=doc(page("p", markup=[item])), headers=h)
+    assert r.status_code == 200 and r.json()["pages"][0]["markup"] == [item]
+    bad = await client.put("/documents/mk", json=doc(page("p", markup=[{"x": 1}]), base_version=1), headers=h)
+    assert bad.status_code == 422
+    huge = [{"k": "pen", "id": str(i), "p": [0.1] * 400} for i in range(1500)]
+    assert (await client.put("/documents/mk", json=doc(page("p", markup=huge), base_version=1), headers=h)).status_code == 422

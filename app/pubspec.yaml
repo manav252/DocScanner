@@ -38,6 +38,17 @@ flutter:
   assets:
     - assets/samples/
     - assets/fonts/
+  # Bundled so text renders offline on the web too (Flutter web otherwise
+  # downloads fonts at runtime) and Hindi works everywhere. SIL OFL 1.1.
+  fonts:
+    - family: NotoSans
+      fonts:
+        - asset: assets/fonts/NotoSans-Regular.ttf
+        - asset: assets/fonts/NotoSans-Bold.ttf
+          weight: 700
+    - family: NotoSansDevanagari
+      fonts:
+        - asset: assets/fonts/NotoSansDevanagari-Regular.ttf
 
 hooks:
   user_defines:

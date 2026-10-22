@@ -1,6 +1,5 @@
 // Text view: "No text found", "Copy text" -> "Copied", failures with Try again.
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:docscanner/core/providers.dart';
 import 'package:docscanner/data/document_repository.dart';

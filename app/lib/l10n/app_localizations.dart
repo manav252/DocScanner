@@ -698,6 +698,300 @@ abstract class AppLocalizations {
   /// **'Text language'**
   String get readAs;
 
+  /// No description provided for @markup.
+  ///
+  /// In en, this message translates to:
+  /// **'Markup'**
+  String get markup;
+
+  /// No description provided for @markupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit / Markup'**
+  String get markupTitle;
+
+  /// No description provided for @toolSelect.
+  ///
+  /// In en, this message translates to:
+  /// **'Select'**
+  String get toolSelect;
+
+  /// No description provided for @toolText.
+  ///
+  /// In en, this message translates to:
+  /// **'Add text'**
+  String get toolText;
+
+  /// No description provided for @toolPen.
+  ///
+  /// In en, this message translates to:
+  /// **'Pen'**
+  String get toolPen;
+
+  /// No description provided for @toolHighlighter.
+  ///
+  /// In en, this message translates to:
+  /// **'Highlighter'**
+  String get toolHighlighter;
+
+  /// No description provided for @toolEraser.
+  ///
+  /// In en, this message translates to:
+  /// **'Eraser'**
+  String get toolEraser;
+
+  /// No description provided for @toolSignature.
+  ///
+  /// In en, this message translates to:
+  /// **'Signature'**
+  String get toolSignature;
+
+  /// No description provided for @toolRect.
+  ///
+  /// In en, this message translates to:
+  /// **'Rectangle'**
+  String get toolRect;
+
+  /// No description provided for @toolArrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrow'**
+  String get toolArrow;
+
+  /// No description provided for @toolLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Line'**
+  String get toolLine;
+
+  /// No description provided for @toolWhiteout.
+  ///
+  /// In en, this message translates to:
+  /// **'Whiteout'**
+  String get toolWhiteout;
+
+  /// No description provided for @markupHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a tool, then tap or drag on the page.'**
+  String get markupHint;
+
+  /// No description provided for @addInMiddle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add in the middle'**
+  String get addInMiddle;
+
+  /// No description provided for @colour.
+  ///
+  /// In en, this message translates to:
+  /// **'Colour'**
+  String get colour;
+
+  /// No description provided for @size.
+  ///
+  /// In en, this message translates to:
+  /// **'Size'**
+  String get size;
+
+  /// No description provided for @bold.
+  ///
+  /// In en, this message translates to:
+  /// **'Bold'**
+  String get bold;
+
+  /// No description provided for @background.
+  ///
+  /// In en, this message translates to:
+  /// **'Background'**
+  String get background;
+
+  /// No description provided for @bgNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get bgNone;
+
+  /// No description provided for @bgWhite.
+  ///
+  /// In en, this message translates to:
+  /// **'White'**
+  String get bgWhite;
+
+  /// No description provided for @editText.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit text'**
+  String get editText;
+
+  /// No description provided for @bigger.
+  ///
+  /// In en, this message translates to:
+  /// **'Bigger'**
+  String get bigger;
+
+  /// No description provided for @smaller.
+  ///
+  /// In en, this message translates to:
+  /// **'Smaller'**
+  String get smaller;
+
+  /// No description provided for @rotateLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Rotate left'**
+  String get rotateLeft;
+
+  /// No description provided for @rotateRight.
+  ///
+  /// In en, this message translates to:
+  /// **'Rotate right'**
+  String get rotateRight;
+
+  /// No description provided for @moveLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Move left'**
+  String get moveLeft;
+
+  /// No description provided for @moveRight.
+  ///
+  /// In en, this message translates to:
+  /// **'Move right'**
+  String get moveRight;
+
+  /// No description provided for @moveUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Move up'**
+  String get moveUp;
+
+  /// No description provided for @moveDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Move down'**
+  String get moveDown;
+
+  /// No description provided for @deleteItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete item'**
+  String get deleteItem;
+
+  /// No description provided for @itemsOnPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Items on this page'**
+  String get itemsOnPage;
+
+  /// No description provided for @noItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing added yet.'**
+  String get noItems;
+
+  /// No description provided for @typeText.
+  ///
+  /// In en, this message translates to:
+  /// **'Type the text'**
+  String get typeText;
+
+  /// No description provided for @drawSignature.
+  ///
+  /// In en, this message translates to:
+  /// **'Draw your signature'**
+  String get drawSignature;
+
+  /// No description provided for @signatureHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Draw with your finger, mouse or pen. It is saved on this device for next time.'**
+  String get signatureHint;
+
+  /// No description provided for @clear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get clear;
+
+  /// No description provided for @changeSignature.
+  ///
+  /// In en, this message translates to:
+  /// **'Change signature'**
+  String get changeSignature;
+
+  /// No description provided for @discardChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard your changes?'**
+  String get discardChanges;
+
+  /// No description provided for @discard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get discard;
+
+  /// No description provided for @keepEditing.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep editing'**
+  String get keepEditing;
+
+  /// No description provided for @itemText.
+  ///
+  /// In en, this message translates to:
+  /// **'Text: {text}'**
+  String itemText(String text);
+
+  /// No description provided for @itemPen.
+  ///
+  /// In en, this message translates to:
+  /// **'Pen stroke'**
+  String get itemPen;
+
+  /// No description provided for @itemHighlighter.
+  ///
+  /// In en, this message translates to:
+  /// **'Highlight'**
+  String get itemHighlighter;
+
+  /// No description provided for @itemSignature.
+  ///
+  /// In en, this message translates to:
+  /// **'Signature'**
+  String get itemSignature;
+
+  /// No description provided for @itemRect.
+  ///
+  /// In en, this message translates to:
+  /// **'Rectangle'**
+  String get itemRect;
+
+  /// No description provided for @itemArrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrow'**
+  String get itemArrow;
+
+  /// No description provided for @itemLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Line'**
+  String get itemLine;
+
+  /// No description provided for @itemWhiteout.
+  ///
+  /// In en, this message translates to:
+  /// **'Whiteout box'**
+  String get itemWhiteout;
+
+  /// No description provided for @selected.
+  ///
+  /// In en, this message translates to:
+  /// **'selected'**
+  String get selected;
+
   /// No description provided for @uploadExistingTitle.
   ///
   /// In en, this message translates to:

@@ -14,6 +14,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import '../../imaging/geometry.dart';
+import '../../imaging/markup.dart';
 import '../../imaging/page_edits.dart';
 import '../../services/api/api_client.dart';
 import '../document_repository.dart';
@@ -296,6 +297,7 @@ class SyncService {
               'render_width': p.renderWidth,
               'render_height': p.renderHeight,
               if (p.ocrText != null) 'ocr_text': p.ocrText,
+              if (p.markup.isNotEmpty) 'markup': markupToJson(p.markup),
             },
         ],
       };
@@ -319,6 +321,7 @@ class SyncService {
       ocrText: j['ocr_text'] as String?,
       // Text from the server is current for this revision (line boxes stay on the device that ran OCR).
       ocrRevision: j['ocr_text'] == null ? -1 : j['revision'] as int? ?? 0,
+      markup: markupFromJson(j['markup'] as List?),
     );
   }
 }

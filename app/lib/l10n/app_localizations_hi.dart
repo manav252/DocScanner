@@ -371,6 +371,156 @@ class AppLocalizationsHi extends AppLocalizations {
   String get readAs => 'टेक्स्ट की भाषा';
 
   @override
+  String get markup => 'मार्कअप';
+
+  @override
+  String get markupTitle => 'संपादन / मार्कअप';
+
+  @override
+  String get toolSelect => 'चुनें';
+
+  @override
+  String get toolText => 'टेक्स्ट जोड़ें';
+
+  @override
+  String get toolPen => 'पेन';
+
+  @override
+  String get toolHighlighter => 'हाइलाइटर';
+
+  @override
+  String get toolEraser => 'रबड़';
+
+  @override
+  String get toolSignature => 'हस्ताक्षर';
+
+  @override
+  String get toolRect => 'आयत';
+
+  @override
+  String get toolArrow => 'तीर';
+
+  @override
+  String get toolLine => 'रेखा';
+
+  @override
+  String get toolWhiteout => 'व्हाइटआउट';
+
+  @override
+  String get markupHint => 'टूल चुनें, फिर पेज पर टैप करें या खींचें।';
+
+  @override
+  String get addInMiddle => 'बीच में जोड़ें';
+
+  @override
+  String get colour => 'रंग';
+
+  @override
+  String get size => 'आकार';
+
+  @override
+  String get bold => 'बोल्ड';
+
+  @override
+  String get background => 'पृष्ठभूमि';
+
+  @override
+  String get bgNone => 'कोई नहीं';
+
+  @override
+  String get bgWhite => 'सफ़ेद';
+
+  @override
+  String get editText => 'टेक्स्ट बदलें';
+
+  @override
+  String get bigger => 'बड़ा';
+
+  @override
+  String get smaller => 'छोटा';
+
+  @override
+  String get rotateLeft => 'बाएँ घुमाएँ';
+
+  @override
+  String get rotateRight => 'दाएँ घुमाएँ';
+
+  @override
+  String get moveLeft => 'बाएँ ले जाएँ';
+
+  @override
+  String get moveRight => 'दाएँ ले जाएँ';
+
+  @override
+  String get moveUp => 'ऊपर ले जाएँ';
+
+  @override
+  String get moveDown => 'नीचे ले जाएँ';
+
+  @override
+  String get deleteItem => 'आइटम हटाएँ';
+
+  @override
+  String get itemsOnPage => 'इस पेज के आइटम';
+
+  @override
+  String get noItems => 'अभी कुछ नहीं जोड़ा गया।';
+
+  @override
+  String get typeText => 'टेक्स्ट लिखें';
+
+  @override
+  String get drawSignature => 'अपना हस्ताक्षर बनाएँ';
+
+  @override
+  String get signatureHint =>
+      'उंगली, माउस या पेन से बनाएँ। अगली बार के लिए यह इसी डिवाइस पर सहेजा जाता है।';
+
+  @override
+  String get clear => 'साफ़ करें';
+
+  @override
+  String get changeSignature => 'हस्ताक्षर बदलें';
+
+  @override
+  String get discardChanges => 'बदलाव छोड़ दें?';
+
+  @override
+  String get discard => 'छोड़ें';
+
+  @override
+  String get keepEditing => 'संपादन जारी रखें';
+
+  @override
+  String itemText(String text) {
+    return 'टेक्स्ट: $text';
+  }
+
+  @override
+  String get itemPen => 'पेन रेखा';
+
+  @override
+  String get itemHighlighter => 'हाइलाइट';
+
+  @override
+  String get itemSignature => 'हस्ताक्षर';
+
+  @override
+  String get itemRect => 'आयत';
+
+  @override
+  String get itemArrow => 'तीर';
+
+  @override
+  String get itemLine => 'रेखा';
+
+  @override
+  String get itemWhiteout => 'व्हाइटआउट बॉक्स';
+
+  @override
+  String get selected => 'चुना गया';
+
+  @override
   String get uploadExistingTitle => 'अपने स्कैन अपलोड करें?';
 
   @override

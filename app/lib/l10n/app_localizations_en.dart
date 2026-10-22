@@ -373,6 +373,156 @@ class AppLocalizationsEn extends AppLocalizations {
   String get readAs => 'Text language';
 
   @override
+  String get markup => 'Markup';
+
+  @override
+  String get markupTitle => 'Edit / Markup';
+
+  @override
+  String get toolSelect => 'Select';
+
+  @override
+  String get toolText => 'Add text';
+
+  @override
+  String get toolPen => 'Pen';
+
+  @override
+  String get toolHighlighter => 'Highlighter';
+
+  @override
+  String get toolEraser => 'Eraser';
+
+  @override
+  String get toolSignature => 'Signature';
+
+  @override
+  String get toolRect => 'Rectangle';
+
+  @override
+  String get toolArrow => 'Arrow';
+
+  @override
+  String get toolLine => 'Line';
+
+  @override
+  String get toolWhiteout => 'Whiteout';
+
+  @override
+  String get markupHint => 'Choose a tool, then tap or drag on the page.';
+
+  @override
+  String get addInMiddle => 'Add in the middle';
+
+  @override
+  String get colour => 'Colour';
+
+  @override
+  String get size => 'Size';
+
+  @override
+  String get bold => 'Bold';
+
+  @override
+  String get background => 'Background';
+
+  @override
+  String get bgNone => 'None';
+
+  @override
+  String get bgWhite => 'White';
+
+  @override
+  String get editText => 'Edit text';
+
+  @override
+  String get bigger => 'Bigger';
+
+  @override
+  String get smaller => 'Smaller';
+
+  @override
+  String get rotateLeft => 'Rotate left';
+
+  @override
+  String get rotateRight => 'Rotate right';
+
+  @override
+  String get moveLeft => 'Move left';
+
+  @override
+  String get moveRight => 'Move right';
+
+  @override
+  String get moveUp => 'Move up';
+
+  @override
+  String get moveDown => 'Move down';
+
+  @override
+  String get deleteItem => 'Delete item';
+
+  @override
+  String get itemsOnPage => 'Items on this page';
+
+  @override
+  String get noItems => 'Nothing added yet.';
+
+  @override
+  String get typeText => 'Type the text';
+
+  @override
+  String get drawSignature => 'Draw your signature';
+
+  @override
+  String get signatureHint =>
+      'Draw with your finger, mouse or pen. It is saved on this device for next time.';
+
+  @override
+  String get clear => 'Clear';
+
+  @override
+  String get changeSignature => 'Change signature';
+
+  @override
+  String get discardChanges => 'Discard your changes?';
+
+  @override
+  String get discard => 'Discard';
+
+  @override
+  String get keepEditing => 'Keep editing';
+
+  @override
+  String itemText(String text) {
+    return 'Text: $text';
+  }
+
+  @override
+  String get itemPen => 'Pen stroke';
+
+  @override
+  String get itemHighlighter => 'Highlight';
+
+  @override
+  String get itemSignature => 'Signature';
+
+  @override
+  String get itemRect => 'Rectangle';
+
+  @override
+  String get itemArrow => 'Arrow';
+
+  @override
+  String get itemLine => 'Line';
+
+  @override
+  String get itemWhiteout => 'Whiteout box';
+
+  @override
+  String get selected => 'selected';
+
+  @override
   String get uploadExistingTitle => 'Upload your scans?';
 
   @override
