@@ -19,8 +19,11 @@ only adds backup and sync.
 - Text recognition in **English and Hindi** (ML Kit on phones, Tesseract.js on the web):
   *Copy text*, searchable PDFs, "No text found on this page" instead of noise
 - Import photos and PDFs; export PDF or JPG (download, share sheet)
-- Library with search; English and Hindi interface; Simple Mode; light, dark, high contrast;
+- Library with search; delete is instant with **Undo**; English and Hindi interface; Simple Mode; light, dark, high contrast;
   text up to 200 %; screen readers and keyboard (WCAG 2.2 AA checked, see `docs/TESTING.md`)
+- **Backup without an account**: Settings › *Export all documents (ZIP)* and *Import backup*;
+  Settings also shows how much space your documents use
+- Web app is **installable** ("Add to Home Screen") and works **offline** after the first visit
 
 ```
 DocScanner/
@@ -143,6 +146,8 @@ cd app/test_js && npm install && npm test        # opencv.js detector + filters 
 cd scanner_core && .venv/bin/python -m pytest    # Python reference detector (80)
 cd backend && .venv/bin/python -m pytest         # API against Postgres + MinIO (20)
 cd tools/audit && npm install && npm run audit   # axe-core + Lighthouse on app and website
+cd tools/audit && node flow.mjs                  # full flow in Chrome: no console errors; works offline
+cd tools/audit && node perf.mjs --label after    # seeded 14-page document: load, delete, scroll, memory
 ```
 
 Latest run: **325 passed, 0 failed** (see `docs/TESTING.md`, which also lists the
@@ -152,6 +157,12 @@ checks that need a real phone). Lint/format: `dart analyze`, `dart format`,
 `tool/host_test.sh` builds opencv_dart for macOS with CMake + Ninja
 (`python3 -m venv ~/development/buildtools && ~/development/buildtools/bin/pip install cmake ninja`);
 without full Xcode it uses a small `xcodebuild` stand-in for that run only.
+
+## Put it online for a demo
+
+The website and web app can be hosted free on GitHub Pages (a workflow is included),
+the optional backend on Render (`render.yaml`). Nothing deploys by itself; follow
+`docs/DEPLOY.md` (about 5 minutes for the website + app).
 
 ## Source code on GitHub
 
@@ -166,6 +177,8 @@ cd DocScanner && ./start.sh
 
 - `docs/TECH_DECISIONS.md`: architecture diagram, scan flow, choices vs alternatives, limitations, viva Q&A
 - `docs/TESTING.md`: test results, accessibility audit, manual and phone-only checks
+- `docs/PERFORMANCE.md`: what was slow, why, what changed, before/after measurements
+- `docs/DEPLOY.md`: put the website + app on GitHub Pages and the backend on Render (step by step)
 - `docs/FEATURE_AUDIT.md`: the audit this round of work started from
 - `docs/CHANGES.md`: every file created or changed in this round
 

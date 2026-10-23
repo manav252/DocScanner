@@ -19,8 +19,13 @@ class PageRenderer {
   final DocumentRepository _repo;
   final Future<(int, int)> Function(Uint8List) _measure;
 
-  /// Longest side of the flattened page (~280 dpi for A4): sharp text, bounded storage.
-  static const flatMaxSide = 3200;
+  /// Longest side of the flattened page: 2480 px is ~210 dpi on the long side of
+  /// A4 (300 dpi across): sharp text. Measured with tool/pdf_size_test.dart, 3200 px
+  /// at JPEG 90 made a 10-page PDF of 14.0 MB; 2480 px at 85 makes 8.1 MB.
+  static const flatMaxSide = 2480;
+
+  /// JPEG quality of the rendered page (what is shown and exported).
+  static const renderQuality = 85;
   static const thumbMaxSide = 360;
 
   /// Store a new page from a photo/imported image and render it.
@@ -72,7 +77,7 @@ class PageRenderer {
       flat = await _engine.warpEncoded(source, page.corners, maxSide: flatMaxSide);
       await _repo.putPageImage(page.id, PageImage.flat, flat);
     }
-    final render = await _engine.processEncoded(flat, page.edits);
+    final render = await _engine.processEncoded(flat, page.edits, quality: renderQuality);
     final thumb = await _engine.processEncoded(render, PageEdits.none, maxSide: thumbMaxSide, quality: 80);
     await _repo.putPageImage(page.id, PageImage.render, render);
     await _repo.putPageImage(page.id, PageImage.thumb, thumb);

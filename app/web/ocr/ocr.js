@@ -45,12 +45,19 @@
       workers[key] = (async () => {
         const base = baseUrl();
         if (!root.Tesseract) await loadScript(base + 'tesseract.min.js');
-        return root.Tesseract.createWorker(key, 1 /* LSTM only */, {
-          workerPath: base + 'worker.min.js',
-          corePath: base, // picks the (relaxed)SIMD or plain LSTM core the browser supports
-          langPath: base + 'lang',
-          gzip: true,
-        });
+        return root.Tesseract.createWorker(
+          key,
+          1 /* LSTM only */,
+          {
+            workerPath: base + 'worker.min.js',
+            corePath: base, // picks the (relaxed)SIMD or plain LSTM core the browser supports
+            langPath: base + 'lang',
+            gzip: true,
+          },
+          // Tesseract's internal notes ("Image too small to scale", "Line cannot be
+          // recognized" on tiny specks) are not errors; keep them out of the console.
+          { debug_file: '/dev/null' },
+        );
       })().catch((e) => {
         delete workers[key];
         throw e;

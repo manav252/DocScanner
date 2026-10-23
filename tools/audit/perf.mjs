@@ -236,7 +236,10 @@ try {
   // ---- memory: open/close the big document 5 times ----
   console.error('step: memory: open/close the big document 5 times');
   result.heapBeforeMB = await heapMB(page);
-  for (let i = 0; i < 5; i++) {
+  const cycles = Number(opt('cycles', 5));
+  result.heapEvery5 = [];
+  for (let i = 0; i < cycles; i++) {
+    if (i > 0 && i % 5 === 0) result.heapEvery5.push(await heapMB(page));
     await click(page, 'CWT', { exact: false });
     await waitFor(page, () => [...document.querySelectorAll('flt-semantics')].some((n) => (n.textContent || '').includes('Page 1 of')));
     await sleep(1500);

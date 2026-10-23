@@ -1,49 +1,52 @@
 {
  "label": "profile",
- "date": "2026-10-23T14:07:35.476Z",
+ "date": "2026-10-23T15:54:08.411Z",
  "docs": 12,
  "bigDocPages": 14,
  "seeded": {
-  "mb": 97.9,
+  "mb": 98.1,
   "perPage": {
-   "source": 1068081,
-   "render": 605559,
+   "source": 1071205,
+   "render": 605812,
    "thumb": 16601
   }
  },
- "homeLoadMs": 307,
- "thumbnailsReadyMs": "not reported (no preview state in the accessibility tree)",
+ "homeLoadMs": 405,
+ "thumbnailsReadyMs": 514,
  "homeFrames": {
-  "frames": 1303,
+  "frames": 112,
   "p50": 16.7,
   "p95": 16.8,
   "max": 83.3,
-  "over50ms": 2
+  "over50ms": 1
  },
  "homeLongTasks": [
-  65
+  50,
+  52
  ],
  "scroll": {
-  "frames": 230,
+  "frames": 232,
   "p50": 16.7,
   "p95": 16.8,
-  "max": 116.7,
-  "over50ms": 2
+  "max": 166.6,
+  "over50ms": 1
  },
  "scrollLongTasks": [
-  117,
-  71
+  170
  ],
- "heapBeforeMB": 27.2,
- "heapAfter5OpensMB": 31.1,
- "deleteCardGoneMs": 185,
+ "heapBeforeMB": 28,
+ "heapAfter5OpensMB": 32.2,
+ "deleteHasConfirmDialog": false,
+ "deleteCardGoneMs": 12,
  "deleteFrames": {
-  "frames": 217,
+  "frames": 153,
   "p50": 16.7,
   "p95": 16.8,
-  "max": 33.4,
+  "max": 49.9,
   "over50ms": 0
  },
- "deleteLongTasks": [],
+ "deleteLongTasks": [
+  54
+ ],
  "deleteStorageGone": true
 }
