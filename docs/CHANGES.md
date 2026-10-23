@@ -1,6 +1,6 @@
 # Files created or changed in this round
 
-Generated from git (`d7f7a26..HEAD`, 195 files): 85 added, 108 changed, 2 deleted.
+Generated from git (`d7f7a26..HEAD`, 198 files): 87 added, 109 changed, 2 deleted.
 Commits: `f8b1cd8` crop fix; `bb439e3` guest-first; `54589aa` OCR; `9ab4457` markup; `490271d` UI redesign; `b175834` accessibility; `786f967` website; `3d39b4c` docs; `151a831` testing/format; `2ba8060` audit.
 
 ## (root)
@@ -8,6 +8,7 @@ Commits: `f8b1cd8` crop fix; `bb439e3` guest-first; `54589aa` OCR; `9ab4457` mar
 | File | | What |
 |---|---|---|
 | `.gitignore` | changed | Changed for: audit, crop fix, website |
+| `README.md` | changed | Rewritten: one-command start, guest use, phones, tests, GitHub steps, limitations |
 | `ruff.toml` | added | Python lint/format settings |
 | `start.sh` | added | One command: backend (Docker), web app build when needed, website + app server |
 
@@ -212,6 +213,7 @@ Commits: `f8b1cd8` crop fix; `bb439e3` guest-first; `54589aa` OCR; `9ab4457` mar
 
 | File | | What |
 |---|---|---|
+| `docs/CHANGES.md` | added | Changed for: 781c5ad |
 | `docs/FEATURE_AUDIT.md` | added | Audit of what worked and the plan for this round |
 | `docs/TECH_DECISIONS.md` | added | Architecture, scan flow, decisions vs alternatives, limitations, viva Q&A |
 | `docs/TESTING.md` | added | Test results, accessibility audit, manual and phone-only checks |
@@ -260,6 +262,7 @@ Commits: `f8b1cd8` crop fix; `bb439e3` guest-first; `54589aa` OCR; `9ab4457` mar
 | `tools/audit/package-lock.json` | added | Changed for: accessibility |
 | `tools/audit/package.json` | added | Changed for: accessibility |
 | `tools/audit/screenshots.mjs` | added | Takes real app screenshots (demo camera) for the website |
+| `tools/changes_summary.py` | added | Changed for: 781c5ad |
 | `tools/collect_results.py` | added | Turns Dart JSON / JUnit reports into website/data/test-results.json |
 | `tools/run_tests.sh` | added | Runs every test suite and records the real results |
 | `tools/serve.py` | added | Serves website at / and the app at /app/ with no-cache headers |
