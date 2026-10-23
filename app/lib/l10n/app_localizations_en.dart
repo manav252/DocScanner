@@ -13,8 +13,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appName => 'DocScanner';
 
   @override
-  String get appPurpose =>
-      'Turn paper into clean PDFs. Works offline, no account needed.';
+  String get appPurpose => 'Turn paper into clean PDFs. Works offline, no account needed.';
 
   @override
   String get scanDocument => 'Scan Document';
@@ -41,19 +40,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noScansYet => 'No scans yet';
 
   @override
-  String get noScansHint =>
-      'Tap “Scan Document” to scan a page with your camera, or import photos or a PDF.';
+  String get noScansHint => 'Tap “Scan Document” to scan a page with your camera, or import photos or a PDF.';
 
   @override
   String get howItWorksTitle => 'How it works';
 
   @override
-  String get howItWorksStep1 =>
-      'Point the camera at a page. It is captured when you hold still.';
+  String get howItWorksStep1 => 'Point the camera at a page. It is captured when you hold still.';
 
   @override
-  String get howItWorksStep2 =>
-      'Check the corners, then pick a look such as Black & White.';
+  String get howItWorksStep2 => 'Check the corners, then pick a look such as Black & White.';
 
   @override
   String get howItWorksStep3 => 'Save as PDF or JPG and share it.';
@@ -68,8 +64,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statusSyncing => 'Backing up…';
 
   @override
-  String get statusOffline =>
-      'Backup server not reachable. Your scans are safe on this device and will upload later.';
+  String get statusOffline => 'Backup server not reachable. Your scans are safe on this device and will upload later.';
 
   @override
   String statusSyncError(String message) {
@@ -103,12 +98,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String pageCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count pages',
-      one: '1 page',
-    );
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count pages', one: '1 page');
     return '$_temp0';
   }
 
@@ -198,12 +188,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String importProgress(int count, String name) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count pages added',
-      one: '1 page added',
-    );
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count pages added', one: '1 page added');
     return '$_temp0 · $name';
   }
 
@@ -218,8 +203,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get importNothing =>
-      'Nothing to import. Choose JPG, PNG or PDF files.';
+  String get importNothing => 'Nothing to import. Choose JPG, PNG or PDF files.';
 
   @override
   String get appearance => 'Appearance';
@@ -264,8 +248,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get spokenGuidance => 'Spoken guidance';
 
   @override
-  String get spokenGuidanceHint =>
-      'Says “Move closer”, “Hold still”, “Captured” while scanning, and vibrates';
+  String get spokenGuidanceHint => 'Says “Move closer”, “Hold still”, “Captured” while scanning, and vibrates';
 
   @override
   String get textRecognition => 'Text recognition';
@@ -274,8 +257,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get autoOcr => 'Recognise text automatically';
 
   @override
-  String get autoOcrHint =>
-      'Lets you search, copy text and make searchable PDFs. Runs on this device.';
+  String get autoOcrHint => 'Lets you search, copy text and make searchable PDFs. Runs on this device.';
 
   @override
   String get ocrLanguage => 'Text language';
@@ -317,15 +299,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get guide2Title => 'Fix and enhance';
 
   @override
-  String get guide2Body =>
-      'Adjust the corners, choose Black & White or Magic Color, add text or a signature.';
+  String get guide2Body => 'Adjust the corners, choose Black & White or Magic Color, add text or a signature.';
 
   @override
   String get guide3Title => 'Save and share, no account needed';
 
   @override
-  String get guide3Body =>
-      'Export as PDF or JPG. Your scans stay on this device unless you choose to back them up.';
+  String get guide3Body => 'Export as PDF or JPG. Your scans stay on this device unless you choose to back them up.';
 
   @override
   String get getStarted => 'Get started';
@@ -359,8 +339,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noTextFound => 'No text found on this page';
 
   @override
-  String get noTextFoundHint =>
-      'Try a clearer photo, or choose the right language below.';
+  String get noTextFoundHint => 'Try a clearer photo, or choose the right language below.';
 
   @override
   String ocrFailed(String message) {
@@ -368,8 +347,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get ocrUnavailable =>
-      'Text recognition is not available on this device.';
+  String get ocrUnavailable => 'Text recognition is not available on this device.';
 
   @override
   String get recogniseAgain => 'Recognise again';
@@ -480,8 +458,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get drawSignature => 'Draw your signature';
 
   @override
-  String get signatureHint =>
-      'Draw with your finger, mouse or pen. It is saved on this device for next time.';
+  String get signatureHint => 'Draw with your finger, mouse or pen. It is saved on this device for next time.';
 
   @override
   String get clear => 'Clear';
@@ -564,8 +541,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get useDeviceCamera => 'Use device camera';
 
   @override
-  String get demoCameraNote =>
-      'Demo camera: shows sample pages, not your camera.';
+  String get demoCameraNote => 'Demo camera: shows sample pages, not your camera.';
 
   @override
   String get diagnostics => 'Detector diagnostics';
@@ -656,8 +632,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cameraBusyTitle => 'Camera is busy';
 
   @override
-  String get cameraBusyBody =>
-      'Another app or browser tab is using the camera. Close it and try again.';
+  String get cameraBusyBody => 'Another app or browser tab is using the camera. Close it and try again.';
 
   @override
   String get cameraHttpsTitle => 'Camera not available here';
@@ -774,8 +749,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noPagesYet => 'No pages yet';
 
   @override
-  String get noPagesHint =>
-      'Scan a page or import photos or a PDF to add pages.';
+  String get noPagesHint => 'Scan a page or import photos or a PDF to add pages.';
 
   @override
   String pageThumbLabel(int page) {
@@ -827,12 +801,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String formatJpg(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'JPG ($count files)',
-      one: 'JPG',
-    );
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: 'JPG ($count files)', one: 'JPG');
     return '$_temp0';
   }
 
@@ -852,8 +821,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchablePdf => 'Searchable PDF';
 
   @override
-  String get searchablePdfHint =>
-      'Recognise text so it can be searched and copied';
+  String get searchablePdfHint => 'Recognise text so it can be searched and copied';
 
   @override
   String get download => 'Download';
@@ -890,12 +858,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Download saves the file to your Downloads folder. Share opens your device’s share menu in browsers that support it (for example Safari and Chrome on phones); elsewhere it downloads the file.';
 
   @override
-  String get exportHelpIos =>
-      'To save the file, tap Share or save, then “Save to Files”.';
+  String get exportHelpIos => 'To save the file, tap Share or save, then “Save to Files”.';
 
   @override
-  String get exportHelpAndroid =>
-      'To save the file, tap Share or save, then pick Files, Drive or another app.';
+  String get exportHelpAndroid => 'To save the file, tap Share or save, then pick Files, Drive or another app.';
 
   @override
   String get markupBurnedIn => 'Markup will be part of the exported pages.';
@@ -904,16 +870,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adjustCorners => 'Adjust corners';
 
   @override
-  String get noEdgesFound =>
-      'No page edges found. Adjust the corners or keep the full photo.';
+  String get noEdgesFound => 'No page edges found. Adjust the corners or keep the full photo.';
 
   @override
   String get cornersHint =>
       'Drag the corners or edges onto the page. Keyboard: Tab picks a corner, arrow keys move it.';
 
   @override
-  String get cornersCrossed =>
-      'The corners cross over. Drag them back around the page.';
+  String get cornersCrossed => 'The corners cross over. Drag them back around the page.';
 
   @override
   String get resetCorners => 'Reset corners';
@@ -972,8 +936,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get apply => 'Apply';
 
   @override
-  String get cropHint =>
-      'Drag the edges or corners of the box. Drag inside it to move it.';
+  String get cropHint => 'Drag the edges or corners of the box. Drag inside it to move it.';
 
   @override
   String get backUpYourScans => 'Back up and sync your scans';
@@ -995,8 +958,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get serverReachable => 'Connected to the server.';
 
   @override
-  String get serverUnreachable =>
-      'Can’t reach the server. Check the address and that the backend is running.';
+  String get serverUnreachable => 'Can’t reach the server. Check the address and that the backend is running.';
 
   @override
   String get signIn => 'Sign in';
@@ -1037,12 +999,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errWrongPassword => 'Wrong email or password.';
 
   @override
-  String get errAccountExists =>
-      'An account with this email already exists. Sign in instead.';
+  String get errAccountExists => 'An account with this email already exists. Sign in instead.';
 
   @override
-  String get errInvalidInput =>
-      'Check the email address; passwords need at least 8 characters.';
+  String get errInvalidInput => 'Check the email address; passwords need at least 8 characters.';
 
   @override
   String get syncNow => 'Sync now';
@@ -1091,8 +1051,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get syncSyncing => 'Syncing…';
 
   @override
-  String get syncOffline =>
-      'Offline. Changes are saved on this device and will sync later.';
+  String get syncOffline => 'Offline. Changes are saved on this device and will sync later.';
 
   @override
   String syncProblem(String message) {
@@ -1128,10 +1087,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other:
-          '$count documents were edited on two devices; the newer edits were kept: $titles',
-      one:
-          '1 document was edited on two devices; the newer edit was kept: $titles',
+      other: '$count documents were edited on two devices; the newer edits were kept: $titles',
+      one: '1 document was edited on two devices; the newer edit was kept: $titles',
     );
     return '$_temp0';
   }

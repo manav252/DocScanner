@@ -13,8 +13,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get appName => 'डॉकस्कैनर';
 
   @override
-  String get appPurpose =>
-      'काग़ज़ को साफ़ PDF में बदलें। ऑफ़लाइन चलता है, खाते की ज़रूरत नहीं।';
+  String get appPurpose => 'काग़ज़ को साफ़ PDF में बदलें। ऑफ़लाइन चलता है, खाते की ज़रूरत नहीं।';
 
   @override
   String get scanDocument => 'दस्तावेज़ स्कैन करें';
@@ -41,19 +40,16 @@ class AppLocalizationsHi extends AppLocalizations {
   String get noScansYet => 'अभी कोई स्कैन नहीं';
 
   @override
-  String get noScansHint =>
-      'कैमरे से पेज स्कैन करने के लिए “दस्तावेज़ स्कैन करें” दबाएँ, या फ़ोटो या PDF जोड़ें।';
+  String get noScansHint => 'कैमरे से पेज स्कैन करने के लिए “दस्तावेज़ स्कैन करें” दबाएँ, या फ़ोटो या PDF जोड़ें।';
 
   @override
   String get howItWorksTitle => 'यह कैसे काम करता है';
 
   @override
-  String get howItWorksStep1 =>
-      'कैमरे को पेज पर रखें। स्थिर रहने पर तस्वीर अपने-आप ली जाती है।';
+  String get howItWorksStep1 => 'कैमरे को पेज पर रखें। स्थिर रहने पर तस्वीर अपने-आप ली जाती है।';
 
   @override
-  String get howItWorksStep2 =>
-      'कोनों की जाँच करें, फिर ब्लैक एंड व्हाइट जैसा रूप चुनें।';
+  String get howItWorksStep2 => 'कोनों की जाँच करें, फिर ब्लैक एंड व्हाइट जैसा रूप चुनें।';
 
   @override
   String get howItWorksStep3 => 'PDF या JPG के रूप में सहेजें और साझा करें।';
@@ -103,12 +99,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String pageCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count पेज',
-      one: '1 पेज',
-    );
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count पेज', one: '1 पेज');
     return '$_temp0';
   }
 
@@ -198,12 +189,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String importProgress(int count, String name) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count पेज जोड़े',
-      one: '1 पेज जोड़ा',
-    );
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count पेज जोड़े', one: '1 पेज जोड़ा');
     return '$_temp0 · $name';
   }
 
@@ -218,8 +204,7 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get importNothing =>
-      'जोड़ने के लिए कुछ नहीं। JPG, PNG या PDF फ़ाइलें चुनें।';
+  String get importNothing => 'जोड़ने के लिए कुछ नहीं। JPG, PNG या PDF फ़ाइलें चुनें।';
 
   @override
   String get appearance => 'रूप';
@@ -264,8 +249,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get spokenGuidance => 'बोलकर मार्गदर्शन';
 
   @override
-  String get spokenGuidanceHint =>
-      'स्कैन करते समय “पास लाएँ”, “स्थिर रखें”, “तस्वीर ली गई” बोलता है और कंपन करता है';
+  String get spokenGuidanceHint => 'स्कैन करते समय “पास लाएँ”, “स्थिर रखें”, “तस्वीर ली गई” बोलता है और कंपन करता है';
 
   @override
   String get textRecognition => 'टेक्स्ट पहचान';
@@ -274,8 +258,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get autoOcr => 'टेक्स्ट अपने-आप पहचानें';
 
   @override
-  String get autoOcrHint =>
-      'खोजने, टेक्स्ट कॉपी करने और खोजने योग्य PDF बनाने देता है। इसी डिवाइस पर चलता है।';
+  String get autoOcrHint => 'खोजने, टेक्स्ट कॉपी करने और खोजने योग्य PDF बनाने देता है। इसी डिवाइस पर चलता है।';
 
   @override
   String get ocrLanguage => 'टेक्स्ट की भाषा';
@@ -310,22 +293,19 @@ class AppLocalizationsHi extends AppLocalizations {
   String get guide1Title => 'कोई भी पेज स्कैन करें';
 
   @override
-  String get guide1Body =>
-      'कैमरे को दस्तावेज़ पर रखें। डॉकस्कैनर किनारे ढूँढता है और स्थिर रहने पर तस्वीर ले लेता है।';
+  String get guide1Body => 'कैमरे को दस्तावेज़ पर रखें। डॉकस्कैनर किनारे ढूँढता है और स्थिर रहने पर तस्वीर ले लेता है।';
 
   @override
   String get guide2Title => 'ठीक करें और सुधारें';
 
   @override
-  String get guide2Body =>
-      'कोने ठीक करें, ब्लैक एंड व्हाइट या मैजिक कलर चुनें, टेक्स्ट या हस्ताक्षर जोड़ें।';
+  String get guide2Body => 'कोने ठीक करें, ब्लैक एंड व्हाइट या मैजिक कलर चुनें, टेक्स्ट या हस्ताक्षर जोड़ें।';
 
   @override
   String get guide3Title => 'सहेजें और साझा करें, खाते की ज़रूरत नहीं';
 
   @override
-  String get guide3Body =>
-      'PDF या JPG के रूप में निर्यात करें। जब तक आप बैकअप न चुनें, स्कैन इसी डिवाइस पर रहते हैं।';
+  String get guide3Body => 'PDF या JPG के रूप में निर्यात करें। जब तक आप बैकअप न चुनें, स्कैन इसी डिवाइस पर रहते हैं।';
 
   @override
   String get getStarted => 'शुरू करें';
@@ -478,8 +458,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get drawSignature => 'अपना हस्ताक्षर बनाएँ';
 
   @override
-  String get signatureHint =>
-      'उंगली, माउस या पेन से बनाएँ। अगली बार के लिए यह इसी डिवाइस पर सहेजा जाता है।';
+  String get signatureHint => 'उंगली, माउस या पेन से बनाएँ। अगली बार के लिए यह इसी डिवाइस पर सहेजा जाता है।';
 
   @override
   String get clear => 'साफ़ करें';
@@ -562,8 +541,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get useDeviceCamera => 'डिवाइस कैमरा इस्तेमाल करें';
 
   @override
-  String get demoCameraNote =>
-      'डेमो कैमरा: आपका कैमरा नहीं, नमूना पेज दिखाता है।';
+  String get demoCameraNote => 'डेमो कैमरा: आपका कैमरा नहीं, नमूना पेज दिखाता है।';
 
   @override
   String get diagnostics => 'डिटेक्टर जाँच';
@@ -608,12 +586,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String reviewPages(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count पेज देखें',
-      one: '1 पेज देखें',
-    );
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count पेज देखें', one: '1 पेज देखें');
     return '$_temp0';
   }
 
@@ -654,8 +627,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get cameraBusyTitle => 'कैमरा व्यस्त है';
 
   @override
-  String get cameraBusyBody =>
-      'कोई और ऐप या ब्राउज़र टैब कैमरा इस्तेमाल कर रहा है। उसे बंद करके फिर कोशिश करें।';
+  String get cameraBusyBody => 'कोई और ऐप या ब्राउज़र टैब कैमरा इस्तेमाल कर रहा है। उसे बंद करके फिर कोशिश करें।';
 
   @override
   String get cameraHttpsTitle => 'यहाँ कैमरा उपलब्ध नहीं है';
@@ -772,8 +744,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get noPagesYet => 'अभी कोई पेज नहीं';
 
   @override
-  String get noPagesHint =>
-      'पेज जोड़ने के लिए स्कैन करें या फ़ोटो या PDF जोड़ें।';
+  String get noPagesHint => 'पेज जोड़ने के लिए स्कैन करें या फ़ोटो या PDF जोड़ें।';
 
   @override
   String pageThumbLabel(int page) {
@@ -825,12 +796,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String formatJpg(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'JPG ($count फ़ाइलें)',
-      one: 'JPG',
-    );
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: 'JPG ($count फ़ाइलें)', one: 'JPG');
     return '$_temp0';
   }
 
@@ -850,8 +816,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get searchablePdf => 'खोजने योग्य PDF';
 
   @override
-  String get searchablePdfHint =>
-      'टेक्स्ट पहचानें ताकि उसे खोजा और कॉपी किया जा सके';
+  String get searchablePdfHint => 'टेक्स्ट पहचानें ताकि उसे खोजा और कॉपी किया जा सके';
 
   @override
   String get download => 'डाउनलोड करें';
@@ -888,8 +853,7 @@ class AppLocalizationsHi extends AppLocalizations {
       'डाउनलोड फ़ाइल को आपके डाउनलोड फ़ोल्डर में सहेजता है। साझा करें उन ब्राउज़रों में शेयर मेन्यू खोलता है जो इसे सपोर्ट करते हैं (जैसे फ़ोन पर Safari और Chrome); बाक़ी जगह फ़ाइल डाउनलोड होती है।';
 
   @override
-  String get exportHelpIos =>
-      'फ़ाइल सहेजने के लिए “साझा करें या सहेजें” दबाएँ, फिर “Save to Files” चुनें।';
+  String get exportHelpIos => 'फ़ाइल सहेजने के लिए “साझा करें या सहेजें” दबाएँ, फिर “Save to Files” चुनें।';
 
   @override
   String get exportHelpAndroid =>
@@ -902,16 +866,13 @@ class AppLocalizationsHi extends AppLocalizations {
   String get adjustCorners => 'कोने ठीक करें';
 
   @override
-  String get noEdgesFound =>
-      'पेज के किनारे नहीं मिले। कोने ठीक करें या पूरी फ़ोटो रखें।';
+  String get noEdgesFound => 'पेज के किनारे नहीं मिले। कोने ठीक करें या पूरी फ़ोटो रखें।';
 
   @override
-  String get cornersHint =>
-      'कोनों या किनारों को पेज पर खींचें। कीबोर्ड: Tab से कोना चुनें, तीर कुंजियों से खिसकाएँ।';
+  String get cornersHint => 'कोनों या किनारों को पेज पर खींचें। कीबोर्ड: Tab से कोना चुनें, तीर कुंजियों से खिसकाएँ।';
 
   @override
-  String get cornersCrossed =>
-      'कोने एक-दूसरे को काट रहे हैं। उन्हें वापस पेज के चारों ओर खींचें।';
+  String get cornersCrossed => 'कोने एक-दूसरे को काट रहे हैं। उन्हें वापस पेज के चारों ओर खींचें।';
 
   @override
   String get resetCorners => 'कोने पहले जैसे करें';
@@ -970,8 +931,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get apply => 'लागू करें';
 
   @override
-  String get cropHint =>
-      'बॉक्स के किनारे या कोने खींचें। उसे खिसकाने के लिए अंदर से खींचें।';
+  String get cropHint => 'बॉक्स के किनारे या कोने खींचें। उसे खिसकाने के लिए अंदर से खींचें।';
 
   @override
   String get backUpYourScans => 'अपने स्कैन का बैकअप और सिंक करें';
@@ -993,8 +953,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get serverReachable => 'सर्वर से जुड़ गया।';
 
   @override
-  String get serverUnreachable =>
-      'सर्वर तक नहीं पहुँच पा रहे। पता और बैकएंड चल रहा है या नहीं, जाँचें।';
+  String get serverUnreachable => 'सर्वर तक नहीं पहुँच पा रहे। पता और बैकएंड चल रहा है या नहीं, जाँचें।';
 
   @override
   String get signIn => 'साइन इन करें';
@@ -1038,8 +997,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get errAccountExists => 'इस ईमेल से खाता पहले से है। साइन इन करें।';
 
   @override
-  String get errInvalidInput =>
-      'ईमेल पता जाँचें; पासवर्ड में कम से कम 8 अक्षर चाहिए।';
+  String get errInvalidInput => 'ईमेल पता जाँचें; पासवर्ड में कम से कम 8 अक्षर चाहिए।';
 
   @override
   String get syncNow => 'अभी सिंक करें';
@@ -1062,8 +1020,7 @@ class AppLocalizationsHi extends AppLocalizations {
       'आपके स्कैन इसी डिवाइस पर रहेंगे। साइन आउट रहते हुए किए बदलाव दोबारा साइन इन करने पर सिंक होंगे।';
 
   @override
-  String get signedInNote =>
-      'स्कैन इसी डिवाइस पर रहते हैं और आपके खाते में बैकअप होते हैं। ऑफ़लाइन भी काम करते हैं।';
+  String get signedInNote => 'स्कैन इसी डिवाइस पर रहते हैं और आपके खाते में बैकअप होते हैं। ऑफ़लाइन भी काम करते हैं।';
 
   @override
   String get syncNever => 'अभी सिंक नहीं हुआ';
@@ -1088,8 +1045,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get syncSyncing => 'सिंक हो रहा है…';
 
   @override
-  String get syncOffline =>
-      'ऑफ़लाइन। बदलाव इस डिवाइस पर सहेजे गए हैं और बाद में सिंक होंगे।';
+  String get syncOffline => 'ऑफ़लाइन। बदलाव इस डिवाइस पर सहेजे गए हैं और बाद में सिंक होंगे।';
 
   @override
   String syncProblem(String message) {
