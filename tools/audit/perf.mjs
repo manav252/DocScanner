@@ -34,6 +34,12 @@ const browser = await puppeteer.launch({
   args: ['--enable-precise-memory-info', '--js-flags=--expose-gc'],
 });
 const result = { label, date: new Date().toISOString(), docs: docCount, bigDocPages: bigPages };
+// A run that hangs (browser stuck) ends with an error instead of blocking the batch.
+setTimeout(() => {
+  result.error = 'watchdog: run took over 8 minutes';
+  fs.writeFileSync(path.join(here, `../../docs/testing/perf-${label}.json`), JSON.stringify(result, null, 1));
+  process.exit(2);
+}, 8 * 60 * 1000).unref();
 
 // Frame sampler + long-task observer, installed before the app starts.
 const instrument = () => {
@@ -192,6 +198,20 @@ try {
   result.seeded = seeded;
   console.log('seeded', seeded);
 
+  // Repeat-visit conditions: let a service worker (if the build has one) finish
+  // caching first, so it does not download in the background while we measure.
+  if (args.includes('--settle-sw')) {
+    for (const t0 = Date.now(); Date.now() - t0 < 90000; await sleep(1000)) {
+      const st = await page.evaluate(async () => {
+        const reg = await navigator.serviceWorker?.getRegistration();
+        if (!reg) return 'none';
+        if (!reg.active || reg.installing || reg.waiting) return 'installing';
+        return 'active';
+      });
+      if (st === 'active' || (st === 'none' && Date.now() - t0 > 12000)) break;
+    }
+    await sleep(2000);
+  }
   // ---- home load ----
   console.error('step: home load');
   const t0 = Date.now();
@@ -214,6 +234,9 @@ try {
   result.homeFrames = frameStats(await page.evaluate(() => window.__frames.splice(0)));
   result.homeLongTasks = await page.evaluate(() => window.__long.splice(0).map((e) => Math.round(e.ms)));
 
+  if (args.includes('--only-home')) throw Object.assign(new Error('only-home'), { done: true });
+  const onlyDelete = args.includes('--only-delete');
+  if (!onlyDelete) {
   // ---- scroll the Documents list ----
   console.error('step: scroll the Documents list');
   await click(page, 'View Documents');
@@ -236,7 +259,7 @@ try {
   // ---- memory: open/close the big document 5 times ----
   console.error('step: memory: open/close the big document 5 times');
   result.heapBeforeMB = await heapMB(page);
-  const cycles = Number(opt('cycles', 5));
+  const cycles = args.includes('--no-memory') ? 0 : Number(opt('cycles', 5));
   result.heapEvery5 = [];
   for (let i = 0; i < cycles; i++) {
     if (i > 0 && i % 5 === 0) result.heapEvery5.push(await heapMB(page));
@@ -251,6 +274,7 @@ try {
   }
   result.heapAfter5OpensMB = await heapMB(page);
 
+  }
   // Fresh Documents screen for the delete.
   console.error('step: Fresh Documents screen for the delete.');
   await page.goto(appUrl, { waitUntil: 'domcontentloaded' });
@@ -264,22 +288,9 @@ try {
   await page.evaluate(() => { window.__frames.length = 0; window.__long.length = 0; });
   const cards = await texts(page);
   if (!cards.some((t) => t.includes('CWT'))) throw new Error('CWT card not on screen');
-  const tCard = Date.now();
-  await click(page, 'Delete', { exact: true });
-  // Old version: a confirmation dialog. New version: deletes at once with Undo.
-  // Poll from the click for whichever comes first.
-  let dialog = false;
-  let goneAfterCard = null;
-  for (const t0 = Date.now(); Date.now() - t0 < 3000; await sleep(10)) {
-    const st = await page.evaluate(() => ({
-      dialog: !!document.querySelector('flt-semantics[role="dialog"], flt-semantics [role="dialog"], flt-semantics[role="alertdialog"], flt-semantics [role="alertdialog"]'),
-      gone: ![...document.querySelectorAll('flt-semantics')].some((n) => (n.textContent || '').includes('CWT')),
-    }));
-    if (st.dialog) { dialog = true; break; }
-    if (st.gone) { goneAfterCard = Date.now() - tCard; break; }
-  }
-  result.deleteHasConfirmDialog = dialog;
-  if (dialog) await sleep(300); // dialog opens
+  const tracing = args.includes('--trace-delete');
+  const tracePath = path.join(here, '../../docs/testing/raw/delete-trace.json');
+  if (tracing) await page.tracing.start({ path: tracePath, categories: ['devtools.timeline', 'disabled-by-default-devtools.timeline', 'blink', 'v8', 'IndexedDB', 'toplevel', 'disabled-by-default-v8.gc'] });
   const profiling = args.includes('--profile-delete');
   const prof = profiling ? await page.createCDPSession() : null;
   if (prof) {
@@ -287,9 +298,27 @@ try {
     await prof.send('Profiler.setSamplingInterval', { interval: 200 });
     await prof.send('Profiler.start');
   }
-  const tracing = args.includes('--trace-delete');
-  const tracePath = path.join(here, '../../docs/testing/raw/delete-trace.json');
-  if (tracing) await page.tracing.start({ path: tracePath, categories: ['devtools.timeline', 'disabled-by-default-devtools.timeline', 'blink', 'v8', 'IndexedDB', 'toplevel', 'disabled-by-default-v8.gc'] });
+  const tCard = Date.now();
+  await click(page, 'Delete', { exact: true });
+  // Old version: a confirmation dialog. New version: deletes at once with Undo.
+  // Poll from the click for whichever comes first.
+  let dialog = false;
+  let goneAfterCard = null;
+  for (const t0 = Date.now(); Date.now() - t0 < 3000; await sleep(10)) {
+    // The list leaves the accessibility tree a frame before a dialog's buttons arrive:
+    // after the card disappears, keep watching 1 s for a dialog before deciding.
+    if (goneAfterCard != null && Date.now() - tCard > goneAfterCard + 1000) break;
+    // A confirmation dialog hides the list from the accessibility tree, so "CWT gone"
+    // alone is not proof: the old dialog is recognised by its Cancel button.
+    const st = await page.evaluate(() => {
+      const labels = [...document.querySelectorAll('flt-semantics')].map((n) => (n.getAttribute('aria-label') || n.textContent || '').trim());
+      return { dialog: labels.includes('Cancel'), gone: !labels.some((t) => t.includes('CWT')) };
+    });
+    if (st.dialog) { dialog = true; break; }
+    if (st.gone && goneAfterCard == null) goneAfterCard = Date.now() - tCard;
+  }
+  result.deleteHasConfirmDialog = dialog;
+  if (dialog) await sleep(300); // dialog opens
   const tClick = dialog ? Date.now() : tCard;
   if (dialog) await click(page, 'Delete', { exact: true, last: true }); // the dialog's confirm button
   const gone = dialog
@@ -325,7 +354,7 @@ try {
       }),
   );
 } catch (e) {
-  result.error = String(e.stack || e);
+  if (!e.done) result.error = String(e.stack || e);
 } finally {
   await browser.close();
 }
@@ -334,3 +363,5 @@ console.log(JSON.stringify(result, null, 1));
 const out = path.join(here, `../../docs/testing/perf-${label}.json`);
 fs.mkdirSync(path.dirname(out), { recursive: true });
 fs.writeFileSync(out, JSON.stringify(result, null, 1));
+
+process.exit(0);

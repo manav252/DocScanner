@@ -30,7 +30,13 @@ Future<(MemoryStore, DocumentRepository)> device({int docs = 2, DateTime? update
   final store = MemoryStore();
   final repo = DocumentRepository(store);
   for (var d = 0; d < docs; d++) {
-    final pages = [page('d$d-p0'), page('d$d-p1', markup: [const TextMarkup(id: 'm', text: 'Paid', x: .5, y: .5)])];
+    final pages = [
+      page('d$d-p0'),
+      page(
+        'd$d-p1',
+        markup: [const TextMarkup(id: 'm', text: 'Paid', x: .5, y: .5)],
+      ),
+    ];
     for (final p in pages) {
       for (final f in ['source', 'flat', 'render', 'thumb']) {
         await store.put('page/${p.id}/$f.jpg', bytes('$f of ${p.id}'));
@@ -59,7 +65,10 @@ void main() {
     final a = ZipDecoder().decodeBytes(zip);
     final names = a.files.map((f) => f.name).toSet();
     expect(names, contains(BackupService.manifestName));
-    expect(names, containsAll(['documents/d0.json', 'documents/d1.json', 'pages/d1-p1/render.jpg', 'pages/d1-p1/ocr.json']));
+    expect(
+      names,
+      containsAll(['documents/d0.json', 'documents/d1.json', 'pages/d1-p1/render.jpg', 'pages/d1-p1/ocr.json']),
+    );
     expect(names.where((n) => n.endsWith('flat.jpg')), isEmpty);
     expect(utf8.decode(a.find('pages/d0-p0/source.jpg')!.content), 'source of d0-p0');
     final m = jsonDecode(utf8.decode(a.find(BackupService.manifestName)!.content)) as Map<String, dynamic>;

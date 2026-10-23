@@ -79,7 +79,11 @@ class BackupService {
   /// Restore documents from [zip]. A document already on this device is
   /// replaced only if the backup's copy is newer. Imported documents stay on
   /// this device (they are not backed up to an account until the user chooses to).
-  Future<BackupImportResult> importZip(Uint8List zip, {CancelToken? cancel, void Function(int, int)? onProgress}) async {
+  Future<BackupImportResult> importZip(
+    Uint8List zip, {
+    CancelToken? cancel,
+    void Function(int, int)? onProgress,
+  }) async {
     final Archive archive;
     try {
       archive = ZipDecoder().decodeBytes(zip);

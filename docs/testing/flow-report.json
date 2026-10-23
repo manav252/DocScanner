@@ -1,60 +1,60 @@
 {
- "date": "2026-10-23T16:08:00.665Z",
+ "date": "2026-10-23T22:02:11.182Z",
  "steps": [
   {
    "name": "open app (fresh profile), skip the guide",
    "ok": true,
-   "ms": 2262
+   "ms": 2294
   },
   {
    "name": "scan 2 pages with the demo camera",
    "ok": true,
-   "ms": 6367
+   "ms": 6330
   },
   {
    "name": "filters: Black & White, then Done",
    "ok": true,
-   "ms": 4617
+   "ms": 4615
   },
   {
    "name": "rotate",
    "ok": true,
-   "ms": 3209
+   "ms": 3210
   },
   {
    "name": "markup: pen stroke, Done",
    "ok": true,
-   "ms": 2957
+   "ms": 2975
   },
   {
    "name": "text recognition (Text view)",
    "ok": true,
-   "ms": 1533
+   "ms": 1536
   },
   {
    "name": "export PDF (download)",
    "ok": true,
-   "ms": 2426
+   "ms": 2421
   },
   {
    "name": "delete with Undo, then delete for real",
    "ok": true,
-   "ms": 9677
+   "ms": 9766
   },
   {
    "name": "settings: export all documents (ZIP)",
    "ok": true,
-   "ms": 7714
+   "ms": 7688
   },
   {
    "name": "offline copy ready (service worker + pre-cache)",
    "ok": true,
-   "ms": 18
+   "ms": 28
   },
   {
    "name": "offline: app loads and the demo camera scans (OpenCV from cache)",
    "ok": true,
-   "ms": 2055
+   "ms": 2070
   }
  ],
  "consoleErrors": [],

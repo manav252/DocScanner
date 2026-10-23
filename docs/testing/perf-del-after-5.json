@@ -1,0 +1,35 @@
+{
+ "label": "del-after-5",
+ "date": "2026-10-23T21:57:49.912Z",
+ "docs": 12,
+ "bigDocPages": 14,
+ "seeded": {
+  "mb": 98.1,
+  "perPage": {
+   "source": 1070388,
+   "render": 605752,
+   "thumb": 16601
+  }
+ },
+ "homeLoadMs": 370,
+ "thumbnailsReadyMs": 423,
+ "homeFrames": {
+  "frames": 109,
+  "p50": 16.7,
+  "p95": 16.8,
+  "max": 66.7,
+  "over50ms": 1
+ },
+ "homeLongTasks": [],
+ "deleteHasConfirmDialog": false,
+ "deleteCardGoneMs": 54,
+ "deleteFrames": {
+  "frames": 184,
+  "p50": 16.7,
+  "p95": 16.8,
+  "max": 33.4,
+  "over50ms": 0
+ },
+ "deleteLongTasks": [],
+ "deleteStorageGone": true
+}

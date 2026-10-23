@@ -1,0 +1,26 @@
+{
+ "label": "home-before-4",
+ "date": "2026-10-23T18:39:33.169Z",
+ "docs": 12,
+ "bigDocPages": 14,
+ "seeded": {
+  "mb": 98,
+  "perPage": {
+   "source": 1067378,
+   "render": 605715,
+   "thumb": 16601
+  }
+ },
+ "homeLoadMs": 310,
+ "thumbnailsReadyMs": "not reported (no preview state in the accessibility tree)",
+ "homeFrames": {
+  "frames": 1301,
+  "p50": 16.7,
+  "p95": 16.8,
+  "max": 83.3,
+  "over50ms": 2
+ },
+ "homeLongTasks": [
+  73
+ ]
+}

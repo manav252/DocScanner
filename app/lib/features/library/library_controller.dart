@@ -27,8 +27,10 @@ final libraryProvider = StreamProvider.autoDispose<List<ScanDocument>>((ref) asy
       (query.isEmpty ||
           d.title.toLowerCase().contains(query) ||
           d.pages.any((p) => p.ocrText?.toLowerCase().contains(query) ?? false));
-  List<ScanDocument> view(Map<String, ScanDocument> all) =>
-      [for (final d in all.values) if (matches(d)) d]..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+  List<ScanDocument> view(Map<String, ScanDocument> all) => [
+    for (final d in all.values)
+      if (matches(d)) d,
+  ]..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
 
   // Listen before the first read so no change is missed.
   final changed = StreamController<String>();

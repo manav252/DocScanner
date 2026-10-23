@@ -11,6 +11,7 @@ import '../common/document_card.dart';
 import '../editor/document_editor_page.dart';
 import '../library/documents_page.dart';
 import '../library/import_ui.dart';
+import '../../data/models.dart';
 import '../library/delete_controller.dart';
 import '../library/library_controller.dart';
 import '../settings/settings_page.dart';
@@ -24,8 +25,19 @@ class HomePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = context.l10n;
     final theme = Theme.of(context);
-    final pending = ref.watch(pendingDeletesProvider);
-    final docs = ref.watch(libraryProvider).whenData((l) => [for (final d in l) if (!pending.contains(d.id)) d]);
+    final all = ref.watch(libraryProvider);
+    // Rebuild for a delete only if it concerns a document this screen shows (a few
+    // beyond the recent cards, which move up when one is hidden). A string key:
+    // Riverpod compares selected values with ==.
+    final shownIds = [for (final d in all.value ?? const <ScanDocument>[]) d.id].take(recentCount + 8).toList();
+    final hiddenKey = ref.watch(pendingDeletesProvider.select((s) => shownIds.where(s.contains).join(',')));
+    final hidden = hiddenKey.isEmpty ? const <String>{} : hiddenKey.split(',').toSet();
+    final docs = all.whenData(
+      (l) => [
+        for (final d in l)
+          if (!hidden.contains(d.id)) d,
+      ],
+    );
     void push(Widget page) => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => page));
 
     return Scaffold(

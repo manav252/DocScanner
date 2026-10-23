@@ -1,0 +1,49 @@
+{
+ "label": "abm-after-3",
+ "date": "2026-10-23T18:27:52.759Z",
+ "docs": 12,
+ "bigDocPages": 14,
+ "seeded": {
+  "mb": 98.1,
+  "perPage": {
+   "source": 1070368,
+   "render": 605856,
+   "thumb": 16601
+  }
+ },
+ "homeLoadMs": 434,
+ "thumbnailsReadyMs": 496,
+ "homeFrames": {
+  "frames": 110,
+  "p50": 16.7,
+  "p95": 16.7,
+  "max": 83.4,
+  "over50ms": 2
+ },
+ "homeLongTasks": [
+  75,
+  51
+ ],
+ "scroll": {
+  "frames": 237,
+  "p50": 16.7,
+  "p95": 16.8,
+  "max": 33.4,
+  "over50ms": 0
+ },
+ "scrollLongTasks": [],
+ "heapBeforeMB": 26,
+ "heapEvery5": [],
+ "heapAfter5OpensMB": 26.4,
+ "deleteHasConfirmDialog": false,
+ "deleteCardGoneMs": 57,
+ "deleteFrames": {
+  "frames": 183,
+  "p50": 16.7,
+  "p95": 16.8,
+  "max": 33.3,
+  "over50ms": 0
+ },
+ "deleteLongTasks": [],
+ "deleteStorageGone": true
+}

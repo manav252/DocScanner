@@ -50,9 +50,17 @@ class _DocumentsPageState extends ConsumerState<DocumentsPage> {
     final l = context.l10n;
     final docs = ref.watch(libraryProvider);
     final query = ref.watch(libraryQueryProvider);
-    final pending = ref.watch(pendingDeletesProvider);
-    _collapsed.retainAll(pending); // undone: the card comes back
-    final shown = docs.whenData((l) => [for (final d in l) if (!_collapsed.contains(d.id)) d]);
+    // Not watched here: only the card being deleted rebuilds (see _DeletableItem).
+    // Undo brings a folded-away card back into the list.
+    ref.listen(pendingDeletesProvider, (_, pending) {
+      if (_collapsed.any((id) => !pending.contains(id))) setState(() => _collapsed.retainAll(pending));
+    });
+    final shown = docs.whenData(
+      (l) => [
+        for (final d in l)
+          if (!_collapsed.contains(d.id)) d,
+      ],
+    );
     return Scaffold(
       appBar: AppBar(title: Text(l.documents)),
       body: Center(
@@ -89,7 +97,7 @@ class _DocumentsPageState extends ConsumerState<DocumentsPage> {
               ),
               Expanded(
                 child: switch (shown) {
-                  AsyncData(value: final list) when list.every((d) => pending.contains(d.id)) =>
+                  AsyncData(value: final list) when list.isEmpty =>
                     query.isEmpty
                         ? _Empty(
                             title: l.noScansYet,
@@ -121,17 +129,22 @@ class _DocumentsPageState extends ConsumerState<DocumentsPage> {
                       final i = list.indexWhere((d) => ValueKey(d.id) == key);
                       return i < 0 ? null : i;
                     },
-                    itemBuilder: (_, i) => Collapsible(
+                    itemBuilder: (_, i) => _DeletableItem(
                       key: ValueKey(list[i].id),
-                      hidden: pending.contains(list[i].id),
-                      onCollapsed: () => setState(() => _collapsed.add(list[i].id)),
+                      id: list[i].id,
+                      // Undo during the fold animation: the card stays.
+                      onCollapsed: () {
+                        if (ref.read(pendingDeletesProvider).contains(list[i].id)) {
+                          setState(() => _collapsed.add(list[i].id));
+                        }
+                      },
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: DocumentCard(
                           doc: list[i],
-                          onOpen: () => Navigator.of(context).push(
-                            MaterialPageRoute<void>(builder: (_) => DocumentEditorPage(documentId: list[i].id)),
-                          ),
+                          onOpen: () => Navigator.of(
+                            context,
+                          ).push(MaterialPageRoute<void>(builder: (_) => DocumentEditorPage(documentId: list[i].id))),
                           onRename: () => _rename(list[i]),
                           onExport: () => showExportSheet(context, list[i]),
                           onDelete: () => _delete(list[i]),
@@ -175,5 +188,21 @@ class _Empty extends StatelessWidget {
         ],
       ),
     ),
+  );
+}
+
+/// A list item that folds away while its document is being deleted. It listens
+/// to its own document only, so deleting one card does not rebuild the others.
+class _DeletableItem extends ConsumerWidget {
+  const _DeletableItem({super.key, required this.id, required this.child, required this.onCollapsed});
+  final String id;
+  final Widget child;
+  final VoidCallback onCollapsed;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) => Collapsible(
+    hidden: ref.watch(pendingDeletesProvider.select((s) => s.contains(id))),
+    onCollapsed: onCollapsed,
+    child: child,
   );
 }

@@ -1,8 +1,8 @@
 {
- "generatedAt": "2026-10-23T01:37:37+00:00",
- "commit": "3d39b4c",
+ "generatedAt": "2026-10-23T22:02:05+00:00",
+ "commit": "16c9d0e",
  "totals": {
-  "passed": 325,
+  "passed": 344,
   "failed": 0,
   "skipped": 0
  },
@@ -13,56 +13,6 @@
    "command": "cd app && tool/host_test.sh",
    "status": "run",
    "tests": [
-    {
-     "name": "adding a page stores source, flat, render and thumb",
-     "file": "features/document_controller_test.dart",
-     "status": "passed"
-    },
-    {
-     "name": "reorder, rotate, filter, crop, delete",
-     "file": "features/document_controller_test.dart",
-     "status": "passed"
-    },
-    {
-     "name": "apply filter to all pages",
-     "file": "features/document_controller_test.dart",
-     "status": "passed"
-    },
-    {
-     "name": "setCorners re-flattens and resets crop",
-     "file": "features/document_controller_test.dart",
-     "status": "passed"
-    },
-    {
-     "name": "retake replaces the photo but keeps position and filter",
-     "file": "features/document_controller_test.dart",
-     "status": "passed"
-    },
-    {
-     "name": "rename",
-     "file": "features/document_controller_test.dart",
-     "status": "passed"
-    },
-    {
-     "name": "import: photos are detected + Magic Color, PDF pages are added as-is",
-     "file": "features/document_controller_test.dart",
-     "status": "passed"
-    },
-    {
-     "name": "import: an unreadable file is skipped and named; the other files are still added",
-     "file": "features/document_controller_test.dart",
-     "status": "passed"
-    },
-    {
-     "name": "export PDF and JPGs",
-     "file": "features/document_controller_test.dart",
-     "status": "passed"
-    },
-    {
-     "name": "library search sees new documents",
-     "file": "features/document_controller_test.dart",
-     "status": "passed"
-    },
     {
      "name": "OCR runs for stale pages only and stores text + line boxes",
      "file": "features/ocr_test.dart",
@@ -109,13 +59,13 @@
      "status": "passed"
     },
     {
-     "name": "A creates and pushes a document",
-     "file": "integration/sync_e2e_test.dart",
+     "name": "searchable PDF keeps Hindi text when the Devanagari font is supplied",
+     "file": "features/ocr_test.dart",
      "status": "passed"
     },
     {
-     "name": "searchable PDF keeps Hindi text when the Devanagari font is supplied",
-     "file": "features/ocr_test.dart",
+     "name": "A creates and pushes a document",
+     "file": "integration/sync_e2e_test.dart",
      "status": "passed"
     },
     {
@@ -136,6 +86,11 @@
     {
      "name": "an older concurrent edit loses to the server copy",
      "file": "integration/sync_e2e_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "error screen with Retry",
+     "file": "package:flutter_test/src/widget_tester.dart",
      "status": "passed"
     },
     {
@@ -169,7 +124,62 @@
      "status": "passed"
     },
     {
+     "name": "adding a page stores source, flat, render and thumb",
+     "file": "features/document_controller_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "reorder, rotate, filter, crop, delete",
+     "file": "features/document_controller_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "apply filter to all pages",
+     "file": "features/document_controller_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "setCorners re-flattens and resets crop",
+     "file": "features/document_controller_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "retake replaces the photo but keeps position and filter",
+     "file": "features/document_controller_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "rename",
+     "file": "features/document_controller_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "import: photos are detected + Magic Color, PDF pages are added as-is",
+     "file": "features/document_controller_test.dart",
+     "status": "passed"
+    },
+    {
      "name": "first launch with no scans: guidance instead of an empty list",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "import: an unreadable file is skipped and named; the other files are still added",
+     "file": "features/document_controller_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "export PDF and JPGs",
+     "file": "features/document_controller_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "library search sees new documents",
+     "file": "features/document_controller_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "documents: search titles, no-results state, clear",
      "file": "package:flutter_test/src/widget_tester.dart",
      "status": "passed"
     },
@@ -194,26 +204,6 @@
      "status": "passed"
     },
     {
-     "name": "running scanner: every control has a text label; no icon-only buttons",
-     "file": "package:flutter_test/src/widget_tester.dart",
-     "status": "passed"
-    },
-    {
-     "name": "documents: search titles, no-results state, clear",
-     "file": "package:flutter_test/src/widget_tester.dart",
-     "status": "passed"
-    },
-    {
-     "name": "photo without text: says so, Copy is disabled",
-     "file": "package:flutter_test/src/widget_tester.dart",
-     "status": "passed"
-    },
-    {
-     "name": "Switch camera opens the next camera",
-     "file": "package:flutter_test/src/widget_tester.dart",
-     "status": "passed"
-    },
-    {
      "name": "settings: sign-in is optional, only under backup",
      "file": "package:flutter_test/src/widget_tester.dart",
      "status": "passed"
@@ -224,7 +214,7 @@
      "status": "passed"
     },
     {
-     "name": "recognised text can be copied; button confirms \"Copied\"",
+     "name": "running scanner: every control has a text label; no icon-only buttons",
      "file": "package:flutter_test/src/widget_tester.dart",
      "status": "passed"
     },
@@ -234,7 +224,27 @@
      "status": "passed"
     },
     {
+     "name": "Switch camera opens the next camera",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "photo without text: says so, Copy is disabled",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
      "name": "no camera: clear message, Upload a photo opens the corner review, Retake returns",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "editor shows pages; rotate and rename update the document (no account)",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "recognised text can be copied; button confirms \"Copied\"",
      "file": "package:flutter_test/src/widget_tester.dart",
      "status": "passed"
     },
@@ -259,7 +269,7 @@
      "status": "passed"
     },
     {
-     "name": "a failure explains what to do and offers Try again",
+     "name": "editor: every page tool is labelled; no icon-only buttons or hidden menus",
      "file": "package:flutter_test/src/widget_tester.dart",
      "status": "passed"
     },
@@ -314,11 +324,6 @@
      "status": "passed"
     },
     {
-     "name": "editor shows pages; rotate and rename update the document (no account)",
-     "file": "package:flutter_test/src/widget_tester.dart",
-     "status": "passed"
-    },
-    {
      "name": "keyboard: Tab picks a corner, arrows move it 1% (Shift: 0.2%)",
      "file": "package:flutter_test/src/widget_tester.dart",
      "status": "passed"
@@ -334,7 +339,12 @@
      "status": "passed"
     },
     {
-     "name": "editor: every page tool is labelled; no icon-only buttons or hidden menus",
+     "name": "a failure explains what to do and offers Try again",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "editor: Move later / Next page / Move earlier reorder without dragging",
      "file": "package:flutter_test/src/widget_tester.dart",
      "status": "passed"
     },
@@ -359,7 +369,12 @@
      "status": "passed"
     },
     {
-     "name": "editor: Move later / Next page / Move earlier reorder without dragging",
+     "name": "editor: Delete page is immediate and Undo brings it back with its images",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "editor: Add pages is a labelled button that lists the choices",
      "file": "package:flutter_test/src/widget_tester.dart",
      "status": "passed"
     },
@@ -394,6 +409,11 @@
      "status": "passed"
     },
     {
+     "name": "filters: preview cards, compare with original, apply shows progress",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
      "name": "resume clears the capture and keeps scanning",
      "file": "features/capture_controller_test.dart",
      "status": "passed"
@@ -416,11 +436,6 @@
     {
      "name": "torch toggles on the camera",
      "file": "features/capture_controller_test.dart",
-     "status": "passed"
-    },
-    {
-     "name": "editor: Delete page is immediate and Undo brings it back with its images",
-     "file": "package:flutter_test/src/widget_tester.dart",
      "status": "passed"
     },
     {
@@ -449,17 +464,17 @@
      "status": "passed"
     },
     {
-     "name": "editor: Add pages is a labelled button that lists the choices",
-     "file": "package:flutter_test/src/widget_tester.dart",
-     "status": "passed"
-    },
-    {
      "name": "sign-in with the server down: says it cannot reach the server; the app keeps working",
      "file": "package:flutter_test/src/widget_tester.dart",
      "status": "passed"
     },
     {
-     "name": "filters: preview cards, compare with original, apply shows progress",
+     "name": "delete the card goes at once; Undo brings it back; nothing was deleted",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "delete Undo while the card is still folding away keeps it",
      "file": "package:flutter_test/src/widget_tester.dart",
      "status": "passed"
     },
@@ -499,7 +514,7 @@
      "status": "passed"
     },
     {
-     "name": "home (light): tap targets, labels, contrast",
+     "name": "delete without Undo, the files are removed after 5 s in the background",
      "file": "package:flutter_test/src/widget_tester.dart",
      "status": "passed"
     },
@@ -509,17 +524,7 @@
      "status": "passed"
     },
     {
-     "name": "home (dark): tap targets, labels, contrast",
-     "file": "package:flutter_test/src/widget_tester.dart",
-     "status": "passed"
-    },
-    {
-     "name": "home (highContrast): tap targets, labels, contrast",
-     "file": "package:flutter_test/src/widget_tester.dart",
-     "status": "passed"
-    },
-    {
-     "name": "home at 200% text: no overflow",
+     "name": "delete if the delete fails, the card comes back with an error",
      "file": "package:flutter_test/src/widget_tester.dart",
      "status": "passed"
     },
@@ -529,12 +534,72 @@
      "status": "passed"
     },
     {
-     "name": "photo -> flat -> filtered render + thumbnail",
-     "file": "imaging/page_renderer_engine_test.dart",
+     "name": "thumbnails missing thumbnail is rebuilt from the page and cached",
+     "file": "features/delete_and_thumbnails_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "thumbnails page without any image: null, not an endless wait",
+     "file": "features/delete_and_thumbnails_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "thumbnails storage that never answers times out",
+     "file": "features/delete_and_thumbnails_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "thumbnails repair makes missing thumbnails and removes leftovers of an interrupted delete",
+     "file": "features/delete_and_thumbnails_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "home (light): tap targets, labels, contrast",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "home (dark): tap targets, labels, contrast",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "thumbnails a card whose preview cannot load shows an icon and the name, no spinner",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "home (highContrast): tap targets, labels, contrast",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "importing a file that is not a photo: names it, creates no empty document",
+     "file": "package:flutter_test/src/widget_tester.dart",
      "status": "passed"
     },
     {
      "name": "editor screen every tool is a labelled button; Simple Mode shows the essentials",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "home at 200% text: no overflow",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "large documents 30-page document: list shows it; a change re-reads one record, not the library",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "large documents deleting a 30-page document removes all 120 page files",
+     "file": "features/delete_and_thumbnails_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "signed in but the backup server is offline: says scans are safe on this device",
      "file": "package:flutter_test/src/widget_tester.dart",
      "status": "passed"
     },
@@ -554,13 +619,88 @@
      "status": "passed"
     },
     {
-     "name": "importing a file that is not a photo: names it, creates no empty document",
+     "name": "documents at 200% text: no overflow",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "editor screen add text in the middle, edit it with the keyboard, undo/redo, save",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "editor (light): tap targets, labels, contrast",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "editor (dark): tap targets, labels, contrast",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "editor screen drag draws a rectangle; Delete key removes the selection",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "editor (highContrast): tap targets, labels, contrast",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "photo -> flat -> filtered render + thumbnail",
+     "file": "imaging/page_renderer_engine_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "navigation: Home \u2192 Documents \u2192 a document \u2192 back to Home",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "editor at 200% text: no overflow",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "markup (light): tap targets, labels, contrast",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "editor screen pen strokes and eraser; leaving with changes asks first",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "markup (dark): tap targets, labels, contrast",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "editor screen rotating the page keeps markup on the content",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "markup (highContrast): tap targets, labels, contrast",
      "file": "package:flutter_test/src/widget_tester.dart",
      "status": "passed"
     },
     {
      "name": "fixture tilted_paper",
      "file": "imaging/opencv_detector_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "markup at 200% text: no overflow",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "DetectorParams mirrors shared/detector_params.json",
+     "file": "imaging/params_test.dart",
      "status": "passed"
     },
     {
@@ -576,11 +716,6 @@
     {
      "name": "fixture strong_perspective",
      "file": "imaging/opencv_detector_test.dart",
-     "status": "passed"
-    },
-    {
-     "name": "documents at 200% text: no overflow",
-     "file": "package:flutter_test/src/widget_tester.dart",
      "status": "passed"
     },
     {
@@ -624,7 +759,7 @@
      "status": "passed"
     },
     {
-     "name": "editor (light): tap targets, labels, contrast",
+     "name": "settings (light): tap targets, labels, contrast",
      "file": "package:flutter_test/src/widget_tester.dart",
      "status": "passed"
     },
@@ -634,117 +769,12 @@
      "status": "passed"
     },
     {
-     "name": "signed in but the backup server is offline: says scans are safe on this device",
-     "file": "package:flutter_test/src/widget_tester.dart",
-     "status": "passed"
-    },
-    {
-     "name": "editor screen add text in the middle, edit it with the keyboard, undo/redo, save",
-     "file": "package:flutter_test/src/widget_tester.dart",
-     "status": "passed"
-    },
-    {
-     "name": "editor (dark): tap targets, labels, contrast",
-     "file": "package:flutter_test/src/widget_tester.dart",
-     "status": "passed"
-    },
-    {
-     "name": "editor (highContrast): tap targets, labels, contrast",
-     "file": "package:flutter_test/src/widget_tester.dart",
-     "status": "passed"
-    },
-    {
-     "name": "editor screen drag draws a rectangle; Delete key removes the selection",
-     "file": "package:flutter_test/src/widget_tester.dart",
-     "status": "passed"
-    },
-    {
-     "name": "editor at 200% text: no overflow",
-     "file": "package:flutter_test/src/widget_tester.dart",
-     "status": "passed"
-    },
-    {
-     "name": "DetectorParams mirrors shared/detector_params.json",
-     "file": "imaging/params_test.dart",
-     "status": "passed"
-    },
-    {
-     "name": "markup (light): tap targets, labels, contrast",
-     "file": "package:flutter_test/src/widget_tester.dart",
-     "status": "passed"
-    },
-    {
-     "name": "markup (dark): tap targets, labels, contrast",
-     "file": "package:flutter_test/src/widget_tester.dart",
-     "status": "passed"
-    },
-    {
-     "name": "editor screen pen strokes and eraser; leaving with changes asks first",
-     "file": "package:flutter_test/src/widget_tester.dart",
-     "status": "passed"
-    },
-    {
-     "name": "markup (highContrast): tap targets, labels, contrast",
-     "file": "package:flutter_test/src/widget_tester.dart",
-     "status": "passed"
-    },
-    {
-     "name": "portrait.jpg: upright size, detection and warp of the detected page",
-     "file": "imaging/orientation_engine_test.dart",
-     "status": "passed"
-    },
-    {
-     "name": "landscape.jpg: upright size, detection and warp of the detected page",
-     "file": "imaging/orientation_engine_test.dart",
-     "status": "passed"
-    },
-    {
-     "name": "exif_rotated.jpg: upright size, detection and warp of the detected page",
-     "file": "imaging/orientation_engine_test.dart",
-     "status": "passed"
-    },
-    {
-     "name": "markup at 200% text: no overflow",
-     "file": "package:flutter_test/src/widget_tester.dart",
-     "status": "passed"
-    },
-    {
-     "name": "large.jpg: upright size, detection and warp of the detected page",
-     "file": "imaging/orientation_engine_test.dart",
-     "status": "passed"
-    },
-    {
-     "name": "the warp crops exactly the selected area",
-     "file": "imaging/orientation_engine_test.dart",
-     "status": "passed"
-    },
-    {
-     "name": "editor screen rotating the page keeps markup on the content",
-     "file": "package:flutter_test/src/widget_tester.dart",
-     "status": "passed"
-    },
-    {
-     "name": "navigation: Home \u2192 Documents \u2192 a document \u2192 back to Home",
-     "file": "package:flutter_test/src/widget_tester.dart",
-     "status": "passed"
-    },
-    {
-     "name": "EXIF-rotated photo: the same selection gives the same crop as the upright photo",
-     "file": "imaging/orientation_engine_test.dart",
-     "status": "passed"
-    },
-    {
-     "name": "very large photo: selection in full-size pixels scales with the cap",
-     "file": "imaging/orientation_engine_test.dart",
-     "status": "passed"
-    },
-    {
-     "name": "settings (light): tap targets, labels, contrast",
-     "file": "package:flutter_test/src/widget_tester.dart",
-     "status": "passed"
-    },
-    {
      "name": "settings (dark): tap targets, labels, contrast",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "settings (highContrast): tap targets, labels, contrast",
      "file": "package:flutter_test/src/widget_tester.dart",
      "status": "passed"
     },
@@ -794,18 +824,13 @@
      "status": "passed"
     },
     {
-     "name": "settings (highContrast): tap targets, labels, contrast",
-     "file": "package:flutter_test/src/widget_tester.dart",
+     "name": "portrait.jpg: upright size, detection and warp of the detected page",
+     "file": "imaging/orientation_engine_test.dart",
      "status": "passed"
     },
     {
-     "name": "original matches the Python reference",
-     "file": "imaging/opencv_filters_test.dart",
-     "status": "passed"
-    },
-    {
-     "name": "grayscale matches the Python reference",
-     "file": "imaging/opencv_filters_test.dart",
+     "name": "landscape.jpg: upright size, detection and warp of the detected page",
+     "file": "imaging/orientation_engine_test.dart",
      "status": "passed"
     },
     {
@@ -814,13 +839,8 @@
      "status": "passed"
     },
     {
-     "name": "magic_color matches the Python reference",
-     "file": "imaging/opencv_filters_test.dart",
-     "status": "passed"
-    },
-    {
-     "name": "bw matches the Python reference",
-     "file": "imaging/opencv_filters_test.dart",
+     "name": "exif_rotated.jpg: upright size, detection and warp of the detected page",
+     "file": "imaging/orientation_engine_test.dart",
      "status": "passed"
     },
     {
@@ -829,23 +849,13 @@
      "status": "passed"
     },
     {
-     "name": "B&W is strictly black/white with a clean border",
-     "file": "imaging/opencv_filters_test.dart",
+     "name": "large.jpg: upright size, detection and warp of the detected page",
+     "file": "imaging/orientation_engine_test.dart",
      "status": "passed"
     },
     {
-     "name": "applyEdits: rotate, crop and downscale",
-     "file": "imaging/opencv_filters_test.dart",
-     "status": "passed"
-    },
-    {
-     "name": "crop follows a clockwise rotation",
-     "file": "imaging/opencv_filters_test.dart",
-     "status": "passed"
-    },
-    {
-     "name": "PageEdits JSON round trip",
-     "file": "imaging/opencv_filters_test.dart",
+     "name": "the warp crops exactly the selected area",
+     "file": "imaging/orientation_engine_test.dart",
      "status": "passed"
     },
     {
@@ -859,12 +869,32 @@
      "status": "passed"
     },
     {
+     "name": "EXIF-rotated photo: the same selection gives the same crop as the upright photo",
+     "file": "imaging/orientation_engine_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "onboarding (light): tap targets, labels, contrast",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
      "name": "concurrent requests resolve independently",
      "file": "imaging/native_scan_engine_test.dart",
      "status": "passed"
     },
     {
-     "name": "onboarding (light): tap targets, labels, contrast",
+     "name": "very large photo: selection in full-size pixels scales with the cap",
+     "file": "imaging/orientation_engine_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "onboarding (dark): tap targets, labels, contrast",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "onboarding (highContrast): tap targets, labels, contrast",
      "file": "package:flutter_test/src/widget_tester.dart",
      "status": "passed"
     },
@@ -879,8 +909,18 @@
      "status": "passed"
     },
     {
+     "name": "document JSON round trip",
+     "file": "data/repository_test.dart",
+     "status": "passed"
+    },
+    {
      "name": "smoother holds then drops",
      "file": "imaging/corner_smoother_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "edit bumps revision; markSynced clears needsSync",
+     "file": "data/repository_test.dart",
      "status": "passed"
     },
     {
@@ -891,26 +931,6 @@
     {
      "name": "stability: never steady while moving, resets on miss",
      "file": "imaging/corner_smoother_test.dart",
-     "status": "passed"
-    },
-    {
-     "name": "onboarding (dark): tap targets, labels, contrast",
-     "file": "package:flutter_test/src/widget_tester.dart",
-     "status": "passed"
-    },
-    {
-     "name": "onboarding (highContrast): tap targets, labels, contrast",
-     "file": "package:flutter_test/src/widget_tester.dart",
-     "status": "passed"
-    },
-    {
-     "name": "document JSON round trip",
-     "file": "data/repository_test.dart",
-     "status": "passed"
-    },
-    {
-     "name": "edit bumps revision; markSynced clears needsSync",
-     "file": "data/repository_test.dart",
      "status": "passed"
     },
     {
@@ -934,13 +954,13 @@
      "status": "passed"
     },
     {
-     "name": "JPEG and PNG sizes from headers",
-     "file": "data/image_header_test.dart",
+     "name": "original matches the Python reference",
+     "file": "imaging/opencv_filters_test.dart",
      "status": "passed"
     },
     {
-     "name": "unknown data",
-     "file": "data/image_header_test.dart",
+     "name": "grayscale matches the Python reference",
+     "file": "imaging/opencv_filters_test.dart",
      "status": "passed"
     },
     {
@@ -954,8 +974,78 @@
      "status": "passed"
     },
     {
+     "name": "magic_color matches the Python reference",
+     "file": "imaging/opencv_filters_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "bw matches the Python reference",
+     "file": "imaging/opencv_filters_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "B&W is strictly black/white with a clean border",
+     "file": "imaging/opencv_filters_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "applyEdits: rotate, crop and downscale",
+     "file": "imaging/opencv_filters_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "account (optional sign-in) (light): tap targets, labels, contrast",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "crop follows a clockwise rotation",
+     "file": "imaging/opencv_filters_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "PageEdits JSON round trip",
+     "file": "imaging/opencv_filters_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "account (optional sign-in) (dark): tap targets, labels, contrast",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "account (optional sign-in) (highContrast): tap targets, labels, contrast",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "JPEG and PNG sizes from headers",
+     "file": "data/image_header_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "unknown data",
+     "file": "data/image_header_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "export: every document, its pages (no flattened copy) and a manifest; stored, not deflated",
+     "file": "data/backup_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "import on a new device: documents, text, markup and images come back, kept on the device",
+     "file": "data/backup_test.dart",
+     "status": "passed"
+    },
+    {
      "name": "expired access token is refreshed once and the request retried",
      "file": "services/api_client_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "import over existing documents: newer copies replace older ones, the rest is skipped",
+     "file": "data/backup_test.dart",
      "status": "passed"
     },
     {
@@ -979,18 +1069,13 @@
      "status": "passed"
     },
     {
-     "name": "account (optional sign-in) (light): tap targets, labels, contrast",
-     "file": "package:flutter_test/src/widget_tester.dart",
+     "name": "not a backup: clear errors, nothing changed",
+     "file": "data/backup_test.dart",
      "status": "passed"
     },
     {
-     "name": "account (optional sign-in) (dark): tap targets, labels, contrast",
-     "file": "package:flutter_test/src/widget_tester.dart",
-     "status": "passed"
-    },
-    {
-     "name": "account (optional sign-in) (highContrast): tap targets, labels, contrast",
-     "file": "package:flutter_test/src/widget_tester.dart",
+     "name": "cancel stops the export",
+     "file": "data/backup_test.dart",
      "status": "passed"
     },
     {
@@ -1019,7 +1104,7 @@
      "status": "passed"
     }
    ],
-   "passed": 201,
+   "passed": 218,
    "failed": 0,
    "skipped": 0
   },
@@ -1597,6 +1682,16 @@
      "status": "passed"
     },
     {
+     "name": "test_hosted_postgres_urls_get_the_async_driver",
+     "file": "tests.test_config",
+     "status": "passed"
+    },
+    {
+     "name": "test_cors_origins_from_json_env",
+     "file": "tests.test_config",
+     "status": "passed"
+    },
+    {
      "name": "test_files_must_be_uploaded_before_metadata",
      "file": "tests.test_documents",
      "status": "passed"
@@ -1672,7 +1767,7 @@
      "status": "passed"
     }
    ],
-   "passed": 20,
+   "passed": 22,
    "failed": 0,
    "skipped": 0
   }

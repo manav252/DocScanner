@@ -89,7 +89,7 @@ Future<void> settle(WidgetTester tester, [int n = 6]) async {
 
 /// Folding away, or already dropped from the list.
 bool hidden(WidgetTester tester, String docId) {
-  final f = find.byKey(ValueKey(docId));
+  final f = find.descendant(of: find.byKey(ValueKey(docId)), matching: find.byType(Collapsible));
   return f.evaluate().isEmpty || tester.widget<Collapsible>(f).hidden;
 }
 
@@ -126,6 +126,18 @@ void main() {
       await settle(tester);
       expect(await ids(tester, store), contains('d0'));
       expect(store.data.keys.where((k) => k.startsWith('page/d0-')), isNotEmpty);
+    });
+
+    testWidgets('Undo while the card is still folding away keeps it', (tester) async {
+      final store = (await tester.runAsync(seed))!;
+      await openDocuments(tester, store);
+      await tester.tap(find.widgetWithText(TextButton, 'Delete').first);
+      await tester.pump(const Duration(milliseconds: 100)); // mid-animation
+      await tester.pump(const Duration(milliseconds: 300)); // snackbar in
+      await tester.tap(find.text('Undo'));
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(hidden(tester, 'd0'), isFalse);
     });
 
     testWidgets('without Undo, the files are removed after 5 s in the background', (tester) async {

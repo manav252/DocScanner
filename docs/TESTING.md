@@ -1,16 +1,16 @@
 # Testing report
 
-Last full run: **23 Oct 2026**, `tools/run_tests.sh` (the website's *Test results*
+Last full run: **24 Oct 2026**, `tools/run_tests.sh` (the website's *Test results*
 page shows the same run, read from the runners' own reports:
 `website/data/test-results.json`).
 
 | Suite | Command | Passed | Failed | Skipped |
 |---|---|---:|---:|---:|
-| Flutter / Dart app (incl. 10 app ↔ backend sync tests) | `cd app && tool/host_test.sh` | 201 | 0 | 0 |
+| Flutter / Dart app (incl. 10 app ↔ backend sync tests) | `cd app && tool/host_test.sh` | 218 | 0 | 0 |
 | JavaScript: opencv.js detector, filters, Tesseract.js OCR | `cd app/test_js && npm test` | 24 | 0 | 0 |
 | Python `scanner_core` (reference detector) | `cd scanner_core && .venv/bin/python -m pytest` | 80 | 0 | 0 |
-| Backend API (real Postgres + MinIO in Docker) | `cd backend && .venv/bin/python -m pytest` | 20 | 0 | 0 |
-| **Total** | `tools/run_tests.sh` | **325** | **0** | **0** |
+| Backend API (real Postgres + MinIO in Docker) | `cd backend && .venv/bin/python -m pytest` | 22 | 0 | 0 |
+| **Total** | `tools/run_tests.sh` | **344** | **0** | **0** |
 
 The 10 sync tests run only when the backend answers on `http://localhost:8000`
 (`DOCSCANNER_E2E_API`); without it they are reported as skipped, never as passed.
@@ -51,6 +51,32 @@ What the suites cover, by area:
   200 % text without overflow; keyboard Tab order and Enter.
 - **Backend**: auth, documents CRUD, versions and 409 conflicts, files in MinIO,
   `/process`, PDF download, upload, markup validation and size limits.
+- **Delete and thumbnails** (`delete_and_thumbnails_test.dart`): the card goes in one
+  frame with no dialog; Undo brings it back with nothing deleted; without Undo the
+  files go after 5 s; a failing delete puts the card back with an error and removes
+  no image; a missing thumbnail is rebuilt and cached (same bytes); a page without
+  images gives a placeholder with the name, no spinner; storage that never answers
+  times out; the repair pass rebuilds thumbnails and removes only journalled leftovers.
+- **Large documents**: a 30-page document among 20 lists correctly, and renaming one
+  document re-reads at most 3 records (not the library); deleting it removes all
+  120 page files.
+- **Backup** (`backup_test.dart`): ZIP export (manifest, documents, pages, no
+  flattened copies, stored not deflated); import on a new device (text, markup,
+  images back, kept on the device); import over existing documents (newer wins,
+  sync identity kept); not-a-backup files rejected; cancel.
+- **Error screen**: a screen that throws shows "Something went wrong" with Retry,
+  and Retry rebuilds it.
+- **Hosted backend settings**: `postgres://` URLs get the async driver; CORS origins
+  from JSON.
+
+### Browser checks (headless Chrome)
+
+| Script | What it checks | Last result |
+|---|---|---|
+| `tools/audit/flow.mjs` | The whole flow in a fresh profile: guide, scan 2 pages (demo camera), filters, rotate, markup, text recognition, PDF download (valid `%PDF`), delete + Undo, ZIP backup; **every console error and uncaught exception recorded**; then the server is shut down and the app must reload and scan from its offline copy | 11/11 steps, 0 console errors, 0 uncaught exceptions; offline reload and scan OK |
+| `tools/audit/perf.mjs` | Seeded 14-page document: home load, delete, scroll, memory | see `docs/PERFORMANCE.md` |
+| `tools/audit/thumbcheck.mjs` | A page with a missing thumbnail: rebuilt, or stuck? | see `docs/PERFORMANCE.md` |
+| `tools/audit/audit.mjs` | axe-core + Lighthouse accessibility | see below |
 
 ### Accessibility audit (web)
 
@@ -92,6 +118,8 @@ reproduce faithfully. To check, install the app (README › Run on a physical ph
 | TalkBack / VoiceOver | Turn on the screen reader; scan, edit, export | Every control is announced with its label; captures announced |
 | 200 % system font | Largest font size in system settings | Nothing cut off; toolbars wrap or scroll |
 | iOS build | `cd app/ios && pod install` then build in Xcode | Builds (new pods: flutter_tts, ML Kit Devanagari) |
+| Smoothness on a mid-range phone | `flutter run --profile`, open DevTools › Performance; delete a 14-page document, scroll Documents, open/close a document 10 times | Frames under 16 ms (60 fps) except at most one; memory returns to its level after closing |
+| Backup on a phone | Settings › Export all documents (ZIP) › save to Files; delete the app's data; Import backup | All documents back |
 
 ## 4. How to re-run everything
 

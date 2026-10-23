@@ -141,16 +141,16 @@ tools/run_tests.sh                 # everything; writes website/data/test-result
 Or one suite at a time:
 
 ```bash
-cd app && tool/host_test.sh                      # Flutter/Dart incl. native OpenCV (201 with the backend running)
+cd app && tool/host_test.sh                      # Flutter/Dart incl. native OpenCV (218 with the backend running)
 cd app/test_js && npm install && npm test        # opencv.js detector + filters + Tesseract OCR (24)
 cd scanner_core && .venv/bin/python -m pytest    # Python reference detector (80)
-cd backend && .venv/bin/python -m pytest         # API against Postgres + MinIO (20)
+cd backend && .venv/bin/python -m pytest         # API against Postgres + MinIO (22)
 cd tools/audit && npm install && npm run audit   # axe-core + Lighthouse on app and website
 cd tools/audit && node flow.mjs                  # full flow in Chrome: no console errors; works offline
 cd tools/audit && node perf.mjs --label after    # seeded 14-page document: load, delete, scroll, memory
 ```
 
-Latest run: **325 passed, 0 failed** (see `docs/TESTING.md`, which also lists the
+Latest run: **344 passed, 0 failed** (see `docs/TESTING.md`, which also lists the
 checks that need a real phone). Lint/format: `dart analyze`, `dart format`,
 `ruff check .`, `ruff format --check .`.
 

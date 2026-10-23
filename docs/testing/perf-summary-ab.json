@@ -1,0 +1,148 @@
+{
+ "runs": {
+  "before": 5,
+  "after": 5
+ },
+ "metrics": {
+  "Home: titles on screen (ms)": {
+   "before": {
+    "median": 283,
+    "min": 279,
+    "max": 297,
+    "n": 5
+   },
+   "after": {
+    "median": 425,
+    "min": 406,
+    "max": 487,
+    "n": 5
+   }
+  },
+  "Home: longest task (ms)": {
+   "before": {
+    "median": 62,
+    "min": 61,
+    "max": 64,
+    "n": 5
+   },
+   "after": {
+    "median": 79,
+    "min": 75,
+    "max": 97,
+    "n": 5
+   }
+  },
+  "Home: worst frame (ms)": {
+   "before": {
+    "median": 83.3,
+    "min": 66.7,
+    "max": 83.4,
+    "n": 5
+   },
+   "after": {
+    "median": 83.4,
+    "min": 83.3,
+    "max": 100,
+    "n": 5
+   }
+  },
+  "Delete: card gone after (ms)": {
+   "before": {
+    "median": 164,
+    "min": 156,
+    "max": 185,
+    "n": 5
+   },
+   "after": {
+    "median": 71,
+    "min": 53,
+    "max": 82,
+    "n": 5
+   }
+  },
+  "Delete: worst frame (ms)": {
+   "before": {
+    "median": 33.4,
+    "min": 33.3,
+    "max": 50,
+    "n": 5
+   },
+   "after": {
+    "median": 50,
+    "min": 33.4,
+    "max": 66.7,
+    "n": 5
+   }
+  },
+  "Delete: frames over 50 ms": {
+   "before": {
+    "median": 0,
+    "min": 0,
+    "max": 0,
+    "n": 5
+   },
+   "after": {
+    "median": 0,
+    "min": 0,
+    "max": 1,
+    "n": 5
+   }
+  },
+  "Delete: longest task (ms)": {
+   "before": {
+    "median": 0,
+    "min": 0,
+    "max": 58,
+    "n": 5
+   },
+   "after": {
+    "median": 54,
+    "min": 0,
+    "max": 61,
+    "n": 5
+   }
+  },
+  "Scroll: p95 frame (ms)": {
+   "before": {
+    "median": 16.7,
+    "min": 16.7,
+    "max": 16.8,
+    "n": 5
+   },
+   "after": {
+    "median": 16.7,
+    "min": 16.7,
+    "max": 16.8,
+    "n": 5
+   }
+  },
+  "Scroll: worst frame (ms)": {
+   "before": {
+    "median": 16.8,
+    "min": 16.8,
+    "max": 33.4,
+    "n": 5
+   },
+   "after": {
+    "median": 33.2,
+    "min": 16.8,
+    "max": 33.3,
+    "n": 5
+   }
+  },
+  "JS heap after 5 opens of the 14-page document (MB)": {
+   "before": {
+    "median": 25.3,
+    "min": 25.2,
+    "max": 25.3,
+    "n": 5
+   },
+   "after": {
+    "median": 26,
+    "min": 26,
+    "max": 26,
+    "n": 5
+   }
+  }
+ }
+}

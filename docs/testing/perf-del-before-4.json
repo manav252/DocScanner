@@ -1,0 +1,17 @@
+{
+ "label": "del-before-4",
+ "date": "2026-10-23T21:41:57.548Z",
+ "docs": 12,
+ "bigDocPages": 14,
+ "seeded": {
+  "mb": 98.1,
+  "perPage": {
+   "source": 1065834,
+   "render": 607321,
+   "thumb": 16601
+  }
+ },
+ "homeLoadMs": 331,
+ "thumbnailsReadyMs": "not reported (no preview state in the accessibility tree)",
+ "error": "watchdog: run took over 8 minutes"
+}

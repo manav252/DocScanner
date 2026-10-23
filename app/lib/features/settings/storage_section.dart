@@ -35,18 +35,15 @@ class StorageSection extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 12),
-        Text(
-          switch (usage) {
-            AsyncData(value: (bytes: final b?, :final documents, :final pages)) => l.storageUsed(
-              formatBytes(b),
-              documents,
-              pages,
-            ),
-            AsyncData(value: (bytes: null, :final documents, :final pages)) => l.storageUnknown(documents, pages),
-            _ => '…',
-          },
-          key: const ValueKey('storage-used'),
-        ),
+        Text(switch (usage) {
+          AsyncData(value: (bytes: final b?, :final documents, :final pages)) => l.storageUsed(
+            formatBytes(b),
+            documents,
+            pages,
+          ),
+          AsyncData(value: (bytes: null, :final documents, :final pages)) => l.storageUnknown(documents, pages),
+          _ => '…',
+        }, key: const ValueKey('storage-used')),
         const SizedBox(height: 12),
         Text(l.exportAllHint, style: theme.textTheme.bodySmall),
         const SizedBox(height: 8),
@@ -93,9 +90,7 @@ class StorageSection extends ConsumerWidget {
             valueListenable: progress,
             builder: (_, v, _) => LinearProgressIndicator(value: v),
           ),
-          actions: [
-            TextButton.icon(onPressed: cancel.cancel, icon: const Icon(Icons.close), label: Text(l.cancel)),
-          ],
+          actions: [TextButton.icon(onPressed: cancel.cancel, icon: const Icon(Icons.close), label: Text(l.cancel))],
         ),
       ),
     );

@@ -1,0 +1,7 @@
+{
+ "label": "del-after-4",
+ "date": "2026-10-23T21:50:48.166Z",
+ "docs": 12,
+ "bigDocPages": 14,
+ "error": "TimeoutError: Waiting for selector `flt-semantics-host flt-semantics` failed: Waiting failed: 30000ms exceeded\n    at new WaitTask (file:///Users/manavdoshi/DocScanner/tools/audit/node_modules/puppeteer-core/lib/esm/puppeteer/common/WaitTask.js:45:34)\n    at IsolatedWorld.waitForFunction (file:///Users/manavdoshi/DocScanner/tools/audit/node_modules/puppeteer-core/lib/esm/puppeteer/api/Realm.js:22:26)\n    at CSSQueryHandler.waitFor (file:///Users/manavdoshi/DocScanner/tools/audit/node_modules/puppeteer-core/lib/esm/puppeteer/common/QueryHandler.js:175:95)\n    at async CdpFrame.waitForSelector (file:///Users/manavdoshi/DocScanner/tools/audit/node_modules/puppeteer-core/lib/esm/puppeteer/api/Frame.js:545:21)\n    at async CdpPage.waitForSelector (file:///Users/manavdoshi/DocScanner/tools/audit/node_modules/puppeteer-core/lib/esm/puppeteer/api/Page.js:1373:20)\n    at async file:///Users/manavdoshi/DocScanner/tools/audit/perf.mjs:120:3"
+}

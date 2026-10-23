@@ -57,7 +57,11 @@ void main() {
       for (final src in sources) {
         final det = await engine.detectEncoded(src);
         final flat = await engine.warpEncoded(src, det.detection.corners, maxSide: maxSide);
-        final render = await engine.processEncoded(flat, const PageEdits(filter: PageFilter.magicColor), quality: quality);
+        final render = await engine.processEncoded(
+          flat,
+          const PageEdits(filter: PageFilter.magicColor),
+          quality: quality,
+        );
         renders += render.length;
         final (w, h) = await _size(render);
         pages.add(PdfPageInput(jpeg: render, width: w, height: h));

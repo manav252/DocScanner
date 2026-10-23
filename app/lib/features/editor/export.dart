@@ -31,12 +31,8 @@ Future<ByteData?> _devanagariFontBytes() async {
 
 typedef _PdfJob = ({List<PdfPageInput> pages, String title, PdfPageSize size, ByteData? font});
 
-Future<Uint8List> _pdfJob(_PdfJob j) => buildPdf(
-  j.pages,
-  title: j.title,
-  size: j.size,
-  devanagariFont: j.font == null ? null : pw.Font.ttf(j.font!),
-);
+Future<Uint8List> _pdfJob(_PdfJob j) =>
+    buildPdf(j.pages, title: j.title, size: j.size, devanagariFont: j.font == null ? null : pw.Font.ttf(j.font!));
 
 Future<List<OcrLine>?> _ocrLines(DocumentRepository repo, String pageId) async {
   final b = await repo.pageOcr(pageId);

@@ -72,7 +72,10 @@ class SomethingWentWrong extends StatelessWidget {
                     ),
                     if (kDebugMode && details != null) ...[
                       const SizedBox(height: 12),
-                      Text(details!.exceptionAsString(), style: const TextStyle(fontSize: 12, color: Color(0xFF464B55))),
+                      Text(
+                        details!.exceptionAsString(),
+                        style: const TextStyle(fontSize: 12, color: Color(0xFF464B55)),
+                      ),
                     ],
                     const SizedBox(height: 20),
                     FilledButton.icon(

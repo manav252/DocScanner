@@ -1,0 +1,118 @@
+{
+ "runs": {
+  "before": 3,
+  "after": 1
+ },
+ "metrics": {
+  "Home: titles on screen (ms)": {
+   "before": {
+    "median": 391,
+    "min": 336,
+    "max": 408,
+    "n": 3
+   },
+   "after": {
+    "median": 370,
+    "min": 370,
+    "max": 370,
+    "n": 1
+   }
+  },
+  "Home: longest task (ms)": {
+   "before": {
+    "median": 73,
+    "min": 69,
+    "max": 75,
+    "n": 3
+   },
+   "after": {
+    "median": 0,
+    "min": 0,
+    "max": 0,
+    "n": 1
+   }
+  },
+  "Home: worst frame (ms)": {
+   "before": {
+    "median": 100.1,
+    "min": 99.9,
+    "max": 116.7,
+    "n": 3
+   },
+   "after": {
+    "median": 66.7,
+    "min": 66.7,
+    "max": 66.7,
+    "n": 1
+   }
+  },
+  "Delete: card gone after (ms)": {
+   "before": {
+    "median": 181,
+    "min": 172,
+    "max": 189,
+    "n": 3
+   },
+   "after": {
+    "median": 54,
+    "min": 54,
+    "max": 54,
+    "n": 1
+   }
+  },
+  "Delete: worst frame (ms)": {
+   "before": {
+    "median": 49.9,
+    "min": 33.4,
+    "max": 99.9,
+    "n": 3
+   },
+   "after": {
+    "median": 33.4,
+    "min": 33.4,
+    "max": 33.4,
+    "n": 1
+   }
+  },
+  "Delete: frames over 50 ms": {
+   "before": {
+    "median": 0,
+    "min": 0,
+    "max": 2,
+    "n": 3
+   },
+   "after": {
+    "median": 0,
+    "min": 0,
+    "max": 0,
+    "n": 1
+   }
+  },
+  "Delete: longest task (ms)": {
+   "before": {
+    "median": 54,
+    "min": 50,
+    "max": 70,
+    "n": 3
+   },
+   "after": {
+    "median": 0,
+    "min": 0,
+    "max": 0,
+    "n": 1
+   }
+  },
+  "Scroll: p95 frame (ms)": {
+   "before": null,
+   "after": null
+  },
+  "Scroll: worst frame (ms)": {
+   "before": null,
+   "after": null
+  },
+  "JS heap after 5 opens of the 14-page document (MB)": {
+   "before": null,
+   "after": null
+  }
+ }
+}

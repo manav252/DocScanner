@@ -1,0 +1,27 @@
+{
+ "label": "del-after-2",
+ "date": "2026-10-23T21:18:06.792Z",
+ "docs": 12,
+ "bigDocPages": 14,
+ "seeded": {
+  "mb": 98.1,
+  "perPage": {
+   "source": 1071305,
+   "render": 604910,
+   "thumb": 16601
+  }
+ },
+ "homeLoadMs": 470,
+ "thumbnailsReadyMs": 546,
+ "homeFrames": {
+  "frames": 109,
+  "p50": 16.7,
+  "p95": 16.8,
+  "max": 100,
+  "over50ms": 1
+ },
+ "homeLongTasks": [
+  64
+ ],
+ "error": "watchdog: run took over 8 minutes"
+}

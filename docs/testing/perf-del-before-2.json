@@ -1,0 +1,16 @@
+{
+ "label": "del-before-2",
+ "date": "2026-10-23T21:00:24.430Z",
+ "docs": 12,
+ "bigDocPages": 14,
+ "seeded": {
+  "mb": 97.9,
+  "perPage": {
+   "source": 1063948,
+   "render": 606151,
+   "thumb": 16601
+  }
+ },
+ "homeLoadMs": 358,
+ "error": "watchdog: run took over 8 minutes"
+}

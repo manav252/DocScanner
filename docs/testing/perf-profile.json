@@ -1,52 +1,38 @@
 {
  "label": "profile",
- "date": "2026-10-23T15:54:08.411Z",
+ "date": "2026-10-23T18:44:20.742Z",
  "docs": 12,
  "bigDocPages": 14,
  "seeded": {
   "mb": 98.1,
   "perPage": {
-   "source": 1071205,
-   "render": 605812,
+   "source": 1067579,
+   "render": 607346,
    "thumb": 16601
   }
  },
- "homeLoadMs": 405,
- "thumbnailsReadyMs": 514,
+ "homeLoadMs": 427,
+ "thumbnailsReadyMs": 502,
  "homeFrames": {
-  "frames": 112,
+  "frames": 110,
   "p50": 16.7,
   "p95": 16.8,
-  "max": 83.3,
+  "max": 100,
   "over50ms": 1
  },
  "homeLongTasks": [
-  50,
-  52
+  69,
+  51
  ],
- "scroll": {
-  "frames": 232,
-  "p50": 16.7,
-  "p95": 16.8,
-  "max": 166.6,
-  "over50ms": 1
- },
- "scrollLongTasks": [
-  170
- ],
- "heapBeforeMB": 28,
- "heapAfter5OpensMB": 32.2,
  "deleteHasConfirmDialog": false,
- "deleteCardGoneMs": 12,
+ "deleteCardGoneMs": 50,
  "deleteFrames": {
-  "frames": 153,
+  "frames": 198,
   "p50": 16.7,
   "p95": 16.8,
-  "max": 49.9,
+  "max": 33.3,
   "over50ms": 0
  },
- "deleteLongTasks": [
-  54
- ],
+ "deleteLongTasks": [],
  "deleteStorageGone": true
 }

@@ -1,0 +1,26 @@
+{
+ "label": "home-after-5",
+ "date": "2026-10-23T18:41:16.550Z",
+ "docs": 12,
+ "bigDocPages": 14,
+ "seeded": {
+  "mb": 97.7,
+  "perPage": {
+   "source": 1065452,
+   "render": 605494,
+   "thumb": 16601
+  }
+ },
+ "homeLoadMs": 392,
+ "thumbnailsReadyMs": 447,
+ "homeFrames": {
+  "frames": 111,
+  "p50": 16.7,
+  "p95": 16.8,
+  "max": 83.3,
+  "over50ms": 1
+ },
+ "homeLongTasks": [
+  52
+ ]
+}
