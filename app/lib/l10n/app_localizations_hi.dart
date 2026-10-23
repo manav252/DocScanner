@@ -267,6 +267,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get errorBody => 'आपके दस्तावेज़ सुरक्षित हैं। फिर कोशिश करें; अगर बार-बार हो, तो ऐप दोबारा शुरू करें।';
 
   @override
+  String get serverWaking => 'सर्वर चालू हो रहा है, इसमें एक मिनट तक लग सकता है…';
+
+  @override
   String deleteFailed(String title) {
     return '“$title” हटाया नहीं जा सका। उसे वापस रख दिया गया है।';
   }

@@ -171,6 +171,7 @@ class _StatusLine extends ConsumerWidget {
         ? (Icons.phone_android, l.statusLocalOnly)
         : switch (sync.phase) {
             SyncPhase.syncing => (Icons.cloud_sync_outlined, l.statusSyncing),
+            SyncPhase.waking => (Icons.hourglass_top, l.serverWaking),
             SyncPhase.offline => (Icons.cloud_off_outlined, l.statusOffline),
             SyncPhase.error => (Icons.sync_problem, l.statusSyncError(sync.message ?? '')),
             _ when pending > 0 => (Icons.cloud_upload_outlined, l.pendingChanges(pending)),

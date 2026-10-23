@@ -13,3 +13,12 @@ def test_hosted_postgres_urls_get_the_async_driver():
 def test_cors_origins_from_json_env(monkeypatch):
     monkeypatch.setenv("DOCSCANNER_CORS_ORIGINS", '["https://manav252.github.io"]')
     assert Settings().cors_origins == ["https://manav252.github.io"]
+
+
+def test_neon_url_from_plain_database_url(monkeypatch):
+    monkeypatch.delenv("DOCSCANNER_DATABASE_URL", raising=False)
+    monkeypatch.setenv(
+        "DATABASE_URL",
+        "postgresql://u:p@ep-x.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
+    )
+    assert Settings().database_url == "postgresql+asyncpg://u:p@ep-x.eu-central-1.aws.neon.tech/neondb?ssl=require"

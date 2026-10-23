@@ -9,6 +9,7 @@ import 'package:docscanner/data/document_repository.dart';
 import 'package:docscanner/data/models.dart';
 import 'package:docscanner/data/page_renderer.dart';
 import 'package:docscanner/data/storage/key_value_store.dart';
+import 'package:docscanner/data/sync/server_waker.dart';
 import 'package:docscanner/features/account/account_page.dart';
 import 'package:docscanner/features/editor/document_editor_page.dart';
 import 'package:docscanner/features/home/home_page.dart';
@@ -75,6 +76,12 @@ Future<MemoryStore> seedOne() async {
 }
 
 void main() {
+  // No real waiting for a "sleeping" server in these tests.
+  setUp(() {
+    ServerWaker.maxWait = Duration.zero;
+    ServerWaker.retryEvery = Duration.zero;
+  });
+
   FakeEngine engine() => FakeEngine(frameDetector: (_) => noPage);
 
   Future<void> signIn(WidgetTester tester) async {
@@ -98,7 +105,11 @@ void main() {
 
   testWidgets('sign-in refused (401) and server error (500): clear messages', (tester) async {
     var status = 401;
-    final client = MockClient((_) async => http.Response('{"detail":"Internal error"}', status));
+    final client = MockClient(
+      (req) async => req.url.path == '/health'
+          ? http.Response('{"status":"ok"}', 200)
+          : http.Response('{"detail":"Internal error"}', status),
+    );
     await tester.pumpWidget(testApp(const AccountPage(), overrides: base(MemoryStore(), engine(), http: client)));
     await settle(tester);
     await signIn(tester);

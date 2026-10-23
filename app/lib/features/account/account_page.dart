@@ -7,6 +7,7 @@ import '../../core/l10n.dart';
 import '../../core/providers.dart';
 import '../../data/sync/sync_service.dart';
 import '../library/library_controller.dart';
+import '../../data/sync/server_waker.dart';
 import '../../data/sync/sync_controller.dart';
 import '../../services/api/api_client.dart';
 
@@ -125,6 +126,7 @@ String describeSync(BuildContext context, SyncStatus s) {
   return switch (s.phase) {
     SyncPhase.signedOut => l.syncNotSignedIn,
     SyncPhase.syncing => l.syncSyncing,
+    SyncPhase.waking => l.serverWaking,
     SyncPhase.idle => synced(s.lastSynced),
     SyncPhase.offline => l.syncOffline,
     SyncPhase.error => l.syncProblem(s.message ?? '?'),
@@ -140,7 +142,8 @@ class SyncIcon extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return switch (status.phase) {
       SyncPhase.signedOut => Icon(Icons.cloud_off_outlined, color: scheme.outline),
-      SyncPhase.syncing => const SizedBox.square(dimension: 22, child: CircularProgressIndicator(strokeWidth: 2.5)),
+      SyncPhase.syncing ||
+      SyncPhase.waking => const SizedBox.square(dimension: 22, child: CircularProgressIndicator(strokeWidth: 2.5)),
       SyncPhase.idle => Icon(Icons.cloud_done_outlined, color: scheme.primary),
       SyncPhase.offline => const Icon(Icons.cloud_off, color: Colors.orange),
       SyncPhase.error => Icon(Icons.sync_problem, color: scheme.error),
@@ -194,6 +197,8 @@ class _SignInFormState extends ConsumerState<_SignInForm> {
     await _saveServer();
     final api = ref.read(apiClientProvider);
     try {
+      // A sleeping free-tier server can take up to a minute: wait (the form says so).
+      if (!await ref.read(serverWakerProvider.notifier).wake()) throw const OfflineException('server did not wake');
       if (_create) {
         await api.register(_email.text, _password.text);
       } else {
@@ -346,6 +351,20 @@ class _SignInFormState extends ConsumerState<_SignInForm> {
             validator: (v) => (v ?? '').length < 8 ? l.passwordRule : null,
             onFieldSubmitted: (_) => _submit(),
           ),
+          if (_busy && ref.watch(serverWakerProvider) == ServerState.waking) ...[
+            const SizedBox(height: 12),
+            Semantics(
+              liveRegion: true,
+              child: Row(
+                key: const ValueKey('server-waking'),
+                children: [
+                  const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2.5)),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text(context.l10n.serverWaking)),
+                ],
+              ),
+            ),
+          ],
           if (_error != null) ...[
             const SizedBox(height: 12),
             Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),

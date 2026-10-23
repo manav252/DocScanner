@@ -87,7 +87,12 @@ class Storage:
 
     async def ping(self) -> bool:
         try:
-            await run_in_threadpool(self._s3.head_bucket, Bucket=self.bucket)
+            try:
+                await run_in_threadpool(self._s3.head_bucket, Bucket=self.bucket)
+            except ClientError:
+                # Bucket-scoped tokens (e.g. Cloudflare R2 "Object Read & Write") may not
+                # allow HeadBucket; listing one key proves read access just as well.
+                await run_in_threadpool(self._s3.list_objects_v2, Bucket=self.bucket, MaxKeys=1)
             return True
         except Exception:  # noqa: BLE001
             return False

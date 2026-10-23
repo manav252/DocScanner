@@ -10,6 +10,7 @@ import 'core/l10n.dart';
 import 'core/providers.dart';
 import 'core/theme.dart';
 import 'data/storage/key_value_store.dart';
+import 'data/sync/server_waker.dart';
 import 'data/sync/sync_controller.dart';
 import 'features/home/home_page.dart';
 import 'features/onboarding/onboarding_page.dart';
@@ -45,6 +46,7 @@ class DocScannerApp extends ConsumerWidget {
     // Background sync runs only when signed in; everything else works as a guest.
     ref.watch(syncControllerProvider);
     ref.listen(maintenanceProvider, (_, _) {}); // runs once in the background; never rebuilds the app
+    ref.listen(serverWarmupProvider, (_, _) {}); // wakes a sleeping free-tier backend early
     final s = ref.watch(appSettingsProvider);
     final reduceMotion = MediaQueryData.fromView(View.of(context)).disableAnimations;
     ThemeData theme(Brightness b, {bool hc = false}) =>

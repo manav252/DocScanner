@@ -266,6 +266,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorBody => 'Your documents are safe. Try again; if it keeps happening, restart the app.';
 
   @override
+  String get serverWaking => 'Waking up the server, this can take up to a minute…';
+
+  @override
   String deleteFailed(String title) {
     return 'Couldn’t delete “$title”. It has been put back.';
   }

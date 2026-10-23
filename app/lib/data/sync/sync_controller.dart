@@ -7,9 +7,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/app_settings.dart';
 import '../../core/providers.dart';
 import '../../services/api/api_client.dart';
+import 'server_waker.dart';
 import 'sync_service.dart';
 
-enum SyncPhase { signedOut, idle, syncing, offline, error }
+enum SyncPhase { signedOut, idle, syncing, waking, offline, error }
 
 class SyncStatus {
   const SyncStatus(this.phase, {this.lastSynced, this.message, this.conflicts = const []});
@@ -69,6 +70,16 @@ class SyncController extends Notifier<SyncStatus> {
     try {
       do {
         _again = false;
+        // A sleeping free-tier server takes up to a minute to start: say so and wait.
+        final waker = ref.read(serverWakerProvider.notifier);
+        if (ref.read(serverWakerProvider) != ServerState.up) {
+          state = state.copyWith(SyncPhase.waking);
+          if (!await waker.wake()) {
+            if (ref.mounted) state = state.copyWith(SyncPhase.offline, message: 'Server not reachable; will retry');
+            continue;
+          }
+          if (!ref.mounted) return;
+        }
         state = state.copyWith(SyncPhase.syncing);
         final service = SyncService(
           api: ref.read(apiClientProvider),
@@ -81,7 +92,15 @@ class SyncController extends Notifier<SyncStatus> {
           if (!ref.mounted) return;
           state = state.copyWith(SyncPhase.idle, lastSynced: DateTime.now(), conflicts: report.conflictTitles);
         } on OfflineException {
-          if (ref.mounted) state = state.copyWith(SyncPhase.offline, message: 'Server not reachable; will retry');
+          if (!ref.mounted) return;
+          // It may have gone back to sleep: wake it and try once more.
+          final retry = ref.read(serverWakerProvider) == ServerState.up;
+          waker.lost();
+          if (retry) {
+            _again = true;
+          } else {
+            state = state.copyWith(SyncPhase.offline, message: 'Server not reachable; will retry');
+          }
         } on ApiException catch (e) {
           if (!ref.mounted) return;
           state = e.isUnauthorized

@@ -518,6 +518,12 @@ abstract class AppLocalizations {
   /// **'Your documents are safe. Try again; if it keeps happening, restart the app.'**
   String get errorBody;
 
+  /// No description provided for @serverWaking.
+  ///
+  /// In en, this message translates to:
+  /// **'Waking up the server, this can take up to a minute…'**
+  String get serverWaking;
+
   /// No description provided for @deleteFailed.
   ///
   /// In en, this message translates to:

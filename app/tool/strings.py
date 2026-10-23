@@ -140,6 +140,10 @@ S = {
         "Your documents are safe. Try again; if it keeps happening, restart the app.",
         "आपके दस्तावेज़ सुरक्षित हैं। फिर कोशिश करें; अगर बार-बार हो, तो ऐप दोबारा शुरू करें।",
     ),
+    "serverWaking": (
+        "Waking up the server, this can take up to a minute…",
+        "सर्वर चालू हो रहा है, इसमें एक मिनट तक लग सकता है…",
+    ),
     "deleteFailed": (
         "Couldn’t delete “{title}”. It has been put back.",
         "“{title}” हटाया नहीं जा सका। उसे वापस रख दिया गया है।",

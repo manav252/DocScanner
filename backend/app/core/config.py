@@ -1,6 +1,8 @@
 from functools import lru_cache
 
-from pydantic import Field, field_validator
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+
+from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DEV_SECRET = "dev-only-insecure-secret-change-me"
@@ -12,7 +14,11 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="DOCSCANNER_", env_file=".env", extra="ignore")
 
     environment: str = "development"
-    database_url: str = "postgresql+asyncpg://docscanner:docscanner@localhost:5432/docscanner"
+    # DOCSCANNER_DATABASE_URL, or plain DATABASE_URL as Neon/Render/Railway name it.
+    database_url: str = Field(
+        "postgresql+asyncpg://docscanner:docscanner@localhost:5432/docscanner",
+        validation_alias=AliasChoices("DOCSCANNER_DATABASE_URL", "DATABASE_URL"),
+    )
 
     s3_endpoint: str = "http://localhost:9000"
     s3_access_key: str = "docscanner"
@@ -36,8 +42,17 @@ class Settings(BaseSettings):
         # Hosting providers (Render, Railway, Heroku) give postgres:// URLs; we need the asyncpg driver.
         for prefix in ("postgres://", "postgresql://"):
             if v.startswith(prefix):
-                return "postgresql+asyncpg://" + v[len(prefix) :]
-        return v
+                v = "postgresql+asyncpg://" + v[len(prefix) :]
+        # Neon adds ?sslmode=require&channel_binding=require (libpq options); asyncpg
+        # takes ssl=require instead and does not know channel_binding.
+        parts = urlsplit(v)
+        query = []
+        for k, val in parse_qsl(parts.query):
+            if k == "sslmode":
+                query.append(("ssl", val))
+            elif k != "channel_binding":
+                query.append((k, val))
+        return urlunsplit(parts._replace(query=urlencode(query)))
 
     @property
     def max_upload_bytes(self) -> int:

@@ -2,8 +2,9 @@
 #   https://<user>.github.io/<repo>/        website
 #   https://<user>.github.io/<repo>/app/    web app
 # Turn it on once: repository Settings > Pages > Source: "GitHub Actions".
-# Optional: Settings > Secrets and variables > Actions > Variables > API_URL
-# (the hosted backend, e.g. https://docscanner-api.onrender.com) for backup/sync.
+# Backend for backup/sync: https://docscanner-api.onrender.com by default; if Render
+# gives your service another URL, set it in Settings > Secrets and variables >
+# Actions > Variables > API_URL (a public address, not a secret).
 name: Deploy website and web app
 
 on:
@@ -37,7 +38,7 @@ jobs:
           flutter build web --release --no-wasm-dry-run \
             --base-href "/${{ github.event.repository.name }}/app/" \
             --dart-define=ASSET_VERSION=${{ github.sha }} \
-            --dart-define=API_URL=${{ vars.API_URL }}
+            --dart-define=API_URL=${{ vars.API_URL || 'https://docscanner-api.onrender.com' }}
       - name: Offline file list
         run: python3 tools/pwa_precache.py
       - name: Assemble site

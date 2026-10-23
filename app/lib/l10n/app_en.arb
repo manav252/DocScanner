@@ -187,6 +187,7 @@
   },
   "errorTitle": "Something went wrong",
   "errorBody": "Your documents are safe. Try again; if it keeps happening, restart the app.",
+  "serverWaking": "Waking up the server, this can take up to a minute…",
   "deleteFailed": "Couldn’t delete “{title}”. It has been put back.",
   "@deleteFailed": {
     "placeholders": {
