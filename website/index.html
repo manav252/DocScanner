@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DocScanner — scan paper into clean PDFs</title>
+  <meta name="description" content="DocScanner turns photos of paper into clean, searchable PDFs. Works offline, no account needed. Phone app and web app.">
+  <link rel="icon" href="img/logo.svg">
+  <link rel="stylesheet" href="css/site.css">
+  <script type="module" src="js/site.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site"></header>
+<main id="main">
+  <section class="hero" aria-labelledby="title">
+    <div>
+      <h1 id="title">Scan paper into clean PDFs</h1>
+      <p class="lead">Point your camera at a page. DocScanner finds the edges, captures it when you hold still,
+        flattens it and cleans it up. Works offline and without an account, on phones and in the browser.</p>
+      <div class="actions">
+        <a class="btn primary" href="/app/">Try it now</a>
+        <a class="btn secondary" href="/app/?demo=1">Try with the demo camera</a>
+        <a class="btn secondary" href="how-it-works.html">See how it works</a>
+      </div>
+      <p class="muted">“Try it now” opens the real web app. It asks for your camera; if you have none, choose
+        “Upload a photo”. The demo camera shows built-in sample pages instead of your camera.</p>
+    </div>
+    <div class="shots">
+      <img src="img/screens/scanner.png" width="824" height="1760" alt="The scanner: a page outlined in blue, with labelled buttons for auto capture, upload a photo and Done.">
+      <img src="img/screens/editor.png" width="824" height="1760" alt="The document editor: a flattened page with labelled tools such as Filters, Rotate, Crop and Markup.">
+    </div>
+  </section>
+
+  <h2>What you can do</h2>
+  <div class="grid">
+    <div class="card"><h3>Scan with the camera</h3><p>Live page outline, auto-capture when steady, spoken and vibration guidance (optional).</p></div>
+    <div class="card"><h3>Fix the corners</h3><p>Drag corners or edges, or use the keyboard. “Use full photo” when there is no page.</p></div>
+    <div class="card"><h3>Pick a look</h3><p>Original, Grayscale, Black &amp; White, Magic Color, with a before/after compare.</p></div>
+    <div class="card"><h3>Add text and markup</h3><p>Text, pen, highlighter, signature, shapes and whiteout. Editable until you export.</p></div>
+    <div class="card"><h3>Find the text</h3><p>Text recognition in English and Hindi, copy the text, searchable PDFs.</p></div>
+    <div class="card"><h3>No account needed</h3><p>Everything is stored on your device. Signing in only adds backup and sync.</p></div>
+  </div>
+
+  <h2>Screenshots</h2>
+  <p class="muted">Taken from the real web app by an automated script (<code>tools/audit/screenshots.mjs</code>). The pages shown are the app’s built-in sample documents.</p>
+  <div class="gallery">
+    <figure class="shot"><img src="img/screens/home-empty.png" width="824" height="1760" loading="lazy" alt="Home screen with Scan Document, Import Photos, Import PDF and View Documents buttons."><figcaption>Home: the main actions, no sign-in.</figcaption></figure>
+    <figure class="shot"><img src="img/screens/review-corners.png" width="824" height="1760" loading="lazy" alt="Adjust corners screen with corner handles on a tilted page and buttons Retake, Reset corners, Use full photo, Rotate, Keep scan."><figcaption>Check the corners after each capture.</figcaption></figure>
+    <figure class="shot"><img src="img/screens/filters.png" width="824" height="1760" loading="lazy" alt="Filters sheet with a large After preview and four labelled filter cards."><figcaption>Filters with before/after compare.</figcaption></figure>
+    <figure class="shot"><img src="img/screens/markup.png" width="824" height="1760" loading="lazy" alt="Markup editor with a pen underline on the page and labelled tools."><figcaption>Markup: pen, text, signature and more.</figcaption></figure>
+    <figure class="shot"><img src="img/screens/export.png" width="824" height="1760" loading="lazy" alt="Export sheet: PDF or JPG, page size, searchable PDF, Download and Share buttons."><figcaption>Export as PDF or JPG.</figcaption></figure>
+    <figure class="shot"><img src="img/screens/guide.png" width="824" height="1760" loading="lazy" alt="First-run guide, step 1 of 3, with Skip and Next buttons."><figcaption>A short guide on first launch (skippable).</figcaption></figure>
+  </div>
+
+  <h2>Built with</h2>
+  <p>Flutter (Android, iPhone, web) · OpenCV (on the device: opencv_dart; in the browser: opencv.js) ·
+    ML Kit and Tesseract.js for text · FastAPI, PostgreSQL and MinIO for the optional backup.
+    <a href="features.html">Feature list and status</a> · <a href="tests.html">Latest test results</a>.</p>
+</main>
+<footer><div class="inner"></div></footer>
+</body>
+</html>

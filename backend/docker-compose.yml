@@ -15,7 +15,7 @@ services:
       DOCSCANNER_S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-docscanner-secret}
       DOCSCANNER_S3_BUCKET: docscanner
       DOCSCANNER_JWT_SECRET: ${DOCSCANNER_JWT_SECRET:-dev-only-insecure-secret-change-me}
-      DOCSCANNER_CORS_ORIGINS: ${DOCSCANNER_CORS_ORIGINS:-["http://localhost:8090","http://127.0.0.1:8090","http://localhost:8080"]}
+      DOCSCANNER_CORS_ORIGINS: ${DOCSCANNER_CORS_ORIGINS:-["http://localhost:8090","http://127.0.0.1:8090","http://localhost:8080","http://127.0.0.1:8080"]}
     ports:
       - "${API_PORT:-8000}:8000"
     depends_on:

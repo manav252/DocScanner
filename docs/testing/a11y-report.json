@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-22T17:11:51.352Z",
+  "date": "2026-10-23T01:29:31.829Z",
   "app": {
     "Home": {
       "violations": [],
@@ -18,5 +18,38 @@
       "failed": []
     }
   },
-  "site": {}
+  "site": {
+    "index.html": {
+      "violations": [],
+      "passes": 20,
+      "lighthouse": {
+        "score": 100,
+        "failed": []
+      }
+    },
+    "how-it-works.html": {
+      "violations": [],
+      "passes": 26,
+      "lighthouse": {
+        "score": 100,
+        "failed": []
+      }
+    },
+    "tests.html": {
+      "violations": [],
+      "passes": 22,
+      "lighthouse": {
+        "score": 100,
+        "failed": []
+      }
+    },
+    "features.html": {
+      "violations": [],
+      "passes": 19,
+      "lighthouse": {
+        "score": 100,
+        "failed": []
+      }
+    }
+  }
 }

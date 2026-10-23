@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>How it works — DocScanner</title>
+  <meta name="description" content="Upload a photo and watch DocScanner's real page-detection pipeline step by step.">
+  <link rel="icon" href="img/logo.svg">
+  <link rel="stylesheet" href="css/site.css">
+  <script type="module" src="js/site.js"></script>
+  <script type="module" src="js/how.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site"></header>
+<main id="main">
+  <h1>How it works</h1>
+  <p class="lead">Upload a photo of a page and see each step the app takes to find and flatten it. This page runs
+    the app’s own detection code (<code>scanner.js</code> with OpenCV) in your browser. Your photo is not uploaded anywhere.</p>
+
+  <div class="card">
+    <div class="upload">
+      <input id="photo" type="file" accept="image/*" class="vh" aria-describedby="status">
+      <label class="btn primary" for="photo">Choose a photo</label>
+      <button class="btn secondary" id="sample" type="button">Use a sample photo</button>
+    </div>
+    <p id="status" class="status" role="status" aria-live="polite">Loading OpenCV (about 10 MB, first time only)…</p>
+  </div>
+
+  <section aria-labelledby="steps-title">
+    <h2 id="steps-title">The steps</h2>
+    <ol class="steps" id="steps" style="list-style:none;padding:0">
+      <li class="card step" data-step="gray"><h3><span class="num">1</span>Grayscale</h3>
+        <p>The photo is shrunk to 500 pixels and turned grey: colour is not needed to find edges, and small images are fast.</p></li>
+      <li class="card step" data-step="blurred"><h3><span class="num">2</span>Blur</h3>
+        <p>A Gaussian blur smooths paper texture and print so they do not count as edges.</p></li>
+      <li class="card step" data-step="edges"><h3><span class="num">3</span>Edges</h3>
+        <p>Canny edge detection marks strong brightness changes in white; thresholds adapt to the photo’s median brightness.</p></li>
+      <li class="card step" data-step="contours"><h3><span class="num">4</span>Outlines</h3>
+        <p>Every closed outline (orange) is checked: four corners, convex, big enough, sensible angles. The best one is the page (green).</p>
+        <p class="legend"><span><span class="swatch" style="background:#ff9600"></span>all outlines</span><span><span class="swatch" style="background:#28dc5a"></span>chosen page</span></p></li>
+      <li class="card step" data-step="corners"><h3><span class="num">5</span>Corners</h3>
+        <p>Each side is refined along the strongest edge, then the four corners are shown on the photo. Red means no page was found.</p></li>
+      <li class="card step" data-step="flattened"><h3><span class="num">6</span>Flattened</h3>
+        <p>A perspective warp maps the four corners to a rectangle: the page as if scanned flat.</p></li>
+    </ol>
+  </section>
+
+  <h2>Then, in the app</h2>
+  <p>You can drag the corners if they are off, pick a filter (Magic Color removes shadows; Black &amp; White uses
+    adaptive thresholding), add markup, recognise text, and export a PDF. On phones the same steps run natively
+    with opencv_dart; a Python reference (<code>scanner_core</code>) and shared test photos keep all three versions in agreement.</p>
+</main>
+<footer><div class="inner"></div></footer>
+</body>
+</html>

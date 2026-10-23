@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Test results — DocScanner</title>
+  <meta name="description" content="Results of DocScanner's latest automated test run.">
+  <link rel="icon" href="img/logo.svg">
+  <link rel="stylesheet" href="css/site.css">
+  <script type="module" src="js/site.js"></script>
+  <script type="module" src="js/tests.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site"></header>
+<main id="main">
+  <h1>Test results</h1>
+  <p class="lead">Numbers from the last real run of <code>tools/run_tests.sh</code>, read from the reports the test
+    runners wrote. Nothing on this page is typed in by hand.</p>
+  <div id="results" aria-live="polite"><p>Loading results…</p></div>
+
+  <h2>Accessibility audit</h2>
+  <div id="a11y"><p>Loading…</p></div>
+
+  <h2>Run them yourself</h2>
+  <pre class="card" style="overflow-x:auto"><code>tools/run_tests.sh          # all suites; updates this page
+cd app &amp;&amp; tool/host_test.sh      # Flutter/Dart only
+cd app/test_js &amp;&amp; npm test     # JavaScript only
+cd tools/audit &amp;&amp; npm run audit  # axe + Lighthouse</code></pre>
+  <p class="muted">Some checks need a real phone (camera focus and flash, ML Kit text recognition, haptics, the
+    system share sheet). They are listed in <code>docs/TESTING.md</code> as manual checks.</p>
+</main>
+<footer><div class="inner"></div></footer>
+</body>
+</html>

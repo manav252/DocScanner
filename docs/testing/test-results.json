@@ -1,0 +1,1650 @@
+{
+ "generatedAt": "2026-10-23T01:22:54+00:00",
+ "commit": "b175834",
+ "totals": {
+  "passed": 319,
+  "failed": 0,
+  "skipped": 0
+ },
+ "suites": [
+  {
+   "id": "dart",
+   "title": "Flutter / Dart (app)",
+   "command": "cd app && tool/host_test.sh",
+   "status": "run",
+   "tests": [
+    {
+     "name": "OCR runs for stale pages only and stores text + line boxes",
+     "file": "features/ocr_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "editing a page makes its text stale; only that page is re-read",
+     "file": "features/ocr_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "OCR for an outdated revision is ignored",
+     "file": "features/ocr_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "library search finds words inside pages",
+     "file": "features/ocr_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "searchable PDF: invisible text placed over the image",
+     "file": "features/ocr_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "pdfSafe",
+     "file": "features/ocr_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "cleanOcr strips border junk and empty lines",
+     "file": "features/ocr_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "cleanOcr drops low-confidence lines and non-words; Hindi passes",
+     "file": "features/ocr_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "OCR uses the chosen language and re-reads pages after a language change",
+     "file": "features/ocr_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "searchable PDF keeps Hindi text when the Devanagari font is supplied",
+     "file": "features/ocr_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "adding a page stores source, flat, render and thumb",
+     "file": "features/document_controller_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "reorder, rotate, filter, crop, delete",
+     "file": "features/document_controller_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "apply filter to all pages",
+     "file": "features/document_controller_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "setCorners re-flattens and resets crop",
+     "file": "features/document_controller_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "A creates and pushes a document",
+     "file": "integration/sync_e2e_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "retake replaces the photo but keeps position and filter",
+     "file": "features/document_controller_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "rename",
+     "file": "features/document_controller_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "import: photos are detected + Magic Color, PDF pages are added as-is",
+     "file": "features/document_controller_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "export PDF and JPGs",
+     "file": "features/document_controller_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "library search sees new documents",
+     "file": "features/document_controller_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "B signs in and pulls it with its images",
+     "file": "integration/sync_e2e_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "B edits (rename, remove a page, change a filter); A receives it",
+     "file": "integration/sync_e2e_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "concurrent edits: the newer edit wins on both devices",
+     "file": "integration/sync_e2e_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "home without an account: actions, status and recent scans from storage",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "an older concurrent edit loses to the server copy",
+     "file": "integration/sync_e2e_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "retake on A re-uploads the photo; B downloads the new one",
+     "file": "integration/sync_e2e_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "first launch with no scans: guidance instead of an empty list",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "delete on B reaches A",
+     "file": "integration/sync_e2e_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "offline is reported as OfflineException and nothing is lost",
+     "file": "integration/sync_e2e_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "guest documents are never uploaded without consent",
+     "file": "integration/sync_e2e_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "signing into another account does not copy documents there until asked",
+     "file": "integration/sync_e2e_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "documents: search titles, no-results state, clear",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "running scanner: every control has a text label; no icon-only buttons",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "settings: sign-in is optional, only under backup",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "settings changes apply: Hindi",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "rotation 0 keeps coordinates",
+     "file": "features/scanner_camera_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "rotation 90 (typical Android back camera) maps to portrait, re-ordered TL..BL",
+     "file": "features/scanner_camera_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "rotation 180 and 270",
+     "file": "features/scanner_camera_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "brightness estimate",
+     "file": "features/scanner_camera_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "Switch camera opens the next camera",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "photo without text: says so, Copy is disabled",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "first-run guide: next, back, skip",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "no camera: clear message, Upload a photo opens the corner review, Retake returns",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "recognised text can be copied; button confirms \"Copied\"",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "camera permission denied: says how to fix it",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "guidance speaks settled hints once, skips flicker, announces captures",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "guidance setting off: nothing is spoken",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "guidance Hindi: spoken in Hindi",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "editor shows pages; rotate and rename update the document (no account)",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "editor: every page tool is labelled; no icon-only buttons or hidden menus",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "a failure explains what to do and offers Try again",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "editor: Move later / Next page / Move earlier reorder without dragging",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "dragging a corner moves only that corner and shows the loupe",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "dragging an edge midpoint moves both corners of that side",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "corners are clamped to the image",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "isValidQuad rejects crossed and tiny quads",
+     "file": "features/corner_editor_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "image fitting and coordinate mapping portrait photo, wide box",
+     "file": "features/corner_editor_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "image fitting and coordinate mapping landscape photo, tall box",
+     "file": "features/corner_editor_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "image fitting and coordinate mapping very large photo, square box",
+     "file": "features/corner_editor_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "image fitting and coordinate mapping portrait photo, portrait box",
+     "file": "features/corner_editor_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "image fitting and coordinate mapping screen points outside the image clamp to its edge",
+     "file": "features/corner_editor_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "the photo is drawn centred and fully inside the editor (portrait photo, wide editor)",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "keyboard: Tab picks a corner, arrows move it 1% (Shift: 0.2%)",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "moving an edge stops at the image border (both ends stay inside)",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "rotating a point clockwise",
+     "file": "features/corner_editor_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "a steady page is auto-captured exactly once",
+     "file": "features/capture_controller_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "a moving page is not auto-captured",
+     "file": "features/capture_controller_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "auto-capture off: steady page waits for the shutter",
+     "file": "features/capture_controller_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "adjust page buttons have text labels; Cancel closes without a result",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "tiny detections are ignored",
+     "file": "features/capture_controller_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "no page in the still: falls back to the preview outline",
+     "file": "features/capture_controller_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "editor: Delete page is immediate and Undo brings it back with its images",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "nothing found anywhere: full photo bounds, detected=false",
+     "file": "features/capture_controller_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "resume clears the capture and keeps scanning",
+     "file": "features/capture_controller_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "adjust page confirm returns the edited corners for the same photo",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "low light is reported",
+     "file": "features/capture_controller_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "permission denied -> failed state; restart recovers",
+     "file": "features/capture_controller_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "suspend releases the camera",
+     "file": "features/capture_controller_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "torch toggles on the camera",
+     "file": "features/capture_controller_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "adjust page rotate turns the photo and its corners",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "editor: Add pages is a labelled button that lists the choices",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "adjust page no page found: explains and starts from the full photo",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "the same page is not auto-captured twice; removing it re-arms",
+     "file": "features/capture_controller_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "a clearly moved page re-arms auto-capture",
+     "file": "features/capture_controller_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "Retake: the same page can be captured again straight away",
+     "file": "features/capture_controller_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "a small page in view asks to move closer",
+     "file": "features/capture_controller_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "an uploaded photo opens the same review; with no camera it returns to the error screen",
+     "file": "features/capture_controller_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "home (light): tap targets, labels, contrast",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "filters: preview cards, compare with original, apply shows progress",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "home (dark): tap targets, labels, contrast",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "model every kind survives JSON, and unknown kinds are skipped",
+     "file": "features/markup_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "model page JSON keeps markup",
+     "file": "features/markup_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "model four clockwise turns return every item to where it was",
+     "file": "features/markup_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "model cropping keeps items on the same page content",
+     "file": "features/markup_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "history undo/redo, previews and dirty state",
+     "file": "features/markup_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "hit testing finds the topmost item, lines by distance, empty space is null",
+     "file": "features/markup_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "hit testing eraser removes strokes only",
+     "file": "features/markup_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "home (highContrast): tap targets, labels, contrast",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "flattening burns markup into the exported image",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "home at 200% text: no overflow",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "fixture tilted_paper",
+     "file": "imaging/opencv_detector_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "fixture low_contrast",
+     "file": "imaging/opencv_detector_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "fixture cluttered_background",
+     "file": "imaging/opencv_detector_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "fixture strong_perspective",
+     "file": "imaging/opencv_detector_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "fixture shadow_across",
+     "file": "imaging/opencv_detector_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "fixture narrow_receipt",
+     "file": "imaging/opencv_detector_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "fixture fills_frame",
+     "file": "imaging/opencv_detector_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "fixture no_document",
+     "file": "imaging/opencv_detector_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "documents (light): tap targets, labels, contrast",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "photo -> flat -> filtered render + thumbnail",
+     "file": "imaging/page_renderer_engine_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "luma (camera Y plane) path matches the colour path",
+     "file": "imaging/opencv_detector_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "encoded bytes path",
+     "file": "imaging/opencv_detector_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "blank frame falls back to the full bounds",
+     "file": "imaging/opencv_detector_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "warp produces a page-shaped image, capped by maxSide",
+     "file": "imaging/opencv_detector_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "documents (dark): tap targets, labels, contrast",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "speed on a 720x1280 frame",
+     "file": "imaging/opencv_detector_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "documents (highContrast): tap targets, labels, contrast",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "editor screen every tool is a labelled button; Simple Mode shows the essentials",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "documents at 200% text: no overflow",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "DetectorParams mirrors shared/detector_params.json",
+     "file": "imaging/params_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "portrait.jpg: upright size, detection and warp of the detected page",
+     "file": "imaging/orientation_engine_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "editor (light): tap targets, labels, contrast",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "landscape.jpg: upright size, detection and warp of the detected page",
+     "file": "imaging/orientation_engine_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "exif_rotated.jpg: upright size, detection and warp of the detected page",
+     "file": "imaging/orientation_engine_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "editor (dark): tap targets, labels, contrast",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "large.jpg: upright size, detection and warp of the detected page",
+     "file": "imaging/orientation_engine_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "the warp crops exactly the selected area",
+     "file": "imaging/orientation_engine_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "EXIF-rotated photo: the same selection gives the same crop as the upright photo",
+     "file": "imaging/orientation_engine_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "editor (highContrast): tap targets, labels, contrast",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "very large photo: selection in full-size pixels scales with the cap",
+     "file": "imaging/orientation_engine_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "detectEncoded runs on the background isolate",
+     "file": "imaging/native_scan_engine_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "detectFrame accepts luma, BGRA and RGBA frames",
+     "file": "imaging/native_scan_engine_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "errors come back as exceptions, not hangs",
+     "file": "imaging/native_scan_engine_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "editor at 200% text: no overflow",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "concurrent requests resolve independently",
+     "file": "imaging/native_scan_engine_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "orderCorners rotated 0 deg, any input order",
+     "file": "imaging/geometry_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "orderCorners rotated 10 deg, any input order",
+     "file": "imaging/geometry_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "orderCorners rotated 30 deg, any input order",
+     "file": "imaging/geometry_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "orderCorners rotated 44 deg, any input order",
+     "file": "imaging/geometry_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "orderCorners rotated -20 deg, any input order",
+     "file": "imaging/geometry_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "orderCorners rotated -44 deg, any input order",
+     "file": "imaging/geometry_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "fitLineHuber ignores outliers",
+     "file": "imaging/geometry_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "quadFromLongSides recovers a clipped corner",
+     "file": "imaging/geometry_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "convexity and area",
+     "file": "imaging/geometry_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "editor screen add text in the middle, edit it with the keyboard, undo/redo, save",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "markup (light): tap targets, labels, contrast",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "markup (dark): tap targets, labels, contrast",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "editor screen drag draws a rectangle; Delete key removes the selection",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "markup (highContrast): tap targets, labels, contrast",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "smoother reduces jitter",
+     "file": "imaging/corner_smoother_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "smoother snaps on a big move",
+     "file": "imaging/corner_smoother_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "smoother holds then drops",
+     "file": "imaging/corner_smoother_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "stability: steady after the window, progress fills up",
+     "file": "imaging/corner_smoother_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "stability: never steady while moving, resets on miss",
+     "file": "imaging/corner_smoother_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "original matches the Python reference",
+     "file": "imaging/opencv_filters_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "grayscale matches the Python reference",
+     "file": "imaging/opencv_filters_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "markup at 200% text: no overflow",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "magic_color matches the Python reference",
+     "file": "imaging/opencv_filters_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "bw matches the Python reference",
+     "file": "imaging/opencv_filters_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "B&W is strictly black/white with a clean border",
+     "file": "imaging/opencv_filters_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "applyEdits: rotate, crop and downscale",
+     "file": "imaging/opencv_filters_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "crop follows a clockwise rotation",
+     "file": "imaging/opencv_filters_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "PageEdits JSON round trip",
+     "file": "imaging/opencv_filters_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "settings (light): tap targets, labels, contrast",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "settings (dark): tap targets, labels, contrast",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "editor screen pen strokes and eraser; leaving with changes asks first",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "document JSON round trip",
+     "file": "data/repository_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "edit bumps revision; markSynced clears needsSync",
+     "file": "data/repository_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "repository list is newest first and searchable by title and page text",
+     "file": "data/repository_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "repository delete of an unsynced doc removes it and its images",
+     "file": "data/repository_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "repository delete of a synced doc leaves a tombstone for sync",
+     "file": "data/repository_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "repository changes stream fires on save",
+     "file": "data/repository_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "FileStore put/get/keys/deletePrefix",
+     "file": "data/repository_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "JPEG and PNG sizes from headers",
+     "file": "data/image_header_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "unknown data",
+     "file": "data/image_header_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "settings (highContrast): tap targets, labels, contrast",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "editor screen rotating the page keeps markup on the content",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "settings at 200% text: no overflow",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "expired access token is refreshed once and the request retried",
+     "file": "services/api_client_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "failed refresh signs out",
+     "file": "services/api_client_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "409 on PUT becomes ConflictException with the server copy",
+     "file": "services/api_client_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "network failure is OfflineException",
+     "file": "services/api_client_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "error detail is surfaced",
+     "file": "services/api_client_test.dart",
+     "status": "passed"
+    },
+    {
+     "name": "onboarding (light): tap targets, labels, contrast",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "onboarding (dark): tap targets, labels, contrast",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "onboarding (highContrast): tap targets, labels, contrast",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "onboarding at 200% text: no overflow",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "account (optional sign-in) (light): tap targets, labels, contrast",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "account (optional sign-in) (dark): tap targets, labels, contrast",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "account (optional sign-in) (highContrast): tap targets, labels, contrast",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "account (optional sign-in) at 200% text: no overflow",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "scanner running: guidelines and 200% text",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "scanner error screen: guidelines incl. contrast, 200% text",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "keyboard only: Tab order on Home, Enter opens the scanner",
+     "file": "package:flutter_test/src/widget_tester.dart",
+     "status": "passed"
+    },
+    {
+     "name": "theme colours meet 4.5:1 for text in every look",
+     "file": "features/accessibility_test.dart",
+     "status": "passed"
+    }
+   ],
+   "passed": 195,
+   "failed": 0,
+   "skipped": 0
+  },
+  {
+   "id": "js",
+   "title": "JavaScript (opencv.js detector, filters, Tesseract.js OCR)",
+   "command": "cd app/test_js && npm test",
+   "status": "run",
+   "tests": [
+    {
+     "name": "params match shared/detector_params.json",
+     "file": "test",
+     "status": "passed"
+    },
+    {
+     "name": "fixture tilted_paper",
+     "file": "test",
+     "status": "passed"
+    },
+    {
+     "name": "fixture low_contrast",
+     "file": "test",
+     "status": "passed"
+    },
+    {
+     "name": "fixture cluttered_background",
+     "file": "test",
+     "status": "passed"
+    },
+    {
+     "name": "fixture strong_perspective",
+     "file": "test",
+     "status": "passed"
+    },
+    {
+     "name": "fixture shadow_across",
+     "file": "test",
+     "status": "passed"
+    },
+    {
+     "name": "fixture narrow_receipt",
+     "file": "test",
+     "status": "passed"
+    },
+    {
+     "name": "fixture fills_frame",
+     "file": "test",
+     "status": "passed"
+    },
+    {
+     "name": "fixture no_document",
+     "file": "test",
+     "status": "passed"
+    },
+    {
+     "name": "orderCorners handles any input order and rotation",
+     "file": "test",
+     "status": "passed"
+    },
+    {
+     "name": "blank image falls back to bounds",
+     "file": "test",
+     "status": "passed"
+    },
+    {
+     "name": "explainDetection: same corners as detectDocument, an image for every step",
+     "file": "test",
+     "status": "passed"
+    },
+    {
+     "name": "explainDetection on a blank image: nothing found, full-photo corners",
+     "file": "test",
+     "status": "passed"
+    },
+    {
+     "name": "warp produces page-shaped output",
+     "file": "test",
+     "status": "passed"
+    },
+    {
+     "name": "speed on 720x1280 frame",
+     "file": "test",
+     "status": "passed"
+    },
+    {
+     "name": "filter original matches the Python reference",
+     "file": "test",
+     "status": "passed"
+    },
+    {
+     "name": "filter grayscale matches the Python reference",
+     "file": "test",
+     "status": "passed"
+    },
+    {
+     "name": "filter magic_color matches the Python reference",
+     "file": "test",
+     "status": "passed"
+    },
+    {
+     "name": "filter bw matches the Python reference",
+     "file": "test",
+     "status": "passed"
+    },
+    {
+     "name": "rotate and crop",
+     "file": "test",
+     "status": "passed"
+    },
+    {
+     "name": "OCR reads a flattened page and returns normalised line boxes",
+     "file": "test",
+     "status": "passed"
+    },
+    {
+     "name": "OCR reads Hindi (hin+eng) from a Devanagari page",
+     "file": "test",
+     "status": "passed"
+    },
+    {
+     "name": "OCR on a photo without text returns no lines (no random letters)",
+     "file": "test",
+     "status": "passed"
+    },
+    {
+     "name": "meaningful-text filter",
+     "file": "test",
+     "status": "passed"
+    }
+   ],
+   "passed": 24,
+   "failed": 0,
+   "skipped": 0
+  },
+  {
+   "id": "scanner_core",
+   "title": "Python scanner_core (reference detector)",
+   "command": "cd scanner_core && .venv/bin/python -m pytest",
+   "status": "run",
+   "tests": [
+    {
+     "name": "test_fixture[tilted_paper]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_fixture[low_contrast]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_fixture[cluttered_background]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_fixture[strong_perspective]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_fixture[shadow_across]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_fixture[narrow_receipt]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_fixture[fills_frame]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_fixture[no_document]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_random_placements[0]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_random_placements[1]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_random_placements[2]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_random_placements[3]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_random_placements[4]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_random_placements[5]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_random_placements[6]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_random_placements[7]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_random_placements[8]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_random_placements[9]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_random_placements[10]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_random_placements[11]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_random_placements[12]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_random_placements[13]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_random_placements[14]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_random_placements[15]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_random_placements[16]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_random_placements[17]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_random_placements[18]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_random_placements[19]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_random_placements[20]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_random_placements[21]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_random_placements[22]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_random_placements[23]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_random_placements[24]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_random_placements[25]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_random_placements[26]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_random_placements[27]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_random_placements[28]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_random_placements[29]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_random_placements[30]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_random_placements[31]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_random_placements[32]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_random_placements[33]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_random_placements[34]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_random_placements[35]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_random_placements[36]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_random_placements[37]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_random_placements[38]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_random_placements[39]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_blank_and_tiny_images_fall_back_to_bounds",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_accepts_grayscale",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_empty_image_raises",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_order_corners_rotated[0]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_order_corners_rotated[10]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_order_corners_rotated[30]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_order_corners_rotated[44]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_order_corners_rotated[-20]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_order_corners_rotated[-44]",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_order_corners_keystone",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_speed_on_hd_frame",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_params_match_shared_json",
+     "file": "tests.test_detect",
+     "status": "passed"
+    },
+    {
+     "name": "test_all_filters_keep_size",
+     "file": "tests.test_filters",
+     "status": "passed"
+    },
+    {
+     "name": "test_grayscale_is_single_channel",
+     "file": "tests.test_filters",
+     "status": "passed"
+    },
+    {
+     "name": "test_bw_is_binary_and_keeps_text",
+     "file": "tests.test_filters",
+     "status": "passed"
+    },
+    {
+     "name": "test_magic_color_removes_shadow",
+     "file": "tests.test_filters",
+     "status": "passed"
+    },
+    {
+     "name": "test_rotate",
+     "file": "tests.test_filters",
+     "status": "passed"
+    },
+    {
+     "name": "test_crop",
+     "file": "tests.test_filters",
+     "status": "passed"
+    },
+    {
+     "name": "test_unknown_filter",
+     "file": "tests.test_filters",
+     "status": "passed"
+    },
+    {
+     "name": "test_scan_auto_detect_round_trip",
+     "file": "tests.test_pipeline",
+     "status": "passed"
+    },
+    {
+     "name": "test_scan_with_manual_corners_and_rotation",
+     "file": "tests.test_pipeline",
+     "status": "passed"
+    },
+    {
+     "name": "test_decode_rejects_garbage",
+     "file": "tests.test_pipeline",
+     "status": "passed"
+    },
+    {
+     "name": "test_smoother_reduces_jitter",
+     "file": "tests.test_smoothing",
+     "status": "passed"
+    },
+    {
+     "name": "test_smoother_snaps_on_big_move",
+     "file": "tests.test_smoothing",
+     "status": "passed"
+    },
+    {
+     "name": "test_smoother_holds_then_drops",
+     "file": "tests.test_smoothing",
+     "status": "passed"
+    },
+    {
+     "name": "test_stability_steady_after_window",
+     "file": "tests.test_smoothing",
+     "status": "passed"
+    },
+    {
+     "name": "test_stability_not_steady_while_moving",
+     "file": "tests.test_smoothing",
+     "status": "passed"
+    },
+    {
+     "name": "test_stability_resets_on_miss",
+     "file": "tests.test_smoothing",
+     "status": "passed"
+    },
+    {
+     "name": "test_warp_recovers_flat_page",
+     "file": "tests.test_warp",
+     "status": "passed"
+    },
+    {
+     "name": "test_output_size_axis_aligned",
+     "file": "tests.test_warp",
+     "status": "passed"
+    },
+    {
+     "name": "test_output_size_uses_longest_edges",
+     "file": "tests.test_warp",
+     "status": "passed"
+    },
+    {
+     "name": "test_max_side_caps_output",
+     "file": "tests.test_warp",
+     "status": "passed"
+    }
+   ],
+   "passed": 80,
+   "failed": 0,
+   "skipped": 0
+  },
+  {
+   "id": "backend",
+   "title": "Backend API (FastAPI + Postgres + MinIO)",
+   "command": "cd backend && .venv/bin/python -m pytest",
+   "status": "run",
+   "tests": [
+    {
+     "name": "test_register_login_me",
+     "file": "tests.test_auth",
+     "status": "passed"
+    },
+    {
+     "name": "test_duplicate_email",
+     "file": "tests.test_auth",
+     "status": "passed"
+    },
+    {
+     "name": "test_wrong_password_and_unknown_user_look_the_same",
+     "file": "tests.test_auth",
+     "status": "passed"
+    },
+    {
+     "name": "test_validation",
+     "file": "tests.test_auth",
+     "status": "passed"
+    },
+    {
+     "name": "test_tokens",
+     "file": "tests.test_auth",
+     "status": "passed"
+    },
+    {
+     "name": "test_files_must_be_uploaded_before_metadata",
+     "file": "tests.test_documents",
+     "status": "passed"
+    },
+    {
+     "name": "test_versioning_conflict_and_page_removal",
+     "file": "tests.test_documents",
+     "status": "passed"
+    },
+    {
+     "name": "test_list_since_cursor_and_tombstones",
+     "file": "tests.test_documents",
+     "status": "passed"
+    },
+    {
+     "name": "test_pagination",
+     "file": "tests.test_documents",
+     "status": "passed"
+    },
+    {
+     "name": "test_users_are_isolated",
+     "file": "tests.test_documents",
+     "status": "passed"
+    },
+    {
+     "name": "test_file_validation",
+     "file": "tests.test_documents",
+     "status": "passed"
+    },
+    {
+     "name": "test_metadata_validation",
+     "file": "tests.test_documents",
+     "status": "passed"
+    },
+    {
+     "name": "test_pdf_download",
+     "file": "tests.test_documents",
+     "status": "passed"
+    },
+    {
+     "name": "test_upload_pdf_and_photo",
+     "file": "tests.test_documents",
+     "status": "passed"
+    },
+    {
+     "name": "test_upload_rejects_bad_files",
+     "file": "tests.test_documents",
+     "status": "passed"
+    },
+    {
+     "name": "test_markup_round_trip_and_limits",
+     "file": "tests.test_documents",
+     "status": "passed"
+    },
+    {
+     "name": "test_detect_only",
+     "file": "tests.test_process",
+     "status": "passed"
+    },
+    {
+     "name": "test_full_process_returns_page_jpeg",
+     "file": "tests.test_process",
+     "status": "passed"
+    },
+    {
+     "name": "test_given_corners_rotate_and_crop_without_warp",
+     "file": "tests.test_process",
+     "status": "passed"
+    },
+    {
+     "name": "test_process_validation",
+     "file": "tests.test_process",
+     "status": "passed"
+    }
+   ],
+   "passed": 20,
+   "failed": 0,
+   "skipped": 0
+  }
+ ]
+}

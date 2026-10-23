@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Features — DocScanner</title>
+  <meta name="description" content="Everything DocScanner does, where it runs, and what is still left to do.">
+  <link rel="icon" href="img/logo.svg">
+  <link rel="stylesheet" href="css/site.css">
+  <script type="module" src="js/site.js"></script>
+  <script type="module" src="js/features.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site"></header>
+<main id="main">
+  <h1>Features</h1>
+  <p class="lead">What DocScanner does, and how each part was checked. “Automated” means covered by the test suites;
+    “phone check” means it also needs a person with a real phone.</p>
+
+  <div class="table-wrap">
+  <table>
+    <caption class="vh">Features and how they are checked</caption>
+    <thead><tr><th scope="col">Feature</th><th scope="col">Phone app</th><th scope="col">Web app</th><th scope="col">Checked by</th></tr></thead>
+    <tbody>
+      <tr><td>Live page outline and auto-capture</td><td>Yes</td><td>Yes (webcam, or the demo camera)</td><td>Automated + phone check</td></tr>
+      <tr><td>Upload a photo instead of the camera</td><td>Yes</td><td>Yes</td><td>Automated</td></tr>
+      <tr><td>Switch camera, flashlight</td><td>Yes</td><td>Switch camera (flashlight only where the browser supports it)</td><td>Automated + phone check</td></tr>
+      <tr><td>Spoken and vibration guidance</td><td>Yes (optional)</td><td>Speech yes; vibration depends on the device</td><td>Automated + phone check</td></tr>
+      <tr><td>Corner editor: drag, keyboard, full photo, rotate</td><td>Yes</td><td>Yes</td><td>Automated</td></tr>
+      <tr><td>Filters with before/after compare</td><td>Yes</td><td>Yes</td><td>Automated</td></tr>
+      <tr><td>Rotate, crop, reorder, delete with undo, retake</td><td>Yes</td><td>Yes</td><td>Automated</td></tr>
+      <tr><td>Markup: text, pen, highlighter, eraser, signature, shapes, whiteout</td><td>Yes</td><td>Yes</td><td>Automated</td></tr>
+      <tr><td>Text recognition (English, Hindi), copy text</td><td>ML Kit</td><td>Tesseract.js</td><td>Automated (web engine) + phone check (ML Kit)</td></tr>
+      <tr><td>PDF (searchable) and JPG export</td><td>Share sheet</td><td>Download or share</td><td>Automated</td></tr>
+      <tr><td>Import photos and PDFs</td><td>Yes</td><td>Yes</td><td>Automated</td></tr>
+      <tr><td>Library, search, rename</td><td>Yes</td><td>Yes</td><td>Automated</td></tr>
+      <tr><td>Works without an account; optional backup and sync</td><td>Yes</td><td>Yes</td><td>Automated (incl. app ↔ server sync)</td></tr>
+      <tr><td>English and Hindi interface</td><td>Yes</td><td>Yes</td><td>Automated</td></tr>
+      <tr><td>Large text, high contrast, screen readers, keyboard</td><td>Yes</td><td>Yes</td><td>Automated + screen reader check on a phone</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>Source code</h2>
+  <div id="repo" class="card"><p>Loading…</p></div>
+
+  <h2>Not done yet</h2>
+  <ul>
+    <li>Testing on a range of physical phones (camera focus, flash, ML Kit speed, TalkBack/VoiceOver) still needs a person with the devices; see <code>docs/TESTING.md</code>.</li>
+    <li>Handwriting recognition is not supported (printed text only).</li>
+    <li>Editing the same document on two devices at once keeps the newer version (no merging).</li>
+  </ul>
+</main>
+<footer><div class="inner"></div></footer>
+</body>
+</html>

@@ -57,6 +57,31 @@ test('blank image falls back to bounds', () => {
   assert.deepStrictEqual(d.corners, S.fullBounds(640, 480));
 });
 
+test('explainDetection: same corners as detectDocument, an image for every step', () => {
+  const name = Object.entries(spec.cases).find(([, c]) => c.found)[0];
+  const img = load(name);
+  const x = S.explainDetection(cv, img);
+  assert.deepStrictEqual(x.result, S.detectDocument(cv, img));
+  for (const step of ['gray', 'blurred', 'edges', 'contours', 'corners', 'flattened']) {
+    const s = x.steps[step];
+    assert.ok(s && s.width > 0 && s.height > 0 && s.data.length === s.width * s.height * 4, step);
+  }
+  assert.ok(x.contourCount > 0);
+  assert.notStrictEqual(x.pass, 'none');
+  // Edges are binary; the working image is <= 500 px + padding.
+  assert.ok(Math.max(x.steps.edges.width, x.steps.edges.height) <= S.PARAMS.max_dim + 2 * S.PARAMS.pad);
+  const e = x.steps.edges.data;
+  for (let i = 0; i < e.length; i += 4 * 97) assert.ok(e[i] === 0 || e[i] === 255);
+});
+
+test('explainDetection on a blank image: nothing found, full-photo corners', () => {
+  const img = { data: new Uint8ClampedArray(320 * 240 * 4).fill(128), width: 320, height: 240 };
+  const x = S.explainDetection(cv, img);
+  assert.strictEqual(x.result.found, false);
+  assert.strictEqual(x.pass, 'none');
+  assert.strictEqual(x.steps.flattened.width, 319); // corner-to-corner distance of a 320 px photo
+});
+
 test('warp produces page-shaped output', () => {
   const img = load('tilted_paper');
   const out = S.warpPerspective(cv, img, spec.cases.tilted_paper.corners, 800);

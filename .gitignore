@@ -8,3 +8,4 @@ backend/.env
 .DS_Store
 .claude/
 **/*.egg-info/
+docs/testing/raw/

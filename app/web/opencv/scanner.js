@@ -191,7 +191,8 @@
     return best ? { quad: best, ratio: bestArea / imgArea } : null;
   }
 
-  function edgeMap(cv, gray, equalize) {
+  /** Blur + Canny + dilate. Returns {blurred, edges} (caller deletes both). */
+  function edgeSteps(cv, gray, equalize) {
     const g = new cv.Mat(), e = new cv.Mat();
     if (equalize) {
       const clahe = new cv.CLAHE(PARAMS.clahe_clip, new cv.Size(8, 8));
@@ -206,8 +207,14 @@
     }
     const k = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(3, 3));
     cv.dilate(e, e, k);
-    k.delete(); g.delete();
-    return e;
+    k.delete();
+    return { blurred: g, edges: e };
+  }
+
+  function edgeMap(cv, gray, equalize) {
+    const { blurred, edges } = edgeSteps(cv, gray, equalize);
+    blurred.delete();
+    return edges;
   }
 
   function median(m) {
@@ -277,8 +284,8 @@
     return q;
   }
 
-  /** Detect the page. Returns {corners: [[x,y] x4] TL,TR,BR,BL in source pixels, found, score}. */
-  function detectDocument(cv, image, maxDim = PARAMS.max_dim) {
+  /** Downscaled, padded grayscale working image. Returns {gray, scale} (caller deletes gray). */
+  function workingGray(cv, image, maxDim) {
     const { width: w, height: h } = image;
     if (!w || !h) throw new Error('empty image');
     const src = cv.matFromImageData(image);
@@ -292,6 +299,14 @@
     small.delete();
     const pad = PARAMS.pad;
     cv.copyMakeBorder(gray, gray, pad, pad, pad, pad, cv.BORDER_REPLICATE);
+    return { gray, scale };
+  }
+
+  /** Detect the page. Returns {corners: [[x,y] x4] TL,TR,BR,BL in source pixels, found, score}. */
+  function detectDocument(cv, image, maxDim = PARAMS.max_dim) {
+    const { width: w, height: h } = image;
+    const { gray, scale } = workingGray(cv, image, maxDim);
+    const pad = PARAMS.pad;
     try {
       for (const equalize of [false, true]) {
         const e = edgeMap(cv, gray, equalize);
@@ -477,5 +492,78 @@
     return result;
   }
 
-  return { PARAMS, detectDocument, warpPerspective, applyEdits, orderCorners, fullBounds, outputSize };
+
+  // ---------- "How it works": the same steps, with a picture of each ----------
+
+  function grayToRGBA(cv, m) {
+    const out = new cv.Mat();
+    cv.cvtColor(m, out, cv.COLOR_GRAY2RGBA);
+    const r = { data: new Uint8ClampedArray(out.data), width: out.cols, height: out.rows };
+    out.delete();
+    return r;
+  }
+
+  function rgbaFromMat(m) {
+    return { data: new Uint8ClampedArray(m.data), width: m.cols, height: m.rows };
+  }
+
+  /**
+   * Run detection step by step and return an image for each step:
+   * gray, blurred, edges, contours (all outlines; the chosen page in green),
+   * corners (on the photo), flattened (the warped page).
+   * Uses the same functions as detectDocument; `result` is identical to it.
+   */
+  function explainDetection(cv, image, maxDim = PARAMS.max_dim) {
+    const result = detectDocument(cv, image, maxDim);
+    const { gray, scale } = workingGray(cv, image, maxDim);
+    const pad = PARAMS.pad;
+    const steps = { gray: grayToRGBA(cv, gray) };
+    let pass = 'normal';
+    let chosen = null;
+    let blurred = null, edges = null;
+    for (const equalize of [false, true]) {
+      const st = edgeSteps(cv, gray, equalize);
+      const res = bestQuad(cv, st.edges);
+      if (blurred) { blurred.delete(); edges.delete(); }
+      blurred = st.blurred; edges = st.edges;
+      if (res) { chosen = res.quad; pass = equalize ? 'low-contrast (CLAHE)' : 'normal'; break; }
+      pass = 'none';
+    }
+    steps.blurred = grayToRGBA(cv, blurred);
+    steps.edges = grayToRGBA(cv, edges);
+
+    // All outlines in orange, the chosen page outline in green.
+    const contours = new cv.MatVector(), hier = new cv.Mat();
+    cv.findContours(edges, contours, hier, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE);
+    const canvas = new cv.Mat(gray.rows, gray.cols, cv.CV_8UC4, new cv.Scalar(20, 20, 20, 255));
+    cv.drawContours(canvas, contours, -1, new cv.Scalar(255, 150, 0, 255), 1);
+    if (chosen) {
+      const q = cv.matFromArray(4, 1, cv.CV_32SC2, chosen.flat().map(Math.round));
+      const v = new cv.MatVector();
+      v.push_back(q);
+      cv.polylines(canvas, v, true, new cv.Scalar(40, 220, 90, 255), 3);
+      v.delete(); q.delete();
+    }
+    steps.contours = rgbaFromMat(canvas);
+    const contourCount = contours.size();
+    canvas.delete(); contours.delete(); hier.delete();
+
+    // Corners drawn on the photo (downscaled for display).
+    const src = cv.matFromImageData(image);
+    const disp = new cv.Mat();
+    cv.resize(src, disp, new cv.Size(gray.cols - 2 * pad, gray.rows - 2 * pad), 0, 0, cv.INTER_AREA);
+    src.delete();
+    const pts = result.corners.map(([x, y]) => new cv.Point(Math.round((x + 0.5) * scale - 0.5), Math.round((y + 0.5) * scale - 0.5)));
+    const color = result.found ? new cv.Scalar(40, 220, 90, 255) : new cv.Scalar(230, 60, 60, 255);
+    for (let i = 0; i < 4; i++) cv.line(disp, pts[i], pts[(i + 1) % 4], color, 2);
+    for (const p of pts) cv.circle(disp, p, 6, new cv.Scalar(30, 110, 255, 255), -1);
+    steps.corners = rgbaFromMat(disp);
+    disp.delete();
+
+    steps.flattened = warpPerspective(cv, image, result.corners, 1000);
+    gray.delete(); blurred.delete(); edges.delete();
+    return { result, steps, pass, contourCount, scale };
+  }
+
+  return { PARAMS, detectDocument, explainDetection, warpPerspective, applyEdits, orderCorners, fullBounds, outputSize };
 });
