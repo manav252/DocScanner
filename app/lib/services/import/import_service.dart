@@ -26,6 +26,12 @@ class ImportService {
   /// Photo library (mobile) / image file picker (web). Multiple selection.
   Future<List<ImportedFile>> pickImages() => _pick(FileType.image);
 
+  /// A DocScanner backup (.zip).
+  Future<ImportedFile?> pickBackup() async {
+    final files = await _pick(FileType.custom, const ['zip']);
+    return files.isEmpty ? null : files.first;
+  }
+
   /// PDF files only.
   Future<List<ImportedFile>> pickPdfs() => _pick(FileType.custom, const ['pdf']);
 

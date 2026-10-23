@@ -4,7 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app_settings.dart';
 
 import '../data/document_repository.dart';
+import '../data/backup.dart';
 import '../data/page_renderer.dart';
+import '../data/thumbnails.dart';
 import '../data/storage/key_value_store.dart';
 import '../imaging/scan_engine.dart';
 import '../imaging/server_scan_engine.dart';
@@ -70,6 +72,36 @@ final documentRepositoryProvider = Provider<DocumentRepository>((ref) {
   final repo = DocumentRepository(ref.watch(keyValueStoreProvider));
   ref.onDispose(repo.dispose);
   return repo;
+});
+
+/// Cached page previews for lists (see ThumbnailService).
+final thumbnailServiceProvider = Provider<ThumbnailService>(
+  (ref) => ThumbnailService(ref.watch(documentRepositoryProvider), ref.watch(scanEngineProvider)),
+);
+
+/// Export/import of all documents as a ZIP (backup without an account).
+final backupServiceProvider = Provider<BackupService>(
+  (ref) => BackupService(ref.watch(documentRepositoryProvider), ref.watch(keyValueStoreProvider)),
+);
+
+/// Space used on this device and how many documents there are.
+final storageUsageProvider = FutureProvider.autoDispose<({int? bytes, int documents, int pages})>((ref) async {
+  final docs = await ref.watch(documentRepositoryProvider).list();
+  return (
+    bytes: await ref.watch(keyValueStoreProvider).usageBytes(),
+    documents: docs.length,
+    pages: docs.fold<int>(0, (n, d) => n + d.pages.length),
+  );
+});
+
+/// Upkeep a few seconds after start: missing thumbnails, leftovers of interrupted deletes.
+final maintenanceProvider = FutureProvider<(int, int)>((ref) async {
+  await Future<void>.delayed(const Duration(seconds: 3));
+  try {
+    return await ref.read(thumbnailServiceProvider).repair();
+  } catch (_) {
+    return (0, 0); // best effort; previews fall back to a placeholder anyway
+  }
 });
 
 final pageRendererProvider = Provider<PageRenderer>(

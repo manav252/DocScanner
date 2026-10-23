@@ -63,7 +63,7 @@ class DocumentCard extends StatelessWidget {
             ? const Icon(Icons.description_outlined, size: 40)
             : Padding(
                 padding: const EdgeInsets.all(6),
-                child: StoredPageImage(page: doc.pages.first),
+                child: StoredPageImage(page: doc.pages.first, label: doc.title),
               ),
       ),
     );

@@ -34,6 +34,7 @@ if [[ "${REBUILD:-0}" == 1 || ! -f $INDEX ]] || ! grep -q '<base href="/app/">' 
   # Flutter keeps its config in XDG_CONFIG_HOME when HOME/.config is not writable.
   (cd app && "$FLUTTER" build web --release --no-wasm-dry-run --base-href /app/ \
       --dart-define=ASSET_VERSION="$(date +%s)") | tail -1
+  python3 tools/pwa_precache.py   # file list for offline use (service worker)
 fi
 
 # --- 3. website + app ---

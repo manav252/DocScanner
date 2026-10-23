@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/cancel.dart';
 import '../../core/l10n.dart';
 import '../../core/providers.dart';
 import '../../services/import/import_service.dart';
@@ -24,6 +25,7 @@ Future<void> importIntoNewDocument(BuildContext context, WidgetRef ref, ImportKi
   if (picked.isEmpty || !context.mounted) return;
   final l = context.l10n;
   final progress = ValueNotifier<ImportProgress>(const ImportProgress(0, ''));
+  final cancel = CancelToken();
   showDialog<void>(
     context: context,
     barrierDismissible: false,
@@ -46,6 +48,14 @@ Future<void> importIntoNewDocument(BuildContext context, WidgetRef ref, ImportKi
             ),
           ),
         ),
+        actions: [
+          TextButton.icon(
+            key: const ValueKey('import-cancel'),
+            onPressed: cancel.cancel,
+            icon: const Icon(Icons.close),
+            label: Text(l.cancel),
+          ),
+        ],
       ),
     ),
   );
@@ -54,9 +64,12 @@ Future<void> importIntoNewDocument(BuildContext context, WidgetRef ref, ImportKi
   final actions = ref.read(libraryActionsProvider);
   try {
     final doc = await actions.createDocument(title: picked.length == 1 ? title : null);
-    final r = await ref.read(importFlowProvider).importFiles(doc.id, picked, onProgress: (p) => progress.value = p);
+    final r = await ref
+        .read(importFlowProvider)
+        .importFiles(doc.id, picked, onProgress: (p) => progress.value = p, cancel: cancel);
     if (!context.mounted) return;
     Navigator.of(context).pop(); // progress dialog
+    if (r.cancelled) _snack(context, l.importCancelled);
     if (r.failed.isNotEmpty) _snack(context, l.importSkipped(r.failed.join(', ')));
     if (r.added == 0) {
       await actions.delete(doc);

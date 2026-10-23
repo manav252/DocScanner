@@ -52,6 +52,17 @@ class IndexedDbStore implements KeyValueStore {
   @override
   Future<void> deletePrefix(String prefix) => _await<JSAny?>(_os('readwrite').delete(_range(prefix)));
 
+  /// The browser's figure for this site (documents plus the offline copy of the app).
+  @override
+  Future<int?> usageBytes() async {
+    try {
+      final e = await web.window.navigator.storage.estimate().toDart;
+      return e.usage;
+    } catch (_) {
+      return null;
+    }
+  }
+
   @override
   Future<List<String>> keys(String prefix) async {
     final r = await _await<JSArray<JSString>>(_os('readonly').getAllKeys(_range(prefix)));

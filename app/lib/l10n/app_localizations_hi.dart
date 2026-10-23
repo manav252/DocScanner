@@ -199,6 +199,79 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String get pagePreview => 'पेज का पूर्वावलोकन';
+
+  @override
+  String get pagePreviewLoading => 'पेज का पूर्वावलोकन लोड हो रहा है';
+
+  @override
+  String get previewUnavailable => 'पूर्वावलोकन उपलब्ध नहीं';
+
+  @override
+  String get exportCancelled => 'निर्यात रद्द किया गया।';
+
+  @override
+  String get importCancelled => 'जोड़ना रद्द किया गया। जो पेज जुड़ चुके थे, वे रखे गए।';
+
+  @override
+  String get storageBackup => 'स्टोरेज और बैकअप';
+
+  @override
+  String get privacyNote =>
+      'आपके दस्तावेज़ इसी डिवाइस पर रहते हैं। जब तक आप साइन इन करके बैकअप नहीं चुनते, कुछ भी अपलोड नहीं होता।';
+
+  @override
+  String storageUsed(String size, int documents, int pages) {
+    return 'इस डिवाइस पर उपयोग की गई जगह: $size ($documents दस्तावेज़, $pages पेज)';
+  }
+
+  @override
+  String storageUnknown(int documents, int pages) {
+    return 'इस डिवाइस पर $documents दस्तावेज़, $pages पेज';
+  }
+
+  @override
+  String get exportAll => 'सभी दस्तावेज़ निर्यात करें (ZIP)';
+
+  @override
+  String get exportAllHint => 'बिना खाते के एक कॉपी रखें, या अपने दस्तावेज़ दूसरे डिवाइस पर ले जाएँ।';
+
+  @override
+  String get importBackup => 'बैकअप से वापस लाएँ';
+
+  @override
+  String get makingBackup => 'बैकअप बन रहा है…';
+
+  @override
+  String get restoringBackup => 'दस्तावेज़ वापस लाए जा रहे हैं…';
+
+  @override
+  String backupSaved(String name) {
+    return 'बैकअप सहेजा गया: $name';
+  }
+
+  @override
+  String backupRestored(int added, int updated, int skipped) {
+    return '$added जोड़े गए, $updated अपडेट हुए, $skipped पहले से नए थे।';
+  }
+
+  @override
+  String backupFailed(String message) {
+    return 'बैकअप नहीं हो सका: $message';
+  }
+
+  @override
+  String get errorTitle => 'कुछ गड़बड़ हो गई';
+
+  @override
+  String get errorBody => 'आपके दस्तावेज़ सुरक्षित हैं। फिर कोशिश करें; अगर बार-बार हो, तो ऐप दोबारा शुरू करें।';
+
+  @override
+  String deleteFailed(String title) {
+    return '“$title” हटाया नहीं जा सका। उसे वापस रख दिया गया है।';
+  }
+
+  @override
   String importSkipped(String names) {
     return 'ये फ़ाइलें खुल नहीं सकीं और छोड़ दी गईं: $names';
   }

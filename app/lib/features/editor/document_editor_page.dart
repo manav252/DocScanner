@@ -17,7 +17,7 @@ import '../common/page_image.dart';
 import '../corners/corner_adjust_page.dart';
 import '../markup/markup_editor_page.dart';
 import '../library/import_flow.dart';
-import '../library/library_controller.dart';
+import '../library/delete_controller.dart';
 import 'crop_page.dart';
 import 'document_controller.dart';
 import 'export_sheet.dart';
@@ -99,12 +99,10 @@ class _DocumentEditorPageState extends ConsumerState<DocumentEditorPage> {
     if (title != null) await _run(() => _doc.rename(title));
   }
 
+  /// Leave the editor at once; the document is removed with Undo offered (app-wide snackbar).
   Future<void> _deleteDocument(ScanDocument doc) async {
-    final l = context.l10n;
-    final ok = await confirmDelete(context, l.deleteDocTitle(doc.title), l.deleteDocBody(doc.pages.length));
-    if (!ok || !mounted) return;
-    await ref.read(libraryActionsProvider).delete(doc);
-    if (mounted) Navigator.of(context).pop();
+    deleteWithUndo(context, ref, doc);
+    Navigator.of(context).pop();
   }
 
   Future<void> _scanMore() async {

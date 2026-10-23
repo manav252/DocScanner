@@ -53,6 +53,16 @@ class FileStore implements KeyValueStore {
   }
 
   @override
+  Future<int?> usageBytes() async {
+    if (!await root.exists()) return 0;
+    var n = 0;
+    await for (final e in root.list(recursive: true)) {
+      if (e is File) n += await e.length();
+    }
+    return n;
+  }
+
+  @override
   Future<List<String>> keys(String prefix) async {
     if (!await root.exists()) return [];
     final out = <String>[];

@@ -6,6 +6,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:pdf/widgets.dart' as pw;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/cancel.dart';
 import '../../core/providers.dart';
 import '../../data/document_repository.dart';
 import '../../data/models.dart';
@@ -17,16 +18,25 @@ import '../markup/markup_painter.dart';
 
 enum ExportFormat { pdf, jpg }
 
-pw.Font? _deva;
+ByteData? _deva;
 
 /// Bundled Noto Sans Devanagari (OFL) so Hindi text is searchable in PDFs.
-Future<pw.Font?> _devanagariFont() async {
+Future<ByteData?> _devanagariFontBytes() async {
   try {
-    return _deva ??= pw.Font.ttf(await rootBundle.load('assets/fonts/NotoSansDevanagari-Regular.ttf'));
+    return _deva ??= await rootBundle.load('assets/fonts/NotoSansDevanagari-Regular.ttf');
   } catch (_) {
     return null; // without it, Hindi text is simply left out of the text layer
   }
 }
+
+typedef _PdfJob = ({List<PdfPageInput> pages, String title, PdfPageSize size, ByteData? font});
+
+Future<Uint8List> _pdfJob(_PdfJob j) => buildPdf(
+  j.pages,
+  title: j.title,
+  size: j.size,
+  devanagariFont: j.font == null ? null : pw.Font.ttf(j.font!),
+);
 
 Future<List<OcrLine>?> _ocrLines(DocumentRepository repo, String pageId) async {
   final b = await repo.pageOcr(pageId);
@@ -46,6 +56,8 @@ class Exporter {
     ScanDocument doc, {
     required ExportFormat format,
     PdfPageSize pageSize = PdfPageSize.fit,
+    CancelToken? cancel,
+    void Function(int done, int total)? onPage,
   }) {
     final engine = _ref.read(scanEngineProvider);
     return buildExport(
@@ -53,6 +65,8 @@ class Exporter {
       doc,
       format: format,
       pageSize: pageSize,
+      cancel: cancel,
+      onPage: onPage,
       // Markup is burned in, then re-encoded as JPEG (full size).
       flatten: (jpeg, items) async =>
           (await engine.normalizeEncoded(await flattenMarkup(jpeg, items), maxSide: 100000, quality: 92)).bytes,
@@ -68,10 +82,14 @@ Future<List<ExportFile>> buildExport(
   required ExportFormat format,
   PdfPageSize pageSize = PdfPageSize.fit,
   Future<Uint8List> Function(Uint8List jpeg, List<MarkupItem> items)? flatten,
+  CancelToken? cancel,
+  void Function(int done, int total)? onPage,
 }) async {
   final name = safeFileName(doc.title);
   final images = <(ScanPage, Uint8List)>[];
-  for (final p in doc.pages) {
+  for (final (i, p) in doc.pages.indexed) {
+    cancel?.check();
+    onPage?.call(i, doc.pages.length);
     var bytes = await repo.pageImage(p.id, PageImage.render);
     if (bytes == null) continue;
     // Editable markup becomes part of the exported image.
@@ -79,12 +97,16 @@ Future<List<ExportFile>> buildExport(
     images.add((p, bytes));
   }
   if (images.isEmpty) throw StateError('This document has no pages');
+  cancel?.check();
+  onPage?.call(doc.pages.length, doc.pages.length);
   return switch (format) {
     ExportFormat.pdf => [
       ExportFile(
         '$name.pdf',
-        await buildPdf(
-          [
+        // Phones: built in a background isolate so the UI keeps moving. (On the
+        // web `compute` runs inline; the page JPEGs are embedded as-is, not re-encoded.)
+        await compute(_pdfJob, (
+          pages: [
             for (final (p, b) in images)
               PdfPageInput(
                 jpeg: b,
@@ -96,8 +118,8 @@ Future<List<ExportFile>> buildExport(
           ],
           title: doc.title,
           size: pageSize,
-          devanagariFont: await _devanagariFont(),
-        ),
+          font: await _devanagariFontBytes(),
+        )),
         'application/pdf',
       ),
     ],

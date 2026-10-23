@@ -10,6 +10,7 @@ import '../account/account_page.dart';
 import '../diagnostics/detector_diagnostics_page.dart';
 import '../library/library_controller.dart';
 import '../onboarding/onboarding_page.dart';
+import 'storage_section.dart';
 
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
@@ -95,6 +96,8 @@ class SettingsPage extends ConsumerWidget {
                 label: (o) => o == OcrLanguage.english ? l.langEnglish : l.langHindi,
                 onSelected: (o) => update(s.copyWith(ocrLanguage: o)),
               ),
+              _Section(l.storageBackup),
+              const StorageSection(),
               _Section(l.backupSync),
               const _BackupCard(),
               _Section(l.help),

@@ -198,6 +198,79 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get pagePreview => 'Page preview';
+
+  @override
+  String get pagePreviewLoading => 'Loading page preview';
+
+  @override
+  String get previewUnavailable => 'Preview not available';
+
+  @override
+  String get exportCancelled => 'Export cancelled.';
+
+  @override
+  String get importCancelled => 'Import cancelled. Pages already added were kept.';
+
+  @override
+  String get storageBackup => 'Storage and backup';
+
+  @override
+  String get privacyNote =>
+      'Your documents stay on this device. Nothing is uploaded unless you sign in and choose to back up.';
+
+  @override
+  String storageUsed(String size, int documents, int pages) {
+    return 'Space used on this device: $size ($documents documents, $pages pages)';
+  }
+
+  @override
+  String storageUnknown(int documents, int pages) {
+    return '$documents documents, $pages pages on this device';
+  }
+
+  @override
+  String get exportAll => 'Export all documents (ZIP)';
+
+  @override
+  String get exportAllHint => 'Keep a copy without an account, or move your documents to another device.';
+
+  @override
+  String get importBackup => 'Import backup';
+
+  @override
+  String get makingBackup => 'Making the backup…';
+
+  @override
+  String get restoringBackup => 'Restoring documents…';
+
+  @override
+  String backupSaved(String name) {
+    return 'Backup saved: $name';
+  }
+
+  @override
+  String backupRestored(int added, int updated, int skipped) {
+    return '$added added, $updated updated, $skipped already up to date.';
+  }
+
+  @override
+  String backupFailed(String message) {
+    return 'Backup failed: $message';
+  }
+
+  @override
+  String get errorTitle => 'Something went wrong';
+
+  @override
+  String get errorBody => 'Your documents are safe. Try again; if it keeps happening, restart the app.';
+
+  @override
+  String deleteFailed(String title) {
+    return 'Couldn’t delete “$title”. It has been put back.';
+  }
+
+  @override
   String importSkipped(String names) {
     return 'These files could not be opened and were skipped: $names';
   }

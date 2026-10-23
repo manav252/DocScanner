@@ -1,4 +1,6 @@
 // Library state: the document list (live-updating) and the search query.
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
@@ -15,13 +17,36 @@ class LibraryQuery extends Notifier<String> {
 
 final libraryQueryProvider = NotifierProvider<LibraryQuery, String>(LibraryQuery.new);
 
-/// Visible documents matching the query, newest first; refreshes on every change.
+/// Visible documents matching the query, newest first. Loads everything once,
+/// then re-reads only the document that changed (not the whole library).
 final libraryProvider = StreamProvider.autoDispose<List<ScanDocument>>((ref) async* {
   final repo = ref.watch(documentRepositoryProvider);
-  final query = ref.watch(libraryQueryProvider);
-  yield await repo.list(query: query);
-  await for (final _ in repo.changes) {
-    yield await repo.list(query: query);
+  final query = ref.watch(libraryQueryProvider).trim().toLowerCase();
+  bool matches(ScanDocument d) =>
+      !d.deleted &&
+      (query.isEmpty ||
+          d.title.toLowerCase().contains(query) ||
+          d.pages.any((p) => p.ocrText?.toLowerCase().contains(query) ?? false));
+  List<ScanDocument> view(Map<String, ScanDocument> all) =>
+      [for (final d in all.values) if (matches(d)) d]..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+
+  // Listen before the first read so no change is missed.
+  final changed = StreamController<String>();
+  final sub = repo.changes.listen(changed.add);
+  ref.onDispose(() {
+    sub.cancel();
+    changed.close();
+  });
+  final all = {for (final d in await repo.listAll()) d.id: d};
+  yield view(all);
+  await for (final id in changed.stream) {
+    final d = await repo.get(id);
+    if (d == null) {
+      all.remove(id);
+    } else {
+      all[id] = d;
+    }
+    yield view(all);
   }
 });
 

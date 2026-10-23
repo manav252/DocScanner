@@ -9,6 +9,8 @@ import '../common/dialogs.dart';
 import '../common/document_card.dart';
 import '../editor/document_editor_page.dart';
 import '../editor/export_sheet.dart';
+import '../common/collapsible.dart';
+import 'delete_controller.dart';
 import 'library_controller.dart';
 
 class DocumentsPage extends ConsumerStatefulWidget {
@@ -20,6 +22,9 @@ class DocumentsPage extends ConsumerStatefulWidget {
 
 class _DocumentsPageState extends ConsumerState<DocumentsPage> {
   late final _search = TextEditingController(text: ref.read(libraryQueryProvider));
+
+  /// Deleted documents whose card has finished folding away (dropped from the list).
+  final _collapsed = <String>{};
 
   @override
   void dispose() {
@@ -37,19 +42,17 @@ class _DocumentsPageState extends ConsumerState<DocumentsPage> {
     if (title != null) await ref.read(libraryActionsProvider).rename(doc, title);
   }
 
-  Future<void> _delete(ScanDocument doc) async {
-    final l = context.l10n;
-    if (await confirmDelete(context, l.deleteDocumentTitle(doc.title), l.deleteDocumentBody(doc.pages.length))) {
-      await ref.read(libraryActionsProvider).delete(doc);
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.documentDeleted)));
-    }
-  }
+  /// Instant: the card folds away, Undo is offered, files are removed afterwards.
+  void _delete(ScanDocument doc) => deleteWithUndo(context, ref, doc);
 
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
     final docs = ref.watch(libraryProvider);
     final query = ref.watch(libraryQueryProvider);
+    final pending = ref.watch(pendingDeletesProvider);
+    _collapsed.retainAll(pending); // undone: the card comes back
+    final shown = docs.whenData((l) => [for (final d in l) if (!_collapsed.contains(d.id)) d]);
     return Scaffold(
       appBar: AppBar(title: Text(l.documents)),
       body: Center(
@@ -85,8 +88,8 @@ class _DocumentsPageState extends ConsumerState<DocumentsPage> {
                 ),
               ),
               Expanded(
-                child: switch (docs) {
-                  AsyncData(value: final list) when list.isEmpty =>
+                child: switch (shown) {
+                  AsyncData(value: final list) when list.every((d) => pending.contains(d.id)) =>
                     query.isEmpty
                         ? _Empty(
                             title: l.noScansYet,
@@ -110,17 +113,30 @@ class _DocumentsPageState extends ConsumerState<DocumentsPage> {
                               label: Text(l.clearSearch),
                             ),
                           ),
-                  AsyncData(value: final list) => ListView.separated(
+                  // Lazily built; each item keyed by document id so a delete only animates that card.
+                  AsyncData(value: final list) => ListView.builder(
                     padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
                     itemCount: list.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 12),
-                    itemBuilder: (_, i) => DocumentCard(
-                      doc: list[i],
-                      onOpen: () => Navigator.of(context)
-                          .push(MaterialPageRoute<void>(builder: (_) => DocumentEditorPage(documentId: list[i].id))),
-                      onRename: () => _rename(list[i]),
-                      onExport: () => showExportSheet(context, list[i]),
-                      onDelete: () => _delete(list[i]),
+                    findChildIndexCallback: (key) {
+                      final i = list.indexWhere((d) => ValueKey(d.id) == key);
+                      return i < 0 ? null : i;
+                    },
+                    itemBuilder: (_, i) => Collapsible(
+                      key: ValueKey(list[i].id),
+                      hidden: pending.contains(list[i].id),
+                      onCollapsed: () => setState(() => _collapsed.add(list[i].id)),
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: DocumentCard(
+                          doc: list[i],
+                          onOpen: () => Navigator.of(context).push(
+                            MaterialPageRoute<void>(builder: (_) => DocumentEditorPage(documentId: list[i].id)),
+                          ),
+                          onRename: () => _rename(list[i]),
+                          onExport: () => showExportSheet(context, list[i]),
+                          onDelete: () => _delete(list[i]),
+                        ),
+                      ),
                     ),
                   ),
                   AsyncError(:final error) => _Empty(title: '$error'),

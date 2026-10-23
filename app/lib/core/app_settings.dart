@@ -67,6 +67,9 @@ class AppSettings {
   /// Default backend: same host as the web app on port 8000, else localhost
   /// (Android emulators reach the host machine at 10.0.2.2).
   static String defaultServerUrl() {
+    // A hosted build sets its backend at build time: --dart-define=API_URL=https://…
+    const configured = String.fromEnvironment('API_URL');
+    if (configured.isNotEmpty) return configured;
     if (kIsWeb) return '${Uri.base.scheme}://${Uri.base.host}:8000';
     if (defaultTargetPlatform == TargetPlatform.android) return 'http://10.0.2.2:8000';
     return 'http://localhost:8000';

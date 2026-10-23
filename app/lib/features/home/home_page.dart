@@ -11,6 +11,7 @@ import '../common/document_card.dart';
 import '../editor/document_editor_page.dart';
 import '../library/documents_page.dart';
 import '../library/import_ui.dart';
+import '../library/delete_controller.dart';
 import '../library/library_controller.dart';
 import '../settings/settings_page.dart';
 
@@ -23,7 +24,8 @@ class HomePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = context.l10n;
     final theme = Theme.of(context);
-    final docs = ref.watch(libraryProvider);
+    final pending = ref.watch(pendingDeletesProvider);
+    final docs = ref.watch(libraryProvider).whenData((l) => [for (final d in l) if (!pending.contains(d.id)) d]);
     void push(Widget page) => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => page));
 
     return Scaffold(
@@ -117,6 +119,7 @@ class HomePage extends ConsumerWidget {
                         children: [
                           for (final d in list.take(recentCount))
                             SizedBox(
+                              key: ValueKey(d.id), // keeps each card's loaded thumbnail when the list changes
                               width: width,
                               child: DocumentCard(
                                 doc: d,

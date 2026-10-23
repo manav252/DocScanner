@@ -20,6 +20,9 @@ abstract interface class KeyValueStore {
 
   /// Keys starting with [prefix].
   Future<List<String>> keys(String prefix);
+
+  /// Bytes this app stores on the device, or null if the platform cannot tell.
+  Future<int?> usageBytes();
 }
 
 /// In-memory store (tests).
@@ -43,4 +46,7 @@ class MemoryStore implements KeyValueStore {
     for (final k in data.keys)
       if (k.startsWith(prefix)) k,
   ];
+
+  @override
+  Future<int?> usageBytes() async => data.values.fold<int>(0, (n, v) => n + v.length);
 }

@@ -1,6 +1,7 @@
 // Import images and PDFs into a document, page by page.
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/cancel.dart';
 import '../../core/providers.dart';
 import '../../imaging/geometry.dart';
 import '../../imaging/page_edits.dart';
@@ -17,9 +18,12 @@ class ImportProgress {
 /// What an import did: pages added, and files that could not be opened
 /// (corrupt, not an image/PDF, password-protected PDF…). Those are skipped.
 class ImportResult {
-  const ImportResult(this.added, this.failed);
+  const ImportResult(this.added, this.failed, {this.cancelled = false});
   final int added;
   final List<String> failed;
+
+  /// Stopped by the user; pages added until then are kept.
+  final bool cancelled;
 }
 
 /// Adds every page of [files] to document [docId]. Photos get the page detected
@@ -34,11 +38,12 @@ class ImportFlow {
     String docId,
     List<ImportedFile> files, {
     void Function(ImportProgress)? onProgress,
+    CancelToken? cancel,
   }) async {
     // Keep the (auto-disposing) document controller alive while importing.
     final keepAlive = _ref.listen(documentProvider(docId), (_, _) {});
     try {
-      return await _import(docId, files, onProgress);
+      return await _import(docId, files, onProgress, cancel);
     } finally {
       keepAlive.close();
     }
@@ -48,6 +53,7 @@ class ImportFlow {
     String docId,
     List<ImportedFile> files,
     void Function(ImportProgress)? onProgress,
+    CancelToken? cancel,
   ) async {
     final ref = _ref;
     final engine = ref.read(scanEngineProvider);
@@ -57,14 +63,17 @@ class ImportFlow {
     var added = 0;
     final failed = <String>[];
     for (final f in files) {
+      if (cancel?.isCancelled ?? false) break;
       try {
-        added += await _importOne(f, added, engine, importer, doc, onProgress);
+        added += await _importOne(f, added, engine, importer, doc, onProgress, cancel);
+      } on Cancelled {
+        break;
       } catch (_) {
         failed.add(f.name);
       }
     }
     await doc.settle();
-    return ImportResult(added, failed);
+    return ImportResult(added, failed, cancelled: cancel?.isCancelled ?? false);
   }
 
   /// Pages added from one file.
@@ -75,11 +84,13 @@ class ImportFlow {
     ImportService importer,
     DocumentController doc,
     void Function(ImportProgress)? onProgress,
+    CancelToken? cancel,
   ) async {
     var added = 0;
     {
       if (f.isPdf) {
         await for (final png in importer.rasterizePdf(f.bytes)) {
+          cancel?.check();
           onProgress?.call(ImportProgress(before + added, '${f.name}: page ${added + 1}'));
           final page = await engine.normalizeEncoded(png);
           await doc.addImage(

@@ -1,0 +1,49 @@
+{
+ "label": "profile",
+ "date": "2026-10-23T14:07:35.476Z",
+ "docs": 12,
+ "bigDocPages": 14,
+ "seeded": {
+  "mb": 97.9,
+  "perPage": {
+   "source": 1068081,
+   "render": 605559,
+   "thumb": 16601
+  }
+ },
+ "homeLoadMs": 307,
+ "thumbnailsReadyMs": "not reported (no preview state in the accessibility tree)",
+ "homeFrames": {
+  "frames": 1303,
+  "p50": 16.7,
+  "p95": 16.8,
+  "max": 83.3,
+  "over50ms": 2
+ },
+ "homeLongTasks": [
+  65
+ ],
+ "scroll": {
+  "frames": 230,
+  "p50": 16.7,
+  "p95": 16.8,
+  "max": 116.7,
+  "over50ms": 2
+ },
+ "scrollLongTasks": [
+  117,
+  71
+ ],
+ "heapBeforeMB": 27.2,
+ "heapAfter5OpensMB": 31.1,
+ "deleteCardGoneMs": 185,
+ "deleteFrames": {
+  "frames": 217,
+  "p50": 16.7,
+  "p95": 16.8,
+  "max": 33.4,
+  "over50ms": 0
+ },
+ "deleteLongTasks": [],
+ "deleteStorageGone": true
+}

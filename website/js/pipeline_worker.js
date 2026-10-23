@@ -1,5 +1,6 @@
-// Loads the same opencv.js and scanner.js files the web app uses (served under /app/).
-importScripts('/app/opencv/opencv.js', '/app/opencv/scanner.js');
+// Loads the same opencv.js and scanner.js files the web app uses (app/ next to the site).
+// Relative to this worker (js/), so the site also works under a sub-path (GitHub Pages).
+importScripts('../app/opencv/opencv.js', '../app/opencv/scanner.js');
 
 // opencv.js exports a thenable Module: never resolve a Promise *with* it (same as the app's worker).
 const ready = new Promise((resolve) => (self.cv.Mat ? resolve() : (self.cv.onRuntimeInitialized = resolve)));

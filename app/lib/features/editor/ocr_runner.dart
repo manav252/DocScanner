@@ -3,6 +3,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/app_settings.dart';
+import '../../core/cancel.dart';
 import '../../core/providers.dart';
 import '../../data/models.dart';
 import '../../imaging/page_edits.dart';
@@ -26,16 +27,23 @@ class OcrRunner {
 
   /// OCR every stale page of [docId] (or just [pageIds]). Returns how many pages
   /// were recognised. Concurrent calls for the same document share the work.
-  Future<int> run(String docId, {Set<String>? pageIds, void Function(OcrProgress)? onProgress}) {
+  /// [cancel] stops after the current page (a run shared with another caller keeps going).
+  Future<int> run(String docId, {Set<String>? pageIds, void Function(OcrProgress)? onProgress, CancelToken? cancel}) {
     final language = _ref.read(appSettingsProvider).ocrLanguage.code;
     final key = '$docId:$language:${pageIds?.join(',') ?? '*'}';
     // Block body: whenComplete would otherwise await the removed future (itself) forever.
-    return _running[key] ??= _run(docId, pageIds, language, onProgress).whenComplete(() {
+    return _running[key] ??= _run(docId, pageIds, language, onProgress, cancel).whenComplete(() {
       _running.remove(key);
     });
   }
 
-  Future<int> _run(String docId, Set<String>? pageIds, String language, void Function(OcrProgress)? onProgress) async {
+  Future<int> _run(
+    String docId,
+    Set<String>? pageIds,
+    String language,
+    void Function(OcrProgress)? onProgress,
+    CancelToken? cancel,
+  ) async {
     final recognizer = _ref.read(textRecognizerProvider);
     if (!recognizer.isAvailable) return 0;
     final keepAlive = _ref.listen(documentProvider(docId), (_, _) {});
@@ -49,6 +57,7 @@ class OcrRunner {
       final engine = _ref.read(scanEngineProvider);
       var done = 0;
       for (final ScanPage p in todo) {
+        cancel?.check();
         onProgress?.call(OcrProgress(done, todo.length));
         final render = await repo.pageImage(p.id, PageImage.render);
         if (render == null) continue;

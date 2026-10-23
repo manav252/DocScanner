@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/cancel.dart';
 import '../../core/l10n.dart';
 import '../../core/providers.dart';
 import '../../data/models.dart';
@@ -31,9 +32,15 @@ class _ExportSheetState extends ConsumerState<ExportSheet> {
   bool _busy = false;
   bool _searchable = true;
   String? _step;
+  double? _progress;
+  CancelToken? _cancel;
 
   Future<void> _go({required bool download}) async {
-    setState(() => _busy = true);
+    final cancel = _cancel = CancelToken();
+    setState(() {
+      _busy = true;
+      _progress = null;
+    });
     final messenger = ScaffoldMessenger.of(context);
     final l = context.l10n;
     try {
@@ -42,16 +49,33 @@ class _ExportSheetState extends ConsumerState<ExportSheet> {
       if (_format == ExportFormat.pdf && _searchable && ocr.available) {
         await ocr.run(
           doc.id,
+          cancel: cancel,
           onProgress: (p) {
             if (mounted && p.total > 0) {
-              setState(() => _step = l.recognizingTextOf(p.done + 1 > p.total ? p.total : p.done + 1, p.total));
+              setState(() {
+                _step = l.recognizingTextOf(p.done + 1 > p.total ? p.total : p.done + 1, p.total);
+                _progress = p.done / p.total / 2;
+              });
             }
           },
         );
+        cancel.check();
         doc = await ref.read(documentRepositoryProvider).get(doc.id) ?? doc;
       }
       if (mounted) setState(() => _step = _format == ExportFormat.pdf ? l.creatingPdf : l.creatingImages);
-      final files = await ref.read(exporterProvider).build(doc, format: _format, pageSize: _size);
+      final ocrShare = _progress == null ? 0.0 : 0.5;
+      final files = await ref
+          .read(exporterProvider)
+          .build(
+            doc,
+            format: _format,
+            pageSize: _size,
+            cancel: cancel,
+            onPage: (done, total) {
+              if (mounted) setState(() => _progress = ocrShare + (1 - ocrShare) * done / total);
+            },
+          );
+      cancel.check();
       final share = ref.read(shareServiceProvider);
       if (download) {
         await share.download(files);
@@ -63,6 +87,14 @@ class _ExportSheetState extends ConsumerState<ExportSheet> {
         messenger.showSnackBar(
           SnackBar(content: Text(files.length == 1 ? l.savedFile(files.first.name) : l.savedImages(files.length))),
         );
+      }
+    } on Cancelled {
+      messenger.showSnackBar(SnackBar(content: Text(l.exportCancelled)));
+      if (mounted) {
+        setState(() {
+          _busy = false;
+          _step = null;
+        });
       }
     } catch (e) {
       messenger.showSnackBar(SnackBar(content: Text(l.exportFailed(e is StateError ? e.message : '$e'))));
@@ -142,9 +174,25 @@ class _ExportSheetState extends ConsumerState<ExportSheet> {
             if (hasMarkup) Text(l.markupBurnedIn),
             Text(help, key: const ValueKey('export-help'), style: Theme.of(context).textTheme.bodySmall),
             const SizedBox(height: 16),
-            if (_busy) const LinearProgressIndicator(),
-            if (_busy && _step != null) Padding(padding: const EdgeInsets.only(top: 8), child: Text(_step!)),
-            if (_busy) const SizedBox(height: 12),
+            if (_busy) LinearProgressIndicator(value: _progress),
+            if (_busy && _step != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Semantics(liveRegion: true, child: Text(_step!)),
+              ),
+            if (_busy) ...[
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerRight,
+                child: OutlinedButton.icon(
+                  key: const ValueKey('export-cancel'),
+                  onPressed: () => _cancel?.cancel(),
+                  icon: const Icon(Icons.close),
+                  label: Text(l.cancel),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
             Row(
               children: [
                 if (canDownload)

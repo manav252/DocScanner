@@ -5,6 +5,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/app_settings.dart';
+import 'core/error_screen.dart';
 import 'core/l10n.dart';
 import 'core/providers.dart';
 import 'core/theme.dart';
@@ -15,6 +16,7 @@ import 'features/onboarding/onboarding_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  installErrorHandling();
   // Web: build the accessibility tree from the start, so screen readers and
   // keyboard users don't first have to find Flutter's hidden "Enable accessibility" button.
   if (kIsWeb) SemanticsBinding.instance.ensureSemantics();
@@ -42,11 +44,13 @@ class DocScannerApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Background sync runs only when signed in; everything else works as a guest.
     ref.watch(syncControllerProvider);
+    ref.listen(maintenanceProvider, (_, _) {}); // runs once in the background; never rebuilds the app
     final s = ref.watch(appSettingsProvider);
     final reduceMotion = MediaQueryData.fromView(View.of(context)).disableAnimations;
     ThemeData theme(Brightness b, {bool hc = false}) =>
         buildTheme(brightness: b, highContrast: s.highContrast || hc, reduceMotion: reduceMotion);
     return MaterialApp(
+      navigatorKey: appNavigatorKey,
       title: 'DocScanner',
       debugShowCheckedModeBanner: false,
       theme: theme(Brightness.light),
@@ -74,7 +78,12 @@ class DocScannerApp extends ConsumerWidget {
           child: child!,
         );
       },
-      home: s.onboardingDone ? const HomePage() : const OnboardingPage(),
+      // Retry on the error screen rebuilds the first screen from scratch.
+      home: ValueListenableBuilder(
+        valueListenable: appRetry,
+        builder: (_, n, _) =>
+            KeyedSubtree(key: ValueKey(n), child: s.onboardingDone ? const HomePage() : const OnboardingPage()),
+      ),
     );
   }
 }

@@ -1,0 +1,45 @@
+# Render blueprint for the optional backend (backup/sync): API + PostgreSQL.
+# Page images go to S3-compatible storage you create separately (e.g. a free
+# Cloudflare R2 bucket); see docs/DEPLOY.md. Nothing here is deployed until you
+# click "New > Blueprint" in Render and choose this repository.
+services:
+  - type: web
+    name: docscanner-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: "8000"
+      - key: WEB_CONCURRENCY
+        value: "1"
+      - key: DOCSCANNER_ENVIRONMENT
+        value: production
+      - key: DOCSCANNER_DATABASE_URL
+        fromDatabase:
+          name: docscanner-db
+          property: connectionString
+      - key: DOCSCANNER_JWT_SECRET
+        generateValue: true
+      - key: DOCSCANNER_CORS_ORIGINS
+        sync: false # e.g. ["https://manav252.github.io"]
+      - key: DOCSCANNER_S3_ENDPOINT
+        sync: false # e.g. https://<account-id>.r2.cloudflarestorage.com
+      - key: DOCSCANNER_S3_ACCESS_KEY
+        sync: false
+      - key: DOCSCANNER_S3_SECRET_KEY
+        sync: false
+      - key: DOCSCANNER_S3_BUCKET
+        value: docscanner
+      - key: DOCSCANNER_S3_REGION
+        value: auto
+      - key: DOCSCANNER_S3_CREATE_BUCKET
+        value: "false"
+
+databases:
+  - name: docscanner-db
+    plan: free
+    databaseName: docscanner
+    user: docscanner

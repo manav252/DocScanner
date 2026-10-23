@@ -210,5 +210,8 @@ final documentProvider = AsyncNotifierProvider.autoDispose.family<DocumentContro
 /// A stored page image; [revision] makes the cache follow re-renders.
 final pageImageProvider = FutureProvider.autoDispose
     .family<Uint8List?, ({String pageId, PageImage kind, int revision})>(
-      (ref, key) => ref.watch(documentRepositoryProvider).pageImage(key.pageId, key.kind),
+      (ref, key) => key.kind == PageImage.thumb
+          // Thumbnails: memory cache, timeout, rebuilt if missing.
+          ? ref.watch(thumbnailServiceProvider).thumb(key.pageId, key.revision)
+          : ref.watch(documentRepositoryProvider).pageImage(key.pageId, key.kind),
     );

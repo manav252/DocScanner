@@ -61,16 +61,51 @@ class DocumentRepository {
 
   /// Delete locally. A synced document becomes a tombstone so the deletion
   /// reaches the server; page images are removed either way.
+  /// The record goes first: if removing images fails afterwards (or the app is
+  /// closed), the page ids stay in a cleanup journal and [orphanPageIds] finds them,
+  /// so there is never a half-deleted document.
   Future<void> delete(ScanDocument doc) async {
-    for (final p in doc.pages) {
-      await deletePageImages(p.id);
-    }
+    final ids = [for (final p in doc.pages) p.id];
+    await _journal((j) => j..addAll(ids));
     if (doc.remoteId != null) {
       await save(doc.edit(deleted: true, pages: const []));
     } else {
       await purge(doc.id);
     }
+    final removed = <String>[];
+    for (final id in ids) {
+      try {
+        await deletePageImages(id);
+        removed.add(id);
+      } catch (_) {
+        // The document is already gone; the journal keeps the id for the cleanup pass.
+      }
+    }
+    await _journal((j) => j..removeAll(removed));
   }
+
+  static const _journalKey = 'app/pages-to-delete.json';
+
+  Future<Set<String>> _readJournal() async {
+    final b = await _store.get(_journalKey);
+    return b == null ? <String>{} : {...(jsonDecode(utf8.decode(b)) as List).cast<String>()};
+  }
+
+  Future<void> _journal(Set<String> Function(Set<String>) change) async {
+    final j = change(await _readJournal());
+    await _store.put(_journalKey, Uint8List.fromList(utf8.encode(jsonEncode(j.toList()))));
+  }
+
+  /// Pages whose deletion was started but not finished (e.g. the app was closed),
+  /// and that no document uses. Only these are ever cleaned up, never a page that
+  /// is still being saved.
+  Future<Set<String>> orphanPageIds() async {
+    final used = {for (final d in await listAll()) ...d.pages.map((p) => p.id)};
+    return (await _readJournal()).difference(used);
+  }
+
+  /// Forget journal entries once their files are gone.
+  Future<void> forgetOrphans(Iterable<String> ids) => _journal((j) => j..removeAll(ids));
 
   /// Remove a document record entirely (after its deletion has been synced).
   Future<void> purge(String id) async {

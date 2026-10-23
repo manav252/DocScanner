@@ -404,6 +404,126 @@ abstract class AppLocalizations {
   /// **'Could not import: {message}'**
   String importFailed(String message);
 
+  /// No description provided for @pagePreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Page preview'**
+  String get pagePreview;
+
+  /// No description provided for @pagePreviewLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading page preview'**
+  String get pagePreviewLoading;
+
+  /// No description provided for @previewUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview not available'**
+  String get previewUnavailable;
+
+  /// No description provided for @exportCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Export cancelled.'**
+  String get exportCancelled;
+
+  /// No description provided for @importCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Import cancelled. Pages already added were kept.'**
+  String get importCancelled;
+
+  /// No description provided for @storageBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage and backup'**
+  String get storageBackup;
+
+  /// No description provided for @privacyNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Your documents stay on this device. Nothing is uploaded unless you sign in and choose to back up.'**
+  String get privacyNote;
+
+  /// No description provided for @storageUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Space used on this device: {size} ({documents} documents, {pages} pages)'**
+  String storageUsed(String size, int documents, int pages);
+
+  /// No description provided for @storageUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'{documents} documents, {pages} pages on this device'**
+  String storageUnknown(int documents, int pages);
+
+  /// No description provided for @exportAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Export all documents (ZIP)'**
+  String get exportAll;
+
+  /// No description provided for @exportAllHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep a copy without an account, or move your documents to another device.'**
+  String get exportAllHint;
+
+  /// No description provided for @importBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Import backup'**
+  String get importBackup;
+
+  /// No description provided for @makingBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Making the backup…'**
+  String get makingBackup;
+
+  /// No description provided for @restoringBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Restoring documents…'**
+  String get restoringBackup;
+
+  /// No description provided for @backupSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup saved: {name}'**
+  String backupSaved(String name);
+
+  /// No description provided for @backupRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'{added} added, {updated} updated, {skipped} already up to date.'**
+  String backupRestored(int added, int updated, int skipped);
+
+  /// No description provided for @backupFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup failed: {message}'**
+  String backupFailed(String message);
+
+  /// No description provided for @errorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong'**
+  String get errorTitle;
+
+  /// No description provided for @errorBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your documents are safe. Try again; if it keeps happening, restart the app.'**
+  String get errorBody;
+
+  /// No description provided for @deleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t delete “{title}”. It has been put back.'**
+  String deleteFailed(String title);
+
   /// No description provided for @importSkipped.
   ///
   /// In en, this message translates to:

@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DEV_SECRET = "dev-only-insecure-secret-change-me"
@@ -29,6 +29,15 @@ class Settings(BaseSettings):
     max_pages_per_document: int = Field(500, ge=1)
     max_files_per_upload: int = Field(50, ge=1)
     cors_origins: list[str] = ["http://localhost:8090", "http://127.0.0.1:8090", "http://localhost:8080"]
+
+    @field_validator("database_url")
+    @classmethod
+    def _async_driver(cls, v: str) -> str:
+        # Hosting providers (Render, Railway, Heroku) give postgres:// URLs; we need the asyncpg driver.
+        for prefix in ("postgres://", "postgresql://"):
+            if v.startswith(prefix):
+                return "postgresql+asyncpg://" + v[len(prefix) :]
+        return v
 
     @property
     def max_upload_bytes(self) -> int:

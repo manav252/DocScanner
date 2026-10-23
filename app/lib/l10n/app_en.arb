@@ -118,6 +118,83 @@
       }
     }
   },
+  "pagePreview": "Page preview",
+  "pagePreviewLoading": "Loading page preview",
+  "previewUnavailable": "Preview not available",
+  "exportCancelled": "Export cancelled.",
+  "importCancelled": "Import cancelled. Pages already added were kept.",
+  "storageBackup": "Storage and backup",
+  "privacyNote": "Your documents stay on this device. Nothing is uploaded unless you sign in and choose to back up.",
+  "storageUsed": "Space used on this device: {size} ({documents} documents, {pages} pages)",
+  "@storageUsed": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      },
+      "documents": {
+        "type": "int"
+      },
+      "pages": {
+        "type": "int"
+      }
+    }
+  },
+  "storageUnknown": "{documents} documents, {pages} pages on this device",
+  "@storageUnknown": {
+    "placeholders": {
+      "documents": {
+        "type": "int"
+      },
+      "pages": {
+        "type": "int"
+      }
+    }
+  },
+  "exportAll": "Export all documents (ZIP)",
+  "exportAllHint": "Keep a copy without an account, or move your documents to another device.",
+  "importBackup": "Import backup",
+  "makingBackup": "Making the backup…",
+  "restoringBackup": "Restoring documents…",
+  "backupSaved": "Backup saved: {name}",
+  "@backupSaved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "backupRestored": "{added} added, {updated} updated, {skipped} already up to date.",
+  "@backupRestored": {
+    "placeholders": {
+      "added": {
+        "type": "int"
+      },
+      "updated": {
+        "type": "int"
+      },
+      "skipped": {
+        "type": "int"
+      }
+    }
+  },
+  "backupFailed": "Backup failed: {message}",
+  "@backupFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "errorTitle": "Something went wrong",
+  "errorBody": "Your documents are safe. Try again; if it keeps happening, restart the app.",
+  "deleteFailed": "Couldn’t delete “{title}”. It has been put back.",
+  "@deleteFailed": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "importSkipped": "These files could not be opened and were skipped: {names}",
   "@importSkipped": {
     "placeholders": {

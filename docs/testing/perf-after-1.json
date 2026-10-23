@@ -1,0 +1,40 @@
+{
+ "label": "after-1",
+ "date": "2026-10-23T14:59:53.957Z",
+ "docs": 12,
+ "bigDocPages": 14,
+ "seeded": {
+  "mb": 97.9,
+  "perPage": {
+   "source": 1065374,
+   "render": 604700,
+   "thumb": 16601
+  }
+ },
+ "homeLoadMs": 449,
+ "thumbnailsReadyMs": 514,
+ "homeFrames": {
+  "frames": 111,
+  "p50": 16.7,
+  "p95": 16.8,
+  "max": 83.4,
+  "over50ms": 2
+ },
+ "homeLongTasks": [
+  77,
+  51
+ ],
+ "scroll": {
+  "frames": 244,
+  "p50": 16.7,
+  "p95": 16.7,
+  "max": 116.6,
+  "over50ms": 1
+ },
+ "scrollLongTasks": [
+  128,
+  50
+ ],
+ "heapBeforeMB": 25.9,
+ "error": "TargetCloseError: Protocol error (Runtime.callFunctionOn): Target closed\n    at CallbackRegistry.clear (file:///Users/manavdoshi/DocScanner/tools/audit/node_modules/puppeteer-core/lib/esm/puppeteer/common/CallbackRegistry.js:78:36)\n    at CdpCDPSession.onClosed (file:///Users/manavdoshi/DocScanner/tools/audit/node_modules/puppeteer-core/lib/esm/puppeteer/cdp/CdpSession.js:111:25)\n    at #onClose (file:///Users/manavdoshi/DocScanner/tools/audit/node_modules/puppeteer-core/lib/esm/puppeteer/cdp/Connection.js:177:21)\n    at WebSocket.<anonymous> (file:///Users/manavdoshi/DocScanner/tools/audit/node_modules/puppeteer-core/lib/esm/puppeteer/node/NodeWebSocketTransport.js:42:30)\n    at callListener (/Users/manavdoshi/DocScanner/tools/audit/node_modules/puppeteer-core/node_modules/ws/lib/event-target.js:290:14)\n    at WebSocket.onClose (/Users/manavdoshi/DocScanner/tools/audit/node_modules/puppeteer-core/node_modules/ws/lib/event-target.js:220:9)\n    at WebSocket.emit (node:events:509:28)\n    at WebSocket.emitClose (/Users/manavdoshi/DocScanner/tools/audit/node_modules/puppeteer-core/node_modules/ws/lib/websocket.js:292:10)\n    at Socket.socketOnClose (/Users/manavdoshi/DocScanner/tools/audit/node_modules/puppeteer-core/node_modules/ws/lib/websocket.js:1374:15)\n    at Socket.emit (node:events:509:28)"
+}

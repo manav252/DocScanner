@@ -11,7 +11,7 @@ function header() {
   const here = location.pathname.split('/').pop() || 'index.html';
   const links = PAGES.map(([href, label]) => {
     const current = href === here ? ' aria-current="page"' : '';
-    return `<li><a href="${href.startsWith('app') ? '/app/' : href}"${current}>${label}</a></li>`;
+    return `<li><a href="${href}"${current}>${label}</a></li>`;
   }).join('');
   document.querySelector('header.site').innerHTML = `
     <div class="inner">
