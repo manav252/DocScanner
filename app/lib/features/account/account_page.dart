@@ -40,60 +40,75 @@ class _SignedIn extends ConsumerWidget {
     final status = ref.watch(syncControllerProvider);
     final settings = ref.watch(appSettingsProvider);
     final theme = Theme.of(context);
-    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      ListTile(
-        contentPadding: EdgeInsets.zero,
-        leading: const CircleAvatar(child: Icon(Icons.person)),
-        title: Text(session.email),
-        subtitle: Text(settings.serverUrl),
-      ),
-      const SizedBox(height: 8),
-      Card(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(children: [
-            SyncIcon(status: status),
-            const SizedBox(width: 12),
-            Expanded(child: Text(describeSync(context, status), key: const ValueKey('sync-status'))),
-            TextButton.icon(
-              onPressed: status.phase == SyncPhase.syncing ? null : () => ref.read(syncControllerProvider.notifier).syncNow(),
-              icon: const Icon(Icons.sync),
-              label: Text(context.l10n.syncNow),
-            ),
-          ]),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: const CircleAvatar(child: Icon(Icons.person)),
+          title: Text(session.email),
+          subtitle: Text(settings.serverUrl),
         ),
-      ),
-      const SizedBox(height: 8),
-      SwitchListTile(
-        contentPadding: EdgeInsets.zero,
-        title: Text(context.l10n.processOnServer),
-        subtitle: Text(context.l10n.processOnServerHint),
-        value: settings.processOnServer,
-        onChanged: (v) => ref.read(appSettingsProvider.notifier).update(settings.copyWith(processOnServer: v)),
-      ),
-      const SizedBox(height: 24),
-      OutlinedButton.icon(
-        icon: const Icon(Icons.logout),
-        label: Text(context.l10n.signOut),
-        onPressed: () async {
-          final l = context.l10n;
-          final ok = await showDialog<bool>(
-            context: context,
-            builder: (c) => AlertDialog(
-              title: Text(l.signOutTitle),
-              content: Text(l.signOutBody),
-              actions: [
-                TextButton.icon(onPressed: () => Navigator.of(c).pop(false), icon: const Icon(Icons.close), label: Text(l.cancel)),
-                FilledButton.icon(onPressed: () => Navigator.of(c).pop(true), icon: const Icon(Icons.logout), label: Text(l.signOut)),
+        const SizedBox(height: 8),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                SyncIcon(status: status),
+                const SizedBox(width: 12),
+                Expanded(child: Text(describeSync(context, status), key: const ValueKey('sync-status'))),
+                TextButton.icon(
+                  onPressed: status.phase == SyncPhase.syncing
+                      ? null
+                      : () => ref.read(syncControllerProvider.notifier).syncNow(),
+                  icon: const Icon(Icons.sync),
+                  label: Text(context.l10n.syncNow),
+                ),
               ],
             ),
-          );
-          if (ok == true) await ref.read(sessionProvider.notifier).set(null);
-        },
-      ),
-      const SizedBox(height: 12),
-      Text(context.l10n.signedInNote, style: theme.textTheme.bodySmall),
-    ]);
+          ),
+        ),
+        const SizedBox(height: 8),
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          title: Text(context.l10n.processOnServer),
+          subtitle: Text(context.l10n.processOnServerHint),
+          value: settings.processOnServer,
+          onChanged: (v) => ref.read(appSettingsProvider.notifier).update(settings.copyWith(processOnServer: v)),
+        ),
+        const SizedBox(height: 24),
+        OutlinedButton.icon(
+          icon: const Icon(Icons.logout),
+          label: Text(context.l10n.signOut),
+          onPressed: () async {
+            final l = context.l10n;
+            final ok = await showDialog<bool>(
+              context: context,
+              builder: (c) => AlertDialog(
+                title: Text(l.signOutTitle),
+                content: Text(l.signOutBody),
+                actions: [
+                  TextButton.icon(
+                    onPressed: () => Navigator.of(c).pop(false),
+                    icon: const Icon(Icons.close),
+                    label: Text(l.cancel),
+                  ),
+                  FilledButton.icon(
+                    onPressed: () => Navigator.of(c).pop(true),
+                    icon: const Icon(Icons.logout),
+                    label: Text(l.signOut),
+                  ),
+                ],
+              ),
+            );
+            if (ok == true) await ref.read(sessionProvider.notifier).set(null);
+          },
+        ),
+        const SizedBox(height: 12),
+        Text(context.l10n.signedInNote, style: theme.textTheme.bodySmall),
+      ],
+    );
   }
 }
 
@@ -241,95 +256,110 @@ class _SignInFormState extends ConsumerState<_SignInForm> {
     final scheme = Theme.of(context).colorScheme;
     return Form(
       key: _form,
-      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Semantics(header: true, child: Text(l.backUpYourScans, style: Theme.of(context).textTheme.titleLarge)),
-        const SizedBox(height: 8),
-        Text(l.backUpIntro),
-        const SizedBox(height: 20),
-        TextFormField(
-          key: const ValueKey('server-url'),
-          controller: _server,
-          keyboardType: TextInputType.url,
-          decoration: InputDecoration(labelText: l.server, border: const OutlineInputBorder()),
-          validator: (v) {
-            final u = Uri.tryParse(v?.trim() ?? '');
-            return u == null || !(u.isScheme('http') || u.isScheme('https')) || u.host.isEmpty ? l.serverHint : null;
-          },
-        ),
-        const SizedBox(height: 8),
-        Wrap(spacing: 12, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
-          OutlinedButton.icon(
-            key: const ValueKey('test-connection'),
-            onPressed: _testServer,
-            icon: const Icon(Icons.wifi_tethering),
-            label: Text(l.testConnection),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Semantics(header: true, child: Text(l.backUpYourScans, style: Theme.of(context).textTheme.titleLarge)),
+          const SizedBox(height: 8),
+          Text(l.backUpIntro),
+          const SizedBox(height: 20),
+          TextFormField(
+            key: const ValueKey('server-url'),
+            controller: _server,
+            keyboardType: TextInputType.url,
+            decoration: InputDecoration(labelText: l.server, border: const OutlineInputBorder()),
+            validator: (v) {
+              final u = Uri.tryParse(v?.trim() ?? '');
+              return u == null || !(u.isScheme('http') || u.isScheme('https')) || u.host.isEmpty ? l.serverHint : null;
+            },
           ),
-          if (_serverOk != null)
-            Semantics(
-              liveRegion: true,
-              child: Row(mainAxisSize: MainAxisSize.min, children: [
-                Icon(_serverOk! ? Icons.check_circle : Icons.error_outline,
-                    color: _serverOk! ? Colors.green.shade800 : scheme.error),
-                const SizedBox(width: 6),
-                Flexible(child: Text(_serverOk! ? l.serverReachable : l.serverUnreachable)),
-              ]),
-            ),
-        ]),
-        const SizedBox(height: 16),
-        SegmentedButton<bool>(
-          segments: [
-            ButtonSegment(value: false, label: Text(l.signIn)),
-            ButtonSegment(value: true, label: Text(l.createAccount)),
-          ],
-          selected: {_create},
-          onSelectionChanged: (s) => setState(() => _create = s.first),
-        ),
-        const SizedBox(height: 16),
-        TextFormField(
-          key: const ValueKey('email'),
-          controller: _email,
-          keyboardType: TextInputType.emailAddress,
-          autofillHints: const [AutofillHints.email],
-          decoration: InputDecoration(labelText: l.email, border: const OutlineInputBorder()),
-          validator: (v) => (v ?? '').contains('@') ? null : l.enterEmail,
-        ),
-        const SizedBox(height: 12),
-        TextFormField(
-          key: const ValueKey('password'),
-          controller: _password,
-          obscureText: _obscure,
-          autofillHints: [_create ? AutofillHints.newPassword : AutofillHints.password],
-          decoration: InputDecoration(
-            labelText: l.password,
-            helperText: _create ? l.passwordRule : null,
-            border: const OutlineInputBorder(),
-            suffixIcon: Padding(
-              padding: const EdgeInsets.only(right: 4),
-              child: TextButton.icon(
-                key: const ValueKey('toggle-password'),
-                onPressed: () => setState(() => _obscure = !_obscure),
-                icon: Icon(_obscure ? Icons.visibility : Icons.visibility_off),
-                label: Text(_obscure ? l.showPassword : l.hidePassword,
-                    semanticsLabel: _obscure ? l.showPasswordLabel : l.hidePasswordLabel),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 12,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              OutlinedButton.icon(
+                key: const ValueKey('test-connection'),
+                onPressed: _testServer,
+                icon: const Icon(Icons.wifi_tethering),
+                label: Text(l.testConnection),
+              ),
+              if (_serverOk != null)
+                Semantics(
+                  liveRegion: true,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        _serverOk! ? Icons.check_circle : Icons.error_outline,
+                        color: _serverOk! ? Colors.green.shade800 : scheme.error,
+                      ),
+                      const SizedBox(width: 6),
+                      Flexible(child: Text(_serverOk! ? l.serverReachable : l.serverUnreachable)),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          SegmentedButton<bool>(
+            segments: [
+              ButtonSegment(value: false, label: Text(l.signIn)),
+              ButtonSegment(value: true, label: Text(l.createAccount)),
+            ],
+            selected: {_create},
+            onSelectionChanged: (s) => setState(() => _create = s.first),
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
+            key: const ValueKey('email'),
+            controller: _email,
+            keyboardType: TextInputType.emailAddress,
+            autofillHints: const [AutofillHints.email],
+            decoration: InputDecoration(labelText: l.email, border: const OutlineInputBorder()),
+            validator: (v) => (v ?? '').contains('@') ? null : l.enterEmail,
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            key: const ValueKey('password'),
+            controller: _password,
+            obscureText: _obscure,
+            autofillHints: [_create ? AutofillHints.newPassword : AutofillHints.password],
+            decoration: InputDecoration(
+              labelText: l.password,
+              helperText: _create ? l.passwordRule : null,
+              border: const OutlineInputBorder(),
+              suffixIcon: Padding(
+                padding: const EdgeInsets.only(right: 4),
+                child: TextButton.icon(
+                  key: const ValueKey('toggle-password'),
+                  onPressed: () => setState(() => _obscure = !_obscure),
+                  icon: Icon(_obscure ? Icons.visibility : Icons.visibility_off),
+                  label: Text(
+                    _obscure ? l.showPassword : l.hidePassword,
+                    semanticsLabel: _obscure ? l.showPasswordLabel : l.hidePasswordLabel,
+                  ),
+                ),
               ),
             ),
+            validator: (v) => (v ?? '').length < 8 ? l.passwordRule : null,
+            onFieldSubmitted: (_) => _submit(),
           ),
-          validator: (v) => (v ?? '').length < 8 ? l.passwordRule : null,
-          onFieldSubmitted: (_) => _submit(),
-        ),
-        if (_error != null) ...[
-          const SizedBox(height: 12),
-          Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+          if (_error != null) ...[
+            const SizedBox(height: 12),
+            Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+          ],
+          const SizedBox(height: 20),
+          FilledButton(
+            key: const ValueKey('auth-submit'),
+            onPressed: _busy ? null : _submit,
+            child: _busy
+                ? const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                : Text(_create ? l.createAccount : l.signIn),
+          ),
         ],
-        const SizedBox(height: 20),
-        FilledButton(
-          key: const ValueKey('auth-submit'),
-          onPressed: _busy ? null : _submit,
-          child: _busy
-              ? const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2))
-              : Text(_create ? l.createAccount : l.signIn),
-        ),
-      ]),
+      ),
     );
   }
 }

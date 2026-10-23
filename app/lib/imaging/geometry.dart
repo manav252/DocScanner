@@ -79,13 +79,13 @@ bool isConvex(List<Pt> q) {
 }
 
 List<double> interiorAngles(List<Pt> q) => [
-      for (var i = 0; i < 4; i++)
-        () {
-          final v1 = q[(i + 3) % 4] - q[i], v2 = q[(i + 1) % 4] - q[i];
-          final cos = v1.dot(v2) / (v1.length * v2.length + 1e-6);
-          return math.acos(cos.clamp(-1.0, 1.0)) * 180 / math.pi;
-        }(),
-    ];
+  for (var i = 0; i < 4; i++)
+    () {
+      final v1 = q[(i + 3) % 4] - q[i], v2 = q[(i + 1) % 4] - q[i];
+      final cos = v1.dot(v2) / (v1.length * v2.length + 1e-6);
+      return math.acos(cos.clamp(-1.0, 1.0)) * 180 / math.pi;
+    }(),
+];
 
 double _percentile(List<double> values, double p) {
   final s = [...values]..sort();

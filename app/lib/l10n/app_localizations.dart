@@ -410,6 +410,12 @@ abstract class AppLocalizations {
   /// **'Could not import: {message}'**
   String importFailed(String message);
 
+  /// No description provided for @importSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'These files could not be opened and were skipped: {names}'**
+  String importSkipped(String names);
+
   /// No description provided for @importNothing.
   ///
   /// In en, this message translates to:

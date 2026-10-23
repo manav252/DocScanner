@@ -22,15 +22,17 @@ Future<void> main() async {
   final (settings, session) = await loadSettingsAndSession(store);
   // `?demo=1` on the web (or --dart-define=DEMO_CAMERA=true) starts with the demo camera.
   final demo = const bool.fromEnvironment('DEMO_CAMERA') || (kIsWeb && Uri.base.queryParameters['demo'] == '1');
-  runApp(ProviderScope(
-    overrides: [
-      keyValueStoreProvider.overrideWithValue(store),
-      appSettingsProvider.overrideWith(() => AppSettingsNotifier(settings)),
-      sessionProvider.overrideWith(() => SessionNotifier(session)),
-      if (demo) cameraModeProvider.overrideWith(() => CameraModeNotifier(CameraMode.demo)),
-    ],
-    child: const DocScannerApp(),
-  ));
+  runApp(
+    ProviderScope(
+      overrides: [
+        keyValueStoreProvider.overrideWithValue(store),
+        appSettingsProvider.overrideWith(() => AppSettingsNotifier(settings)),
+        sessionProvider.overrideWith(() => SessionNotifier(session)),
+        if (demo) cameraModeProvider.overrideWith(() => CameraModeNotifier(CameraMode.demo)),
+      ],
+      child: const DocScannerApp(),
+    ),
+  );
 }
 
 class DocScannerApp extends ConsumerWidget {

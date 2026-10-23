@@ -4,6 +4,7 @@ Revision ID: 0001
 Revises:
 Create Date: 2026-10-22
 """
+
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
@@ -27,13 +28,17 @@ def upgrade() -> None:
     op.create_table(
         "documents",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
-        sa.Column("owner_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "owner_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        ),
         sa.Column("client_id", sa.String(64), nullable=False),
         sa.Column("title", sa.String(200), nullable=False),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("version", sa.Integer, nullable=False),
-        sa.Column("change_seq", sa.BigInteger, nullable=False, server_default=sa.text("nextval('document_change_seq')")),
+        sa.Column(
+            "change_seq", sa.BigInteger, nullable=False, server_default=sa.text("nextval('document_change_seq')")
+        ),
         sa.Column("deleted", sa.Boolean, nullable=False, server_default=sa.false()),
         sa.Column("pages", postgresql.JSONB, nullable=False, server_default=sa.text("'[]'::jsonb")),
         sa.UniqueConstraint("owner_id", "client_id", name="uq_documents_owner_client"),

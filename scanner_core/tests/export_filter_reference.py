@@ -4,6 +4,7 @@ their filters against these files.
 
 Usage: python tests/export_filter_reference.py
 """
+
 import json
 import sys
 from pathlib import Path

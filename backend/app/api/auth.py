@@ -15,7 +15,9 @@ def _tokens(request: Request, user: User) -> TokenOut:
     s = request.app.state.settings
     access, expires = create_token(s, user.id, "access")
     refresh, _ = create_token(s, user.id, "refresh")
-    return TokenOut(access_token=access, refresh_token=refresh, expires_in=expires, user=UserOut(id=str(user.id), email=user.email))
+    return TokenOut(
+        access_token=access, refresh_token=refresh, expires_in=expires, user=UserOut(id=str(user.id), email=user.email)
+    )
 
 
 @router.post("/register", response_model=TokenOut, status_code=status.HTTP_201_CREATED)

@@ -25,8 +25,12 @@ async def test_wrong_password_and_unknown_user_look_the_same(client):
 
 
 async def test_validation(client):
-    assert (await client.post("/auth/register", json={"email": "x@example.com", "password": "short"})).status_code == 422
-    assert (await client.post("/auth/register", json={"email": "not-an-email", "password": "long enough"})).status_code == 422
+    assert (
+        await client.post("/auth/register", json={"email": "x@example.com", "password": "short"})
+    ).status_code == 422
+    assert (
+        await client.post("/auth/register", json={"email": "not-an-email", "password": "long enough"})
+    ).status_code == 422
 
 
 async def test_tokens(client):
@@ -38,4 +42,6 @@ async def test_tokens(client):
     assert (await client.post("/auth/refresh", json={"refresh_token": u["access_token"]})).status_code == 401
     r = await client.post("/auth/refresh", json={"refresh_token": u["refresh_token"]})
     assert r.status_code == 200
-    assert (await client.get("/auth/me", headers={"Authorization": f"Bearer {r.json()['access_token']}"})).status_code == 200
+    assert (
+        await client.get("/auth/me", headers={"Authorization": f"Bearer {r.json()['access_token']}"})
+    ).status_code == 200

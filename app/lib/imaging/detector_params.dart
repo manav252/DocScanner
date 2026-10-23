@@ -14,17 +14,17 @@ abstract final class DetectorParams {
   static const refineMinGrad = 20.0;
 
   static Map<String, Object> toJson() => {
-        'max_dim': maxDim,
-        'pad': pad,
-        'min_area_ratio': minAreaRatio,
-        'min_fill_ratio': minFillRatio,
-        'max_edge_deviation': maxEdgeDeviation,
-        'min_angle': minAngle,
-        'max_angle': maxAngle,
-        'approx_epsilons': approxEpsilons,
-        'clahe_clip': claheClip,
-        'low_canny': lowCanny,
-        'refine_bands': refineBands,
-        'refine_min_grad': refineMinGrad,
-      };
+    'max_dim': maxDim,
+    'pad': pad,
+    'min_area_ratio': minAreaRatio,
+    'min_fill_ratio': minFillRatio,
+    'max_edge_deviation': maxEdgeDeviation,
+    'min_angle': minAngle,
+    'max_angle': maxAngle,
+    'approx_epsilons': approxEpsilons,
+    'clahe_clip': claheClip,
+    'low_canny': lowCanny,
+    'refine_bands': refineBands,
+    'refine_min_grad': refineMinGrad,
+  };
 }

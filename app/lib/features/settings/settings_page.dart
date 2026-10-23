@@ -102,8 +102,9 @@ class SettingsPage extends ConsumerWidget {
                 alignment: Alignment.centerLeft,
                 child: OutlinedButton.icon(
                   key: const ValueKey('show-guide'),
-                  onPressed: () => Navigator.of(context)
-                      .push(MaterialPageRoute<void>(builder: (_) => const OnboardingPage(popOnFinish: true))),
+                  onPressed: () =>
+                      Navigator.of(context)
+                          .push(MaterialPageRoute<void>(builder: (_) => const OnboardingPage(popOnFinish: true))),
                   icon: const Icon(Icons.school_outlined),
                   label: Text(l.showGuide),
                 ),
@@ -113,8 +114,9 @@ class SettingsPage extends ConsumerWidget {
                 Align(
                   alignment: Alignment.centerLeft,
                   child: OutlinedButton.icon(
-                    onPressed: () => Navigator.of(context)
-                        .push(MaterialPageRoute<void>(builder: (_) => const DetectorDiagnosticsPage())),
+                    onPressed: () =>
+                        Navigator.of(context)
+                            .push(MaterialPageRoute<void>(builder: (_) => const DetectorDiagnosticsPage())),
                     icon: const Icon(Icons.biotech_outlined),
                     label: Text(l.diagnostics),
                   ),
@@ -141,46 +143,59 @@ class _BackupCard extends ConsumerWidget {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          if (session == null) ...[
-            Text(l.backupSyncHint),
-            const SizedBox(height: 12),
-            FilledButton.tonalIcon(
-              key: const ValueKey('open-backup'),
-              onPressed: openAccount,
-              icon: const Icon(Icons.cloud_outlined),
-              label: Text(l.backupSync),
-            ),
-          ] else ...[
-            Text(l.signedInAs(session.email)),
-            const SizedBox(height: 8),
-            Row(children: [
-              SyncIcon(status: status),
-              const SizedBox(width: 8),
-              Expanded(child: Text(describeSync(context, status))),
-            ]),
-            if ((summary?.pending ?? 0) > 0) ...[const SizedBox(height: 4), Text(l.pendingChanges(summary!.pending))],
-            if (status.conflicts.isNotEmpty) ...[
-              const SizedBox(height: 4),
-              Text(l.conflictsResolved(status.conflicts.length, status.conflicts.join(', '))),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (session == null) ...[
+              Text(l.backupSyncHint),
+              const SizedBox(height: 12),
+              FilledButton.tonalIcon(
+                key: const ValueKey('open-backup'),
+                onPressed: openAccount,
+                icon: const Icon(Icons.cloud_outlined),
+                label: Text(l.backupSync),
+              ),
+            ] else ...[
+              Text(l.signedInAs(session.email)),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  SyncIcon(status: status),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(describeSync(context, status))),
+                ],
+              ),
+              if ((summary?.pending ?? 0) > 0) ...[const SizedBox(height: 4), Text(l.pendingChanges(summary!.pending))],
+              if (status.conflicts.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(l.conflictsResolved(status.conflicts.length, status.conflicts.join(', '))),
+              ],
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: openAccount,
+                    icon: const Icon(Icons.manage_accounts_outlined),
+                    label: Text(l.backupSync),
+                  ),
+                  if ((summary?.localOnly ?? 0) > 0)
+                    FilledButton.tonalIcon(
+                      key: const ValueKey('upload-local'),
+                      onPressed: () async {
+                        final actions = ref.read(libraryActionsProvider);
+                        await actions.backUp(await actions.localOnly());
+                        ref.read(syncControllerProvider.notifier).syncNow();
+                      },
+                      icon: const Icon(Icons.cloud_upload_outlined),
+                      label: Text('${l.uploadLocalDocs} (${summary!.localOnly})'),
+                    ),
+                ],
+              ),
             ],
-            const SizedBox(height: 12),
-            Wrap(spacing: 8, runSpacing: 8, children: [
-              OutlinedButton.icon(onPressed: openAccount, icon: const Icon(Icons.manage_accounts_outlined), label: Text(l.backupSync)),
-              if ((summary?.localOnly ?? 0) > 0)
-                FilledButton.tonalIcon(
-                  key: const ValueKey('upload-local'),
-                  onPressed: () async {
-                    final actions = ref.read(libraryActionsProvider);
-                    await actions.backUp(await actions.localOnly());
-                    ref.read(syncControllerProvider.notifier).syncNow();
-                  },
-                  icon: const Icon(Icons.cloud_upload_outlined),
-                  label: Text('${l.uploadLocalDocs} (${summary!.localOnly})'),
-                ),
-            ]),
           ],
-        ]),
+        ),
       ),
     );
   }
@@ -192,12 +207,12 @@ class _Section extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(top: 28, bottom: 8),
-        child: Semantics(
-          header: true,
-          child: Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
-        ),
-      );
+    padding: const EdgeInsets.only(top: 28, bottom: 8),
+    child: Semantics(
+      header: true,
+      child: Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+    ),
+  );
 }
 
 class _Label extends StatelessWidget {
@@ -205,8 +220,10 @@ class _Label extends StatelessWidget {
   final String text;
 
   @override
-  Widget build(BuildContext context) =>
-      Padding(padding: const EdgeInsets.only(top: 12, bottom: 6), child: Text(text, style: Theme.of(context).textTheme.labelLarge));
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(top: 12, bottom: 6),
+    child: Text(text, style: Theme.of(context).textTheme.labelLarge),
+  );
 }
 
 class _Switch extends StatelessWidget {
@@ -217,30 +234,40 @@ class _Switch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SwitchListTile(
-        contentPadding: EdgeInsets.zero,
-        title: Text(title),
-        subtitle: Text(subtitle),
-        value: value,
-        onChanged: onChanged,
-      );
+    contentPadding: EdgeInsets.zero,
+    title: Text(title),
+    subtitle: Text(subtitle),
+    value: value,
+    onChanged: onChanged,
+  );
 }
 
 /// Single choice shown as labelled chips that wrap (works at 200% text size).
 class ChoiceRow<T> extends StatelessWidget {
-  const ChoiceRow({super.key, required this.values, required this.selected, required this.label, required this.onSelected});
+  const ChoiceRow({
+    super.key,
+    required this.values,
+    required this.selected,
+    required this.label,
+    required this.onSelected,
+  });
   final List<T> values;
   final T selected;
   final String Function(T) label;
   final ValueChanged<T> onSelected;
 
   @override
-  Widget build(BuildContext context) => Wrap(spacing: 8, runSpacing: 8, children: [
-        for (final v in values)
-          ChoiceChip(
-            label: Text(label(v)),
-            selected: v == selected,
-            materialTapTargetSize: MaterialTapTargetSize.padded,
-            onSelected: (_) => onSelected(v),
-          ),
-      ]);
+  Widget build(BuildContext context) => Wrap(
+    spacing: 8,
+    runSpacing: 8,
+    children: [
+      for (final v in values)
+        ChoiceChip(
+          label: Text(label(v)),
+          selected: v == selected,
+          materialTapTargetSize: MaterialTapTargetSize.padded,
+          onSelected: (_) => onSelected(v),
+        ),
+    ],
+  );
 }

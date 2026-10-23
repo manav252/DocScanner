@@ -87,17 +87,19 @@ class _CapturePageState extends ConsumerState<CapturePage> with WidgetsBindingOb
 
   Future<void> _openEditor(CaptureResult capture) async {
     final l = context.l10n;
-    final result = await Navigator.of(context).push<CornerAdjustResult>(MaterialPageRoute(
-      builder: (_) => CornerAdjustPage(
-        bytes: capture.bytes,
-        width: capture.width,
-        height: capture.height,
-        corners: capture.corners,
-        detected: capture.detected,
-        cancelLabel: l.retake,
-        confirmLabel: _replacing ? l.replacePage : l.keepScan,
+    final result = await Navigator.of(context).push<CornerAdjustResult>(
+      MaterialPageRoute(
+        builder: (_) => CornerAdjustPage(
+          bytes: capture.bytes,
+          width: capture.width,
+          height: capture.height,
+          corners: capture.corners,
+          detected: capture.detected,
+          cancelLabel: l.retake,
+          confirmLabel: _replacing ? l.replacePage : l.keepScan,
+        ),
       ),
-    ));
+    );
     if (!mounted) return;
     final controller = ref.read(captureControllerProvider.notifier);
     if (result == null) {
@@ -126,13 +128,15 @@ class _CapturePageState extends ConsumerState<CapturePage> with WidgetsBindingOb
     final pageNumber = (ref.read(documentProvider(_docId!)).value?.pages.length ?? 0) + _saving + 1;
     setState(() => _saving++);
     // Process the page in the background and keep scanning.
-    unawaited(ref
-        .read(documentProvider(_docId!).notifier)
-        .addImage(result.bytes, result.width, result.height, result.corners)
-        .catchError((Object e) => _showError(l.couldNotSavePage))
-        .whenComplete(() {
-      if (mounted) setState(() => _saving--);
-    }));
+    unawaited(
+      ref
+          .read(documentProvider(_docId!).notifier)
+          .addImage(result.bytes, result.width, result.height, result.corners)
+          .catchError((Object e) => _showError(l.couldNotSavePage))
+          .whenComplete(() {
+            if (mounted) setState(() => _saving--);
+          }),
+    );
     if (mounted) ref.read(scanGuidanceProvider).captured(context, pageNumber);
     await controller.resume();
   }
@@ -153,7 +157,8 @@ class _CapturePageState extends ConsumerState<CapturePage> with WidgetsBindingOb
     if (widget.documentId != null) {
       Navigator.of(context).pop(); // came from the editor
     } else {
-      await Navigator.of(context).pushReplacement(MaterialPageRoute<void>(builder: (_) => DocumentEditorPage(documentId: id)));
+      await Navigator.of(context)
+          .pushReplacement(MaterialPageRoute<void>(builder: (_) => DocumentEditorPage(documentId: id)));
     }
   }
 
@@ -176,23 +181,38 @@ class _CapturePageState extends ConsumerState<CapturePage> with WidgetsBindingOb
           borderRadius: BorderRadius.circular(8),
           child: Padding(
             padding: const EdgeInsets.all(4),
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
-              SizedBox(
-                width: 52,
-                height: 64,
-                child: Stack(clipBehavior: Clip.none, children: [
-                  Positioned.fill(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(border: Border.all(color: Colors.white, width: 2), color: Colors.white10),
-                      child: pages.isEmpty ? null : StoredPageImage(page: pages.last, fit: BoxFit.cover),
-                    ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 52,
+                  height: 64,
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Positioned.fill(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.white, width: 2),
+                            color: Colors.white10,
+                          ),
+                          child: pages.isEmpty ? null : StoredPageImage(page: pages.last, fit: BoxFit.cover),
+                        ),
+                      ),
+                      if (_saving > 0)
+                        const Positioned.fill(child: Center(child: CircularProgressIndicator(strokeWidth: 2))),
+                    ],
                   ),
-                  if (_saving > 0) const Positioned.fill(child: Center(child: CircularProgressIndicator(strokeWidth: 2))),
-                ]),
-              ),
-              const SizedBox(height: 4),
-              Text(label, textAlign: TextAlign.center, maxLines: 2, style: const TextStyle(color: Colors.white)),
-            ]),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -217,7 +237,10 @@ class _CapturePageState extends ConsumerState<CapturePage> with WidgetsBindingOb
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
       ref.read(captureControllerProvider.notifier).clearMessage();
     });
-    ref.listen(captureControllerProvider.select(ScanHint.of), (_, hint) => ref.read(scanGuidanceProvider).hint(context, hint));
+    ref.listen(
+      captureControllerProvider.select(ScanHint.of),
+      (_, hint) => ref.read(scanGuidanceProvider).hint(context, hint),
+    );
 
     ref.watch(scanGuidanceProvider); // keep guidance (and its timers) alive while scanning
     final state = ref.watch(captureControllerProvider);
@@ -272,7 +295,8 @@ class _CapturePageState extends ConsumerState<CapturePage> with WidgetsBindingOb
         _ControlButton(
           icon: Icons.query_stats,
           label: l.diagnostics,
-          onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const DetectorDiagnosticsPage())),
+          onPressed: () =>
+              Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const DetectorDiagnosticsPage())),
         ),
     ];
 
@@ -283,88 +307,107 @@ class _CapturePageState extends ConsumerState<CapturePage> with WidgetsBindingOb
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
         titleSpacing: 4,
-        title: Row(children: [
-          TextButton.icon(
-            key: const ValueKey('cancel-scan'),
-            style: TextButton.styleFrom(foregroundColor: Colors.white),
-            onPressed: () => Navigator.of(context).maybePop(),
-            icon: const Icon(Icons.close),
-            label: Text(l.cancel),
-          ),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Text(_replacing ? l.retakeTitle : (demo ? l.scanDemoTitle : l.scanTitle), overflow: TextOverflow.ellipsis),
-          ),
-        ]),
+        title: Row(
+          children: [
+            TextButton.icon(
+              key: const ValueKey('cancel-scan'),
+              style: TextButton.styleFrom(foregroundColor: Colors.white),
+              onPressed: () => Navigator.of(context).maybePop(),
+              icon: const Icon(Icons.close),
+              label: Text(l.cancel),
+            ),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                _replacing ? l.retakeTitle : (demo ? l.scanDemoTitle : l.scanTitle),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
       ),
-      body: Column(children: [
-        Expanded(
-          child: switch (state.status) {
-            CaptureStatus.failed => _FailureView(
+      body: Column(
+        children: [
+          Expanded(
+            child: switch (state.status) {
+              CaptureStatus.failed => _FailureView(
                 failure: state.failure!,
                 onRetry: controller.restart,
                 onDemo: () => ref.read(cameraModeProvider.notifier).set(CameraMode.demo),
                 onUpload: _uploadPhoto,
               ),
-            CaptureStatus.starting || CaptureStatus.suspended => const _Starting(),
-            _ => _Viewfinder(state: state, camera: cam),
-          },
-        ),
-        if (demo)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(l.demoCameraNote, style: const TextStyle(color: Colors.white)),
+              CaptureStatus.starting || CaptureStatus.suspended => const _Starting(),
+              _ => _Viewfinder(state: state, camera: cam),
+            },
           ),
-        if (controls.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
-            child: Wrap(spacing: 8, runSpacing: 8, alignment: WrapAlignment.center, children: controls),
-          ),
-        SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-            // Wraps onto two lines on narrow screens / large text instead of overflowing.
-            child: Wrap(
+          if (demo)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(l.demoCameraNote, style: const TextStyle(color: Colors.white)),
+            ),
+          if (controls.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+              child: Wrap(spacing: 8, runSpacing: 8, alignment: WrapAlignment.center, children: controls),
+            ),
+          SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+              // Wraps onto two lines on narrow screens / large text instead of overflowing.
+              child: Wrap(
                 alignment: WrapAlignment.spaceBetween,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 runSpacing: 8,
                 spacing: 8,
                 children: [
-              _pagesButton(doc),
-              if (state.status != CaptureStatus.failed)
-                Column(mainAxisSize: MainAxisSize.min, children: [
-                  ShutterButton(
-                    label: l.capture,
-                    progress: state.autoCapture ? state.steadyProgress : 0,
-                    busy: state.status == CaptureStatus.capturing,
-                    onPressed: state.status == CaptureStatus.running ? controller.capture : null,
+                  _pagesButton(doc),
+                  if (state.status != CaptureStatus.failed)
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ShutterButton(
+                          label: l.capture,
+                          progress: state.autoCapture ? state.steadyProgress : 0,
+                          busy: state.status == CaptureStatus.capturing,
+                          onPressed: state.status == CaptureStatus.running ? controller.capture : null,
+                        ),
+                        const SizedBox(height: 4),
+                        ExcludeSemantics(
+                          child: Text(l.capture, style: const TextStyle(color: Colors.white)),
+                        ),
+                      ],
+                    ),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(minWidth: _sideWidth),
+                    child: (doc?.pages.isNotEmpty ?? false) && _saving == 0 && !_replacing
+                        ? FilledButton.icon(
+                            key: const ValueKey('capture-done'),
+                            style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 12)),
+                            onPressed: _done,
+                            icon: const Icon(Icons.check),
+                            label: Text(l.done, maxLines: 1),
+                          )
+                        : null,
                   ),
-                  const SizedBox(height: 4),
-                  ExcludeSemantics(child: Text(l.capture, style: const TextStyle(color: Colors.white))),
-                ]),
-              ConstrainedBox(
-                constraints: const BoxConstraints(minWidth: _sideWidth),
-                child: (doc?.pages.isNotEmpty ?? false) && _saving == 0 && !_replacing
-                    ? FilledButton.icon(
-                        key: const ValueKey('capture-done'),
-                        style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 12)),
-                        onPressed: _done,
-                        icon: const Icon(Icons.check),
-                        label: Text(l.done, maxLines: 1),
-                      )
-                    : null,
+                ],
               ),
-            ]),
+            ),
           ),
-        ),
-      ]),
+        ],
+      ),
     );
   }
 }
 
 class _ControlButton extends StatelessWidget {
-  const _ControlButton({super.key, required this.icon, required this.label, required this.onPressed, this.selected = false});
+  const _ControlButton({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+    this.selected = false,
+  });
   final IconData icon;
   final String label;
   final VoidCallback? onPressed;
@@ -372,16 +415,16 @@ class _ControlButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => OutlinedButton.icon(
-        style: OutlinedButton.styleFrom(
-          foregroundColor: selected ? Colors.black : Colors.white,
-          backgroundColor: selected ? Colors.white : Colors.white12,
-          disabledForegroundColor: Colors.white60,
-          side: const BorderSide(color: Colors.white70),
-        ),
-        onPressed: onPressed,
-        icon: Icon(icon),
-        label: Text(label),
-      );
+    style: OutlinedButton.styleFrom(
+      foregroundColor: selected ? Colors.black : Colors.white,
+      backgroundColor: selected ? Colors.white : Colors.white12,
+      disabledForegroundColor: Colors.white60,
+      side: const BorderSide(color: Colors.white70),
+    ),
+    onPressed: onPressed,
+    icon: Icon(icon),
+    label: Text(label),
+  );
 }
 
 /// What the scanner tells the user right now (shown, and optionally spoken).
@@ -408,17 +451,17 @@ enum ScanHint {
   }
 
   String text(AppLocalizations l) => switch (this) {
-        capturing => l.capturing,
-        tooDarkFlash => l.hintTooDarkFlash,
-        tooDark => l.hintTooDark,
-        pointCamera => l.hintPointCamera,
-        moveCloser => l.hintMoveCloser,
-        holdStill => l.hintHoldStill,
-        found => l.hintFound,
-        nextPage => l.hintNextPage,
-        tapShutter => l.hintTapShutter,
-        none => '',
-      };
+    capturing => l.capturing,
+    tooDarkFlash => l.hintTooDarkFlash,
+    tooDark => l.hintTooDark,
+    pointCamera => l.hintPointCamera,
+    moveCloser => l.hintMoveCloser,
+    holdStill => l.hintHoldStill,
+    found => l.hintFound,
+    nextPage => l.hintNextPage,
+    tapShutter => l.hintTapShutter,
+    none => '',
+  };
 }
 
 class _Viewfinder extends StatelessWidget {
@@ -434,31 +477,34 @@ class _Viewfinder extends StatelessWidget {
     return Center(
       child: AspectRatio(
         aspectRatio: state.previewAspectRatio,
-        child: Stack(fit: StackFit.expand, children: [
-          if (cam != null) ExcludeSemantics(child: cam.buildPreview()),
-          LiveQuadOverlay(corners: state.corners, progress: state.steadyProgress, color: accent),
-          if (hint != ScanHint.none)
-            Positioned(
-              left: 0,
-              right: 0,
-              top: 12,
-              child: Center(
-                child: Semantics(
-                  liveRegion: true,
-                  child: _HintPill(text: hint.text(context.l10n), warning: state.lowLight),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (cam != null) ExcludeSemantics(child: cam.buildPreview()),
+            LiveQuadOverlay(corners: state.corners, progress: state.steadyProgress, color: accent),
+            if (hint != ScanHint.none)
+              Positioned(
+                left: 0,
+                right: 0,
+                top: 12,
+                child: Center(
+                  child: Semantics(
+                    liveRegion: true,
+                    child: _HintPill(text: hint.text(context.l10n), warning: state.lowLight),
+                  ),
                 ),
               ),
-            ),
-          // Shutter flash (skipped when the system asks for reduced motion).
-          if (!MediaQuery.disableAnimationsOf(context))
-            IgnorePointer(
-              child: AnimatedOpacity(
-                opacity: state.status == CaptureStatus.capturing ? 0.6 : 0,
-                duration: const Duration(milliseconds: 150),
-                child: const ColoredBox(color: Colors.white),
+            // Shutter flash (skipped when the system asks for reduced motion).
+            if (!MediaQuery.disableAnimationsOf(context))
+              IgnorePointer(
+                child: AnimatedOpacity(
+                  opacity: state.status == CaptureStatus.capturing ? 0.6 : 0,
+                  duration: const Duration(milliseconds: 150),
+                  child: const ColoredBox(color: Colors.white),
+                ),
               ),
-            ),
-        ]),
+          ],
+        ),
       ),
     );
   }
@@ -471,15 +517,15 @@ class _HintPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => DecoratedBox(
-        decoration: BoxDecoration(
-          color: warning ? const Color(0xFF8A4B00) : Colors.black87, // white text stays >= 4.5:1 over any camera image
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          child: Text(text, style: const TextStyle(color: Colors.white)),
-        ),
-      );
+    decoration: BoxDecoration(
+      color: warning ? const Color(0xFF8A4B00) : Colors.black87, // white text stays >= 4.5:1 over any camera image
+      borderRadius: BorderRadius.circular(20),
+    ),
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      child: Text(text, style: const TextStyle(color: Colors.white)),
+    ),
+  );
 }
 
 class _Starting extends StatelessWidget {
@@ -487,12 +533,15 @@ class _Starting extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Center(
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          const CircularProgressIndicator(),
-          const SizedBox(height: 16),
-          Text(context.l10n.startingCamera, style: const TextStyle(color: Colors.white)),
-        ]),
-      );
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const CircularProgressIndicator(),
+        const SizedBox(height: 16),
+        Text(context.l10n.startingCamera, style: const TextStyle(color: Colors.white)),
+      ],
+    ),
+  );
 }
 
 class _FailureView extends StatelessWidget {
@@ -513,48 +562,72 @@ class _FailureView extends StatelessWidget {
     return Center(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(32),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Icon(icon, color: Colors.white, size: 56),
-          const SizedBox(height: 16),
-          Semantics(
-            header: true,
-            child: Text(title,
-                textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white)),
-          ),
-          const SizedBox(height: 8),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 520),
-            child: Text(body, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white)),
-          ),
-          const SizedBox(height: 24),
-          Wrap(spacing: 12, runSpacing: 12, alignment: WrapAlignment.center, children: [
-            FilledButton.icon(
-              key: const ValueKey('failure-upload'),
-              onPressed: onUpload,
-              icon: const Icon(Icons.upload_file),
-              label: Text(l.uploadPhoto),
-            ),
-            OutlinedButton.icon(
-              style: OutlinedButton.styleFrom(foregroundColor: Colors.white, side: const BorderSide(color: Colors.white70)),
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh),
-              label: Text(l.tryAgain),
-            ),
-            if (failure.kind == CameraFailureKind.permissionDenied && !kIsWeb)
-              OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(foregroundColor: Colors.white, side: const BorderSide(color: Colors.white70)),
-                onPressed: openAppSettings,
-                icon: const Icon(Icons.settings_outlined),
-                label: Text(l.openSettings),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: Colors.white, size: 56),
+            const SizedBox(height: 16),
+            Semantics(
+              header: true,
+              child: Text(
+                title,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white),
               ),
-            OutlinedButton.icon(
-              style: OutlinedButton.styleFrom(foregroundColor: Colors.white, side: const BorderSide(color: Colors.white70)),
-              onPressed: onDemo,
-              icon: const Icon(Icons.slideshow_outlined),
-              label: Text(l.useDemoCamera),
             ),
-          ]),
-        ]),
+            const SizedBox(height: 8),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: Text(
+                body,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              alignment: WrapAlignment.center,
+              children: [
+                FilledButton.icon(
+                  key: const ValueKey('failure-upload'),
+                  onPressed: onUpload,
+                  icon: const Icon(Icons.upload_file),
+                  label: Text(l.uploadPhoto),
+                ),
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    side: const BorderSide(color: Colors.white70),
+                  ),
+                  onPressed: onRetry,
+                  icon: const Icon(Icons.refresh),
+                  label: Text(l.tryAgain),
+                ),
+                if (failure.kind == CameraFailureKind.permissionDenied && !kIsWeb)
+                  OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      side: const BorderSide(color: Colors.white70),
+                    ),
+                    onPressed: openAppSettings,
+                    icon: const Icon(Icons.settings_outlined),
+                    label: Text(l.openSettings),
+                  ),
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    side: const BorderSide(color: Colors.white70),
+                  ),
+                  onPressed: onDemo,
+                  icon: const Icon(Icons.slideshow_outlined),
+                  label: Text(l.useDemoCamera),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

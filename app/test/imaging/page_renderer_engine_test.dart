@@ -23,7 +23,12 @@ void main() {
     final photo = File('${fixturesDir.path}/tilted_paper.jpg').readAsBytesSync();
     final det = await engine.detectEncoded(photo);
 
-    var page = await renderer.createPage(source: photo, width: det.width, height: det.height, corners: det.detection.corners);
+    var page = await renderer.createPage(
+      source: photo,
+      width: det.width,
+      height: det.height,
+      corners: det.detection.corners,
+    );
     // Letter page ~ 0.77 aspect.
     expect(page.renderWidth / page.renderHeight, inInclusiveRange(0.7, 0.85));
     final (tw, th) = await PageRenderer.imageSize((await repo.pageImage(page.id, PageImage.thumb))!);

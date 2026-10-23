@@ -35,11 +35,15 @@ Future<void> importIntoNewDocument(BuildContext context, WidgetRef ref, ImportKi
           valueListenable: progress,
           builder: (_, p, _) => Semantics(
             liveRegion: true,
-            child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const LinearProgressIndicator(),
-              const SizedBox(height: 12),
-              Text(l.importProgress(p.done, p.label), maxLines: 2, overflow: TextOverflow.ellipsis),
-            ]),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const LinearProgressIndicator(),
+                const SizedBox(height: 12),
+                Text(l.importProgress(p.done, p.label), maxLines: 2, overflow: TextOverflow.ellipsis),
+              ],
+            ),
           ),
         ),
       ),
@@ -50,12 +54,13 @@ Future<void> importIntoNewDocument(BuildContext context, WidgetRef ref, ImportKi
   final actions = ref.read(libraryActionsProvider);
   try {
     final doc = await actions.createDocument(title: picked.length == 1 ? title : null);
-    final n = await ref.read(importFlowProvider).importFiles(doc.id, picked, onProgress: (p) => progress.value = p);
+    final r = await ref.read(importFlowProvider).importFiles(doc.id, picked, onProgress: (p) => progress.value = p);
     if (!context.mounted) return;
     Navigator.of(context).pop(); // progress dialog
-    if (n == 0) {
+    if (r.failed.isNotEmpty) _snack(context, l.importSkipped(r.failed.join(', ')));
+    if (r.added == 0) {
       await actions.delete(doc);
-      if (context.mounted) _snack(context, l.importNothing);
+      if (context.mounted && r.failed.isEmpty) _snack(context, l.importNothing);
     } else {
       await Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => DocumentEditorPage(documentId: doc.id)));
     }
@@ -68,4 +73,5 @@ Future<void> importIntoNewDocument(BuildContext context, WidgetRef ref, ImportKi
   }
 }
 
-void _snack(BuildContext context, String msg) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+void _snack(BuildContext context, String msg) =>
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));

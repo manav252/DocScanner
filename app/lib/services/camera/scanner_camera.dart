@@ -27,14 +27,14 @@ class AnalysisFrame {
 
   /// Map normalised frame coordinates to normalised upright-preview coordinates.
   List<Pt> toUpright(List<Pt> normalized) => orderCorners([
-        for (final p in normalized)
-          switch (rotationDegrees % 360) {
-            90 => Pt(1 - p.y, p.x),
-            180 => Pt(1 - p.x, 1 - p.y),
-            270 => Pt(p.y, 1 - p.x),
-            _ => p,
-          },
-      ]);
+    for (final p in normalized)
+      switch (rotationDegrees % 360) {
+        90 => Pt(1 - p.y, p.x),
+        180 => Pt(1 - p.x, 1 - p.y),
+        270 => Pt(p.y, 1 - p.x),
+        _ => p,
+      },
+  ]);
 }
 
 /// A full-resolution still (JPEG), already upright.

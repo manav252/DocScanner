@@ -10,8 +10,10 @@ import '../page_edits.dart';
 cv.Mat _background(cv.Mat channel) {
   final w = channel.cols, h = channel.rows;
   final s = math.min(1.0, 400 / math.max(h, w));
-  final small = cv.resize(channel, (math.max(1, (w * s).round()), math.max(1, (h * s).round())),
-      interpolation: cv.INTER_AREA);
+  final small = cv.resize(channel, (
+    math.max(1, (w * s).round()),
+    math.max(1, (h * s).round()),
+  ), interpolation: cv.INTER_AREA);
   final k = math.max(3, (math.min(small.rows, small.cols) ~/ 40) | 1);
   final kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE, (k, k));
   final dilated = cv.dilate(small, kernel);
@@ -66,8 +68,9 @@ cv.Mat blackAndWhite(cv.Mat image) {
   return out;
 }
 
-final Uint8List _magicLut =
-    Uint8List.fromList([for (var v = 0; v < 256; v++) ((v - 20) * 255 / 215).clamp(0, 255).floor()]);
+final Uint8List _magicLut = Uint8List.fromList([
+  for (var v = 0; v < 256; v++) ((v - 20) * 255 / 215).clamp(0, 255).floor(),
+]);
 
 /// Shadow removal + local contrast + a little saturation ("Magic Color").
 cv.Mat magicColor(cv.Mat image) {
@@ -98,18 +101,18 @@ cv.Mat magicColor(cv.Mat image) {
 }
 
 cv.Mat applyFilter(cv.Mat image, PageFilter f) => switch (f) {
-      PageFilter.original => image.clone(),
-      PageFilter.grayscale => grayscale(image),
-      PageFilter.bw => blackAndWhite(image),
-      PageFilter.magicColor => magicColor(image),
-    };
+  PageFilter.original => image.clone(),
+  PageFilter.grayscale => grayscale(image),
+  PageFilter.bw => blackAndWhite(image),
+  PageFilter.magicColor => magicColor(image),
+};
 
 cv.Mat rotateQuarterTurns(cv.Mat image, int turns) => switch (turns % 4) {
-      1 => cv.rotate(image, cv.ROTATE_90_CLOCKWISE),
-      2 => cv.rotate(image, cv.ROTATE_180),
-      3 => cv.rotate(image, cv.ROTATE_90_COUNTERCLOCKWISE),
-      _ => image.clone(),
-    };
+  1 => cv.rotate(image, cv.ROTATE_90_CLOCKWISE),
+  2 => cv.rotate(image, cv.ROTATE_180),
+  3 => cv.rotate(image, cv.ROTATE_90_COUNTERCLOCKWISE),
+  _ => image.clone(),
+};
 
 cv.Mat cropNormalized(cv.Mat image, CropRect r) {
   if (r.isFull) return image.clone();

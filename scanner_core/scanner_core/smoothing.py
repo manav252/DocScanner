@@ -6,6 +6,7 @@ jitter, briefly holds the last outline when a frame misses) and a
 auto-capture). Both work in normalised [0, 1] coordinates so they are
 independent of the analysis resolution.
 """
+
 from __future__ import annotations
 
 from collections import deque

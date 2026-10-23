@@ -1,4 +1,5 @@
 """Server-side image work, built on scanner_core (the same pipeline the app runs)."""
+
 from __future__ import annotations
 
 import io

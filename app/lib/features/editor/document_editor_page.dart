@@ -53,14 +53,14 @@ class _DocumentEditorPageState extends ConsumerState<DocumentEditorPage> {
         .run(widget.documentId, onProgress: (p) => mounted ? setState(() => _ocr = p) : null)
         .catchError((Object _) => 0) // OCR is best-effort; the Text tool shows errors
         .whenComplete(() {
-      if (!mounted) return;
-      setState(() => _ocr = null);
-      final latest = ref.read(documentProvider(widget.documentId)).value;
-      if (latest != null && latest.pages.any((p) => p.needsOcrIn(lang))) {
-        // Pages changed while recognising: catch up shortly.
-        Future<void>.delayed(const Duration(seconds: 1), () => mounted ? _maybeOcr(latest) : null);
-      }
-    });
+          if (!mounted) return;
+          setState(() => _ocr = null);
+          final latest = ref.read(documentProvider(widget.documentId)).value;
+          if (latest != null && latest.pages.any((p) => p.needsOcrIn(lang))) {
+            // Pages changed while recognising: catch up shortly.
+            Future<void>.delayed(const Duration(seconds: 1), () => mounted ? _maybeOcr(latest) : null);
+          }
+        });
   }
 
   DocumentController get _doc => ref.read(documentProvider(widget.documentId).notifier);
@@ -92,7 +92,10 @@ class _DocumentEditorPageState extends ConsumerState<DocumentEditorPage> {
   }
 
   Future<void> _rename(ScanDocument doc) async {
-    final title = await showDialog<String>(context: context, builder: (_) => RenameDialog(initial: doc.title));
+    final title = await showDialog<String>(
+      context: context,
+      builder: (_) => RenameDialog(initial: doc.title),
+    );
     if (title != null) await _run(() => _doc.rename(title));
   }
 
@@ -105,37 +108,41 @@ class _DocumentEditorPageState extends ConsumerState<DocumentEditorPage> {
   }
 
   Future<void> _scanMore() async {
-    await Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => CapturePage(documentId: widget.documentId)));
+    await Navigator.of(context)
+        .push(MaterialPageRoute<void>(builder: (_) => CapturePage(documentId: widget.documentId)));
   }
 
   Future<void> _import({required bool files}) async {
     final importer = ref.read(importServiceProvider);
     final picked = files ? await importer.pickFiles() : await importer.pickImages();
     if (picked.isEmpty || !mounted) return;
-    await _run(() => ref.read(importFlowProvider).importFiles(widget.documentId, picked));
+    final l = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    await _run(() async {
+      final r = await ref.read(importFlowProvider).importFiles(widget.documentId, picked);
+      if (r.failed.isNotEmpty) messenger.showSnackBar(SnackBar(content: Text(l.importSkipped(r.failed.join(', ')))));
+    });
   }
 
   Future<void> _adjustCorners(ScanPage page) async {
     final source = await ref.read(documentRepositoryProvider).pageImage(page.id, PageImage.source);
     if (source == null || !mounted) return;
-    final result = await Navigator.of(context).push<CornerAdjustResult>(MaterialPageRoute(
-      builder: (_) => CornerAdjustPage(
-        bytes: source,
-        width: page.sourceWidth,
-        height: page.sourceHeight,
-        corners: page.corners,
+    final result = await Navigator.of(context).push<CornerAdjustResult>(
+      MaterialPageRoute(
+        builder: (_) =>
+            CornerAdjustPage(bytes: source, width: page.sourceWidth, height: page.sourceHeight, corners: page.corners),
       ),
-    ));
+    );
     if (result == null) return;
-    await _run(() => result.rotated
-        ? _doc.replaceImage(page.id, result.bytes, result.width, result.height, result.corners)
-        : _doc.setCorners(page.id, result.corners));
+    await _run(
+      () => result.rotated
+          ? _doc.replaceImage(page.id, result.bytes, result.width, result.height, result.corners)
+          : _doc.setCorners(page.id, result.corners),
+    );
   }
 
   Future<void> _crop(ScanPage page) async {
-    final crop = await Navigator.of(context).push(MaterialPageRoute<CropRect>(
-      builder: (_) => CropPage(page: page),
-    ));
+    final crop = await Navigator.of(context).push(MaterialPageRoute<CropRect>(builder: (_) => CropPage(page: page)));
     if (crop != null) await _run(() => _doc.setCrop(page.id, crop));
   }
 
@@ -154,18 +161,20 @@ class _DocumentEditorPageState extends ConsumerState<DocumentEditorPage> {
     final r = removed;
     if (r == null || !mounted) return;
     messenger.hideCurrentSnackBar();
-    messenger.showSnackBar(SnackBar(
-      content: Text(l.pageDeleted(number)),
-      duration: const Duration(seconds: 8),
-      persist: false,
-      action: SnackBarAction(
-        label: l.undo,
-        onPressed: () => _run(() async {
-          await _doc.restorePage(r);
-          _goTo(r.index);
-        }),
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(l.pageDeleted(number)),
+        duration: const Duration(seconds: 8),
+        persist: false,
+        action: SnackBarAction(
+          label: l.undo,
+          onPressed: () => _run(() async {
+            await _doc.restorePage(r);
+            _goTo(r.index);
+          }),
+        ),
       ),
-    ));
+    );
   }
 
   /// Move the current page one place (keyboard/screen-reader friendly reorder).
@@ -184,12 +193,33 @@ class _DocumentEditorPageState extends ConsumerState<DocumentEditorPage> {
       context: context,
       showDragHandle: true,
       builder: (c) => SafeArea(
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Semantics(header: true, child: Padding(padding: const EdgeInsets.all(8), child: Text(l.addPages, style: Theme.of(c).textTheme.titleLarge))),
-          ListTile(leading: const Icon(Icons.photo_camera), title: Text(l.scanMore), onTap: () => Navigator.pop(c, _AddChoice.camera)),
-          ListTile(leading: const Icon(Icons.photo_library), title: Text(l.importPhotos), onTap: () => Navigator.pop(c, _AddChoice.photos)),
-          ListTile(leading: const Icon(Icons.upload_file), title: Text(l.importPdfOrFiles), onTap: () => Navigator.pop(c, _AddChoice.files)),
-        ]),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Semantics(
+              header: true,
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: Text(l.addPages, style: Theme.of(c).textTheme.titleLarge),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_camera),
+              title: Text(l.scanMore),
+              onTap: () => Navigator.pop(c, _AddChoice.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: Text(l.importPhotos),
+              onTap: () => Navigator.pop(c, _AddChoice.photos),
+            ),
+            ListTile(
+              leading: const Icon(Icons.upload_file),
+              title: Text(l.importPdfOrFiles),
+              onTap: () => Navigator.pop(c, _AddChoice.files),
+            ),
+          ],
+        ),
       ),
     );
     switch (choice) {
@@ -208,7 +238,10 @@ class _DocumentEditorPageState extends ConsumerState<DocumentEditorPage> {
   Widget build(BuildContext context) {
     final async = ref.watch(documentProvider(widget.documentId));
     return switch (async) {
-      AsyncError() => Scaffold(appBar: AppBar(), body: Center(child: Text(context.l10n.documentNotFound))),
+      AsyncError() => Scaffold(
+        appBar: AppBar(),
+        body: Center(child: Text(context.l10n.documentNotFound)),
+      ),
       AsyncData(value: final doc) => _build(doc),
       _ => const Scaffold(body: Center(child: CircularProgressIndicator())),
     };
@@ -248,108 +281,157 @@ class _DocumentEditorPageState extends ConsumerState<DocumentEditorPage> {
         bottom: _busy > 0
             ? const PreferredSize(preferredSize: Size.fromHeight(3), child: LinearProgressIndicator(minHeight: 3))
             : ocr != null
-                ? PreferredSize(
-                    preferredSize: const Size.fromHeight(24),
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: Text(
-                        ocr.total == 0 ? l.recognizingText : l.recognizingTextOf(ocr.done + 1, ocr.total),
-                        key: const ValueKey('ocr-progress'),
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ),
-                  )
-                : null,
+            ? PreferredSize(
+                preferredSize: const Size.fromHeight(24),
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text(
+                    ocr.total == 0 ? l.recognizingText : l.recognizingTextOf(ocr.done + 1, ocr.total),
+                    key: const ValueKey('ocr-progress'),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+              )
+            : null,
       ),
       body: pages.isEmpty
           ? _EmptyDocument(onScan: _scanMore, onImport: () => _import(files: true))
-          : Column(children: [
-              Expanded(
-                child: PageView.builder(
-                  controller: _pager,
-                  itemCount: pages.length,
-                  onPageChanged: (i) => setState(() => _current = i),
-                  itemBuilder: (_, i) => Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Center(
-                      child: Semantics(
-                        image: true,
-                        label: l.pageOf(i + 1, pages.length),
-                        child: Material(
-                          elevation: 3,
-                          child: StoredPageImage(key: ValueKey('page-view-$i'), page: pages[i], kind: PageImage.render),
+          : Column(
+              children: [
+                Expanded(
+                  child: PageView.builder(
+                    controller: _pager,
+                    itemCount: pages.length,
+                    onPageChanged: (i) => setState(() => _current = i),
+                    itemBuilder: (_, i) => Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Center(
+                        child: Semantics(
+                          image: true,
+                          label: l.pageOf(i + 1, pages.length),
+                          child: Material(
+                            elevation: 3,
+                            child: StoredPageImage(
+                              key: ValueKey('page-view-$i'),
+                              page: pages[i],
+                              kind: PageImage.render,
+                            ),
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              Wrap(alignment: WrapAlignment.center, crossAxisAlignment: WrapCrossAlignment.center, children: [
-                TextButton.icon(
-                  key: const ValueKey('prev-page'),
-                  onPressed: index > 0 ? () => _goTo(index - 1) : null,
-                  icon: const Icon(Icons.chevron_left),
-                  label: Text(l.previousPage),
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    TextButton.icon(
+                      key: const ValueKey('prev-page'),
+                      onPressed: index > 0 ? () => _goTo(index - 1) : null,
+                      icon: const Icon(Icons.chevron_left),
+                      label: Text(l.previousPage),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Text(l.pageOf(index + 1, pages.length), style: Theme.of(context).textTheme.bodyMedium),
+                    ),
+                    TextButton.icon(
+                      key: const ValueKey('next-page'),
+                      onPressed: index < pages.length - 1 ? () => _goTo(index + 1) : null,
+                      icon: const Icon(Icons.chevron_right),
+                      iconAlignment: IconAlignment.end,
+                      label: Text(l.nextPage),
+                    ),
+                  ],
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Text(l.pageOf(index + 1, pages.length), style: Theme.of(context).textTheme.bodyMedium),
+                SizedBox(
+                  // Grows with the text size so "Add pages" stays readable.
+                  height: 80 + MediaQuery.textScalerOf(context).scale(32),
+                  child: _PageStrip(
+                    pages: pages,
+                    current: index,
+                    onTap: _goTo,
+                    onReorder: (from, to) {
+                      final moved = pages[from].id;
+                      _run(() async {
+                        await _doc.reorder(from, to);
+                        final i = ref
+                            .read(documentProvider(widget.documentId))
+                            .value
+                            ?.pages
+                            .indexWhere((p) => p.id == moved);
+                        if (i != null && i >= 0) _goTo(i);
+                      });
+                    },
+                    onAdd: _busy > 0 ? null : _addPages,
+                  ),
                 ),
-                TextButton.icon(
-                  key: const ValueKey('next-page'),
-                  onPressed: index < pages.length - 1 ? () => _goTo(index + 1) : null,
-                  icon: const Icon(Icons.chevron_right),
-                  iconAlignment: IconAlignment.end,
-                  label: Text(l.nextPage),
+                const Divider(height: 1),
+                _Toolbar(
+                  tools: [
+                    _Tool(
+                      'tool-filters',
+                      Icons.auto_fix_high,
+                      l.toolFilters,
+                      () => showFilterSheet(
+                        context,
+                        page: current!,
+                        onSelected: (f) => _run(() => _doc.setFilter(current.id, f)),
+                        onApplyAll: (f) => _run(() => _doc.applyFilterToAll(f)),
+                      ),
+                    ),
+                    _Tool('tool-rotate', Icons.rotate_right, l.toolRotate, () => _run(() => _doc.rotate(current!.id))),
+                    _Tool('tool-crop', Icons.crop, l.toolCrop, () => _crop(current!)),
+                    _Tool('tool-corners', Icons.crop_rotate, l.toolCorners, () => _adjustCorners(current!)),
+                    _Tool(
+                      'tool-markup',
+                      Icons.draw_outlined,
+                      l.markup,
+                      () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => MarkupEditorPage(documentId: widget.documentId, pageId: current!.id),
+                        ),
+                      ),
+                    ),
+                    _Tool(
+                      'tool-text',
+                      Icons.text_snippet_outlined,
+                      l.toolPageText,
+                      () => showTextSheet(context, documentId: widget.documentId, pageId: current!.id),
+                    ),
+                    _Tool(
+                      'tool-retake',
+                      Icons.replay,
+                      l.toolRetake,
+                      () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => CapturePage(documentId: widget.documentId, replacePageId: current!.id),
+                        ),
+                      ),
+                    ),
+                    if (pages.length > 1) ...[
+                      _Tool(
+                        'move-earlier',
+                        Icons.arrow_back,
+                        l.moveEarlier,
+                        index > 0 ? () => _move(doc, index, -1) : null,
+                      ),
+                      _Tool(
+                        'move-later',
+                        Icons.arrow_forward,
+                        l.moveLater,
+                        index < pages.length - 1 ? () => _move(doc, index, 1) : null,
+                      ),
+                    ],
+                    if (narrow) _Tool('rename-doc', Icons.edit_outlined, l.rename, () => _rename(doc)),
+                    _Tool('delete-page', Icons.delete_outline, l.deletePage, () => _deletePage(doc, current!)),
+                    _Tool('delete-doc', Icons.delete_forever_outlined, l.deleteDocument, () => _deleteDocument(doc)),
+                  ],
+                  enabled: idle,
                 ),
-              ]),
-              SizedBox(
-                // Grows with the text size so "Add pages" stays readable.
-                height: 80 + MediaQuery.textScalerOf(context).scale(32),
-                child: _PageStrip(
-                  pages: pages,
-                  current: index,
-                  onTap: _goTo,
-                  onReorder: (from, to) {
-                    final moved = pages[from].id;
-                    _run(() async {
-                      await _doc.reorder(from, to);
-                      final i = ref.read(documentProvider(widget.documentId)).value?.pages.indexWhere((p) => p.id == moved);
-                      if (i != null && i >= 0) _goTo(i);
-                    });
-                  },
-                  onAdd: _busy > 0 ? null : _addPages,
-                ),
-              ),
-              const Divider(height: 1),
-              _Toolbar(tools: [
-                _Tool('tool-filters', Icons.auto_fix_high, l.toolFilters, () => showFilterSheet(
-                      context,
-                      page: current!,
-                      onSelected: (f) => _run(() => _doc.setFilter(current.id, f)),
-                      onApplyAll: (f) => _run(() => _doc.applyFilterToAll(f)),
-                    )),
-                _Tool('tool-rotate', Icons.rotate_right, l.toolRotate, () => _run(() => _doc.rotate(current!.id))),
-                _Tool('tool-crop', Icons.crop, l.toolCrop, () => _crop(current!)),
-                _Tool('tool-corners', Icons.crop_rotate, l.toolCorners, () => _adjustCorners(current!)),
-                _Tool('tool-markup', Icons.draw_outlined, l.markup, () => Navigator.of(context).push(MaterialPageRoute<void>(
-                      builder: (_) => MarkupEditorPage(documentId: widget.documentId, pageId: current!.id),
-                    ))),
-                _Tool('tool-text', Icons.text_snippet_outlined, l.toolPageText,
-                    () => showTextSheet(context, documentId: widget.documentId, pageId: current!.id)),
-                _Tool('tool-retake', Icons.replay, l.toolRetake, () => Navigator.of(context).push(MaterialPageRoute<void>(
-                      builder: (_) => CapturePage(documentId: widget.documentId, replacePageId: current!.id),
-                    ))),
-                if (pages.length > 1) ...[
-                  _Tool('move-earlier', Icons.arrow_back, l.moveEarlier, index > 0 ? () => _move(doc, index, -1) : null),
-                  _Tool('move-later', Icons.arrow_forward, l.moveLater,
-                      index < pages.length - 1 ? () => _move(doc, index, 1) : null),
-                ],
-                if (narrow) _Tool('rename-doc', Icons.edit_outlined, l.rename, () => _rename(doc)),
-                _Tool('delete-page', Icons.delete_outline, l.deletePage, () => _deletePage(doc, current!)),
-                _Tool('delete-doc', Icons.delete_forever_outlined, l.deleteDocument, () => _deleteDocument(doc)),
-              ], enabled: idle),
-            ]),
+              ],
+            ),
     );
   }
 }
@@ -386,12 +468,18 @@ class _PageStrip extends StatelessWidget {
           width: 96,
           child: OutlinedButton(
             key: const ValueKey('add-pages'),
-            style: OutlinedButton.styleFrom(padding: const EdgeInsets.all(4), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6))),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.all(4),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+            ),
             onPressed: onAdd,
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
-              const Icon(Icons.add),
-              Text(l.addPages, textAlign: TextAlign.center, maxLines: 2),
-            ]),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.add),
+                Text(l.addPages, textAlign: TextAlign.center, maxLines: 2),
+              ],
+            ),
           ),
         ),
       ),
@@ -411,26 +499,35 @@ class _PageStrip extends StatelessWidget {
               child: Container(
                 width: 68,
                 decoration: BoxDecoration(
-                  border: Border.all(color: i == current ? scheme.primary : scheme.outline, width: i == current ? 3 : 1),
+                  border: Border.all(
+                    color: i == current ? scheme.primary : scheme.outline,
+                    width: i == current ? 3 : 1,
+                  ),
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: Stack(fit: StackFit.expand, children: [
-                  ClipRRect(borderRadius: BorderRadius.circular(4), child: StoredPageImage(page: pages[i])),
-                  Positioned(
-                    right: 2,
-                    bottom: 2,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: i == current ? scheme.primary : Colors.black87,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                        child: Text('${i + 1}', style: const TextStyle(color: Colors.white, fontSize: 13)),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: StoredPageImage(page: pages[i]),
+                    ),
+                    Positioned(
+                      right: 2,
+                      bottom: 2,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: i == current ? scheme.primary : Colors.black87,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                          child: Text('${i + 1}', style: const TextStyle(color: Colors.white, fontSize: 13)),
+                        ),
                       ),
                     ),
-                  ),
-                ]),
+                  ],
+                ),
               ),
             ),
           ),
@@ -479,11 +576,14 @@ class _Toolbar extends StatelessWidget {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       foregroundColor: t.key.startsWith('delete') ? theme.colorScheme.error : null,
                     ),
-                    child: Column(mainAxisSize: MainAxisSize.min, children: [
-                      Icon(t.icon),
-                      const SizedBox(height: 4),
-                      Text(t.label, textAlign: TextAlign.center, maxLines: 2, style: theme.textTheme.labelMedium),
-                    ]),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(t.icon),
+                        const SizedBox(height: 4),
+                        Text(t.label, textAlign: TextAlign.center, maxLines: 2, style: theme.textTheme.labelMedium),
+                      ],
+                    ),
                   ),
                 ),
             ],
@@ -504,18 +604,30 @@ class _EmptyDocument extends StatelessWidget {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          const Icon(Icons.description_outlined, size: 56),
-          const SizedBox(height: 12),
-          Text(l.noPagesYet, style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 8),
-          Text(l.noPagesHint, textAlign: TextAlign.center),
-          const SizedBox(height: 16),
-          Wrap(spacing: 12, runSpacing: 12, alignment: WrapAlignment.center, children: [
-            FilledButton.icon(onPressed: onScan, icon: const Icon(Icons.photo_camera), label: Text(l.scanDocument)),
-            OutlinedButton.icon(onPressed: onImport, icon: const Icon(Icons.upload_file), label: Text(l.importPdfOrFiles)),
-          ]),
-        ]),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.description_outlined, size: 56),
+            const SizedBox(height: 12),
+            Text(l.noPagesYet, style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 8),
+            Text(l.noPagesHint, textAlign: TextAlign.center),
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              alignment: WrapAlignment.center,
+              children: [
+                FilledButton.icon(onPressed: onScan, icon: const Icon(Icons.photo_camera), label: Text(l.scanDocument)),
+                OutlinedButton.icon(
+                  onPressed: onImport,
+                  icon: const Icon(Icons.upload_file),
+                  label: Text(l.importPdfOrFiles),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

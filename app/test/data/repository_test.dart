@@ -10,12 +10,12 @@ import 'package:docscanner/imaging/page_edits.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 ScanDocument doc(String id, String title, {DateTime? updated, List<ScanPage> pages = const []}) => ScanDocument(
-      id: id,
-      title: title,
-      createdAt: DateTime(2026, 1, 1),
-      updatedAt: updated ?? DateTime(2026, 1, 1),
-      pages: pages,
-    );
+  id: id,
+  title: title,
+  createdAt: DateTime(2026, 1, 1),
+  updatedAt: updated ?? DateTime(2026, 1, 1),
+  pages: pages,
+);
 
 const page = ScanPage(
   id: 'p1',

@@ -87,8 +87,8 @@ class DocumentRepository {
 
   /// Every stored file of a page (images, OCR boxes), keyed by storage key; used to undo a delete.
   Future<Map<String, Uint8List>> pageFiles(String pageId) async => {
-        for (final k in await _store.keys('page/$pageId/')) k: ?await _store.get(k),
-      };
+    for (final k in await _store.keys('page/$pageId/')) k: ?await _store.get(k),
+  };
 
   Future<void> putFiles(Map<String, Uint8List> files) async {
     for (final e in files.entries) {

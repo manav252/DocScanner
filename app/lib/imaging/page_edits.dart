@@ -17,7 +17,7 @@ enum PageFilter {
 /// Crop rectangle in normalised [0, 1] coordinates of the rotated page.
 class CropRect {
   const CropRect(this.left, this.top, this.width, this.height)
-      : assert(left >= 0 && top >= 0 && width > 0 && height > 0);
+    : assert(left >= 0 && top >= 0 && width > 0 && height > 0);
 
   static const full = CropRect(0, 0, 1, 1);
 
@@ -57,23 +57,24 @@ class PageEdits {
   final CropRect crop;
 
   PageEdits copyWith({PageFilter? filter, int? quarterTurns, CropRect? crop}) => PageEdits(
-        filter: filter ?? this.filter,
-        quarterTurns: (quarterTurns ?? this.quarterTurns) % 4,
-        crop: crop ?? this.crop,
-      );
+    filter: filter ?? this.filter,
+    quarterTurns: (quarterTurns ?? this.quarterTurns) % 4,
+    crop: crop ?? this.crop,
+  );
 
   /// Rotate 90 degrees clockwise, keeping the same cropped region.
   PageEdits rotatedClockwise() => copyWith(quarterTurns: quarterTurns + 1, crop: crop.rotatedClockwise());
 
   Map<String, Object> toJson() => {'filter': filter.wireName, 'turns': quarterTurns, 'crop': crop.toJson()};
   static PageEdits fromJson(Map<String, dynamic> j) => PageEdits(
-        filter: PageFilter.fromWire(j['filter'] as String?),
-        quarterTurns: (j['turns'] as int? ?? 0) % 4,
-        crop: j['crop'] == null ? CropRect.full : CropRect.fromJson(j['crop'] as List),
-      );
+    filter: PageFilter.fromWire(j['filter'] as String?),
+    quarterTurns: (j['turns'] as int? ?? 0) % 4,
+    crop: j['crop'] == null ? CropRect.full : CropRect.fromJson(j['crop'] as List),
+  );
 
   @override
-  bool operator ==(Object other) => other is PageEdits && other.filter == filter && other.quarterTurns == quarterTurns && other.crop == crop;
+  bool operator ==(Object other) =>
+      other is PageEdits && other.filter == filter && other.quarterTurns == quarterTurns && other.crop == crop;
   @override
   int get hashCode => Object.hash(filter, quarterTurns, crop);
 }

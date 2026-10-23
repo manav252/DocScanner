@@ -10,6 +10,7 @@ and orientation.json with each file's upright size and the page corners in uprig
 
 Usage: python tests/make_orientation_fixtures.py   (needs Pillow: pip install pillow)
 """
+
 import json
 from pathlib import Path
 
@@ -37,7 +38,12 @@ stored = src.transpose(Image.Transpose.ROTATE_90)  # 1600x1200
 exif = Image.Exif()
 exif[0x0112] = 6
 stored.save(OUT / "exif_rotated.jpg", quality=92, exif=exif)
-cases["exif_rotated.jpg"] = {"size": [W, H], "corners": corners, "stored_size": list(stored.size), "exif_orientation": 6}
+cases["exif_rotated.jpg"] = {
+    "size": [W, H],
+    "corners": corners,
+    "stored_size": list(stored.size),
+    "exif_orientation": 6,
+}
 
 big = src.resize((W * 4, H * 4), Image.Resampling.LANCZOS)
 big.save(OUT / "large.jpg", quality=85)

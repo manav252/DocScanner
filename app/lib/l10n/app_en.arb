@@ -118,6 +118,14 @@
       }
     }
   },
+  "importSkipped": "These files could not be opened and were skipped: {names}",
+  "@importSkipped": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
   "importNothing": "Nothing to import. Choose JPG, PNG or PDF files.",
   "appearance": "Appearance",
   "theme": "Theme",

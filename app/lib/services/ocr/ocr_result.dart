@@ -11,9 +11,14 @@ class OcrLine {
   final double confidence;
 
   List<Object> toJson() => [text, left, top, width, height, confidence];
-  static OcrLine fromJson(List<dynamic> j) => OcrLine(j[0] as String, (j[1] as num).toDouble(), (j[2] as num).toDouble(),
-      (j[3] as num).toDouble(), (j[4] as num).toDouble(),
-      confidence: j.length > 5 ? (j[5] as num).toDouble() : 1.0);
+  static OcrLine fromJson(List<dynamic> j) => OcrLine(
+    j[0] as String,
+    (j[1] as num).toDouble(),
+    (j[2] as num).toDouble(),
+    (j[3] as num).toDouble(),
+    (j[4] as num).toDouble(),
+    confidence: j.length > 5 ? (j[5] as num).toDouble() : 1.0,
+  );
 }
 
 class OcrResult {
@@ -23,9 +28,13 @@ class OcrResult {
 
   static const empty = OcrResult('', []);
 
-  Map<String, Object> toJson() => {'text': text, 'lines': [for (final l in lines) l.toJson()]};
-  static OcrResult fromJson(Map<String, dynamic> j) =>
-      OcrResult(j['text'] as String? ?? '', [for (final l in (j['lines'] as List? ?? const [])) OcrLine.fromJson(l as List)]);
+  Map<String, Object> toJson() => {
+    'text': text,
+    'lines': [for (final l in lines) l.toJson()],
+  };
+  static OcrResult fromJson(Map<String, dynamic> j) => OcrResult(j['text'] as String? ?? '', [
+    for (final l in (j['lines'] as List? ?? const [])) OcrLine.fromJson(l as List),
+  ]);
 }
 
 final _edgeJunk = RegExp(r'^[\s|\[\]{}!¦]+|[\s|\[\]{}!¦]+$');

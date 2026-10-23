@@ -392,7 +392,12 @@ class MarkupEditorPageState extends ConsumerState<MarkupEditorPage> {
     final h = history!;
     final hit = eraseAt(h.items, p, _shownSize).toSet();
     if (hit.isNotEmpty) {
-      setState(() => h.preview([for (final i in h.items) if (!hit.contains(i.id)) i]));
+      setState(
+        () => h.preview([
+          for (final i in h.items)
+            if (!hit.contains(i.id)) i,
+        ]),
+      );
     }
   }
 
@@ -606,7 +611,7 @@ class MarkupEditorPageState extends ConsumerState<MarkupEditorPage> {
                 label: '${l.markupTitle}. ${l.markupHint}',
                 child: GestureDetector(
                   key: const ValueKey('markup-canvas'),
-                dragStartBehavior: DragStartBehavior.down, // strokes start where the finger went down
+                  dragStartBehavior: DragStartBehavior.down, // strokes start where the finger went down
                   behavior: HitTestBehavior.opaque,
                   onPanStart: _onPanStart,
                   onPanUpdate: _onPanUpdate,
@@ -639,21 +644,27 @@ class MarkupEditorPageState extends ConsumerState<MarkupEditorPage> {
   }
 
   List<Widget> _undoRedo(MarkupHistory? h) => [
-        TextButton.icon(
-          key: const ValueKey('markup-undo'),
-          onPressed: h?.canUndo ?? false ? undo : null,
-          icon: const Icon(Icons.undo),
-          label: Text(context.l10n.undo),
-        ),
-        TextButton.icon(
-          key: const ValueKey('markup-redo'),
-          onPressed: h?.canRedo ?? false ? redo : null,
-          icon: const Icon(Icons.redo),
-          label: Text(context.l10n.redo),
-        ),
-      ];
+    TextButton.icon(
+      key: const ValueKey('markup-undo'),
+      onPressed: h?.canUndo ?? false ? undo : null,
+      icon: const Icon(Icons.undo),
+      label: Text(context.l10n.undo),
+    ),
+    TextButton.icon(
+      key: const ValueKey('markup-redo'),
+      onPressed: h?.canRedo ?? false ? redo : null,
+      icon: const Icon(Icons.redo),
+      label: Text(context.l10n.redo),
+    ),
+  ];
 
-  Widget _buildPanel(BuildContext context, List<MarkupTool> tools, MarkupItem? sel, bool simple, {bool narrow = false}) {
+  Widget _buildPanel(
+    BuildContext context,
+    List<MarkupTool> tools,
+    MarkupItem? sel,
+    bool simple, {
+    bool narrow = false,
+  }) {
     final l = context.l10n;
     final theme = Theme.of(context);
     Widget label(String t) => Padding(

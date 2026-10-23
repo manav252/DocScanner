@@ -8,6 +8,7 @@ Dart (native) and web test suites.
 
 Run:  python tests/make_fixtures.py
 """
+
 from __future__ import annotations
 
 import json
@@ -18,8 +19,10 @@ import numpy as np
 
 OUT = Path(__file__).resolve().parents[2] / "shared" / "test_fixtures"
 W, H = 1200, 1600
-WORDS = ("invoice total amount date payment account scanner document page "
-         "receipt order shipping customer number reference tax summary").split()
+WORDS = (
+    "invoice total amount date payment account scanner document page "
+    "receipt order shipping customer number reference tax summary"
+).split()
 
 
 def make_paper(rng: np.random.Generator, w=850, h=1100, tint=(245, 246, 248)) -> np.ndarray:
@@ -123,42 +126,74 @@ def main():
         cases[name] = {"found": corners is not None, "corners": corners, "note": note}
 
     c = [[260, 230], [1010, 380], [900, 1420], [120, 1260]]
-    save("tilted_paper", finish(place(bg_wood(rng), paper, c), rng), c,
-         "Page rotated ~12 deg with mild perspective on a wooden desk")
+    save(
+        "tilted_paper",
+        finish(place(bg_wood(rng), paper, c), rng),
+        c,
+        "Page rotated ~12 deg with mild perspective on a wooden desk",
+    )
 
     c = [[170, 200], [1040, 170], [1080, 1430], [140, 1460]]
-    save("low_contrast", finish(place(bg_light_table(rng), make_paper(rng, tint=(238, 240, 240)), c, shadow=False),
-                                rng, light=(1.0, 0.92), noise=3), c,
-         "Off-white page on a near-white table, no drop shadow")
+    save(
+        "low_contrast",
+        finish(
+            place(bg_light_table(rng), make_paper(rng, tint=(238, 240, 240)), c, shadow=False),
+            rng,
+            light=(1.0, 0.92),
+            noise=3,
+        ),
+        c,
+        "Off-white page on a near-white table, no drop shadow",
+    )
 
     c = [[330, 290], [960, 340], [920, 1250], [280, 1200]]
     img = place(bg_cluttered(rng), paper, c)
     cv2.line(img, (700, 1380), (1000, 1100), (30, 30, 160), 16, cv2.LINE_AA)  # a pen lying across the bottom edge
-    save("cluttered_background", finish(img, rng), c,
-         "Page on a busy desk with many coloured shapes and a pen crossing its bottom edge")
+    save(
+        "cluttered_background",
+        finish(img, rng),
+        c,
+        "Page on a busy desk with many coloured shapes and a pen crossing its bottom edge",
+    )
 
     c = [[380, 330], [820, 330], [1130, 1450], [70, 1450]]
-    save("strong_perspective", finish(place(bg_wood(rng), paper, c), rng), c,
-         "Phone held at a steep angle: strong keystone")
+    save(
+        "strong_perspective",
+        finish(place(bg_wood(rng), paper, c), rng),
+        c,
+        "Phone held at a steep angle: strong keystone",
+    )
 
     c = [[150, 180], [1060, 230], [1030, 1400], [170, 1430]]
-    save("shadow_across", finish(place(bg_wood(rng), paper, c), rng,
-                                 shadow_band=((0, 700), (700, 1000), 0.55)), c,
-         "A diagonal shadow (from a hand/phone) falls across the page")
+    save(
+        "shadow_across",
+        finish(place(bg_wood(rng), paper, c), rng, shadow_band=((0, 700), (700, 1000), 0.55)),
+        c,
+        "A diagonal shadow (from a hand/phone) falls across the page",
+    )
 
     receipt = make_paper(rng, w=420, h=1200, tint=(250, 250, 247))
     c = [[480, 160], [800, 210], [700, 1480], [380, 1430]]
     save("narrow_receipt", finish(place(bg_wood(rng), receipt, c), rng), c, "Long narrow receipt")
 
     c = [[25, 30], [1175, 20], [1180, 1575], [20, 1580]]
-    save("fills_frame", finish(place(bg_wood(rng), paper, c, shadow=False), rng), c,
-         "Page nearly fills the frame, corners close to the image border")
+    save(
+        "fills_frame",
+        finish(place(bg_wood(rng), paper, c, shadow=False), rng),
+        c,
+        "Page nearly fills the frame, corners close to the image border",
+    )
 
-    save("no_document", finish(bg_cluttered(rng).astype(np.float32), rng), None,
-         "Cluttered desk without any page: must fall back to full image bounds")
+    save(
+        "no_document",
+        finish(bg_cluttered(rng).astype(np.float32), rng),
+        None,
+        "Cluttered desk without any page: must fall back to full image bounds",
+    )
 
-    (OUT / "expected_corners.json").write_text(json.dumps(
-        {"image_size": [W, H], "corner_order": "TL,TR,BR,BL", "cases": cases}, indent=2))
+    (OUT / "expected_corners.json").write_text(
+        json.dumps({"image_size": [W, H], "corner_order": "TL,TR,BR,BL", "cases": cases}, indent=2)
+    )
     print(f"wrote {len(cases)} fixtures to {OUT}")
 
 

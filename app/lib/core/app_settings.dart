@@ -84,49 +84,48 @@ class AppSettings {
     bool? spokenGuidance,
     OcrLanguage? ocrLanguage,
     bool? onboardingDone,
-  }) =>
-      AppSettings(
-        serverUrl: serverUrl ?? this.serverUrl,
-        processOnServer: processOnServer ?? this.processOnServer,
-        autoOcr: autoOcr ?? this.autoOcr,
-        theme: theme ?? this.theme,
-        highContrast: highContrast ?? this.highContrast,
-        textScale: textScale ?? this.textScale,
-        simpleMode: simpleMode ?? this.simpleMode,
-        localeCode: identical(localeCode, _keep) ? this.localeCode : localeCode as String?,
-        spokenGuidance: spokenGuidance ?? this.spokenGuidance,
-        ocrLanguage: ocrLanguage ?? this.ocrLanguage,
-        onboardingDone: onboardingDone ?? this.onboardingDone,
-      );
+  }) => AppSettings(
+    serverUrl: serverUrl ?? this.serverUrl,
+    processOnServer: processOnServer ?? this.processOnServer,
+    autoOcr: autoOcr ?? this.autoOcr,
+    theme: theme ?? this.theme,
+    highContrast: highContrast ?? this.highContrast,
+    textScale: textScale ?? this.textScale,
+    simpleMode: simpleMode ?? this.simpleMode,
+    localeCode: identical(localeCode, _keep) ? this.localeCode : localeCode as String?,
+    spokenGuidance: spokenGuidance ?? this.spokenGuidance,
+    ocrLanguage: ocrLanguage ?? this.ocrLanguage,
+    onboardingDone: onboardingDone ?? this.onboardingDone,
+  );
 
   Map<String, Object?> toJson() => {
-        'serverUrl': serverUrl,
-        'processOnServer': processOnServer,
-        'autoOcr': autoOcr,
-        'theme': theme.name,
-        'highContrast': highContrast,
-        'textScale': textScale,
-        'simpleMode': simpleMode,
-        'locale': localeCode,
-        'spokenGuidance': spokenGuidance,
-        'ocrLanguage': ocrLanguage.name,
-        'onboardingDone': onboardingDone,
-      };
+    'serverUrl': serverUrl,
+    'processOnServer': processOnServer,
+    'autoOcr': autoOcr,
+    'theme': theme.name,
+    'highContrast': highContrast,
+    'textScale': textScale,
+    'simpleMode': simpleMode,
+    'locale': localeCode,
+    'spokenGuidance': spokenGuidance,
+    'ocrLanguage': ocrLanguage.name,
+    'onboardingDone': onboardingDone,
+  };
 
   static AppSettings fromJson(Map<String, dynamic> j) => AppSettings(
-        serverUrl: j['serverUrl'] as String? ?? defaultServerUrl(),
-        processOnServer: j['processOnServer'] as bool? ?? false,
-        autoOcr: j['autoOcr'] as bool? ?? true,
-        theme: ThemeChoice.values.asNameMap()[j['theme']] ?? ThemeChoice.system,
-        highContrast: j['highContrast'] as bool? ?? false,
-        textScale: ((j['textScale'] as num?)?.toDouble() ?? 1.0).clamp(1.0, 2.0),
-        simpleMode: j['simpleMode'] as bool? ?? true,
-        localeCode: j['locale'] as String?,
-        spokenGuidance: j['spokenGuidance'] as bool? ?? false,
-        ocrLanguage: OcrLanguage.values.asNameMap()[j['ocrLanguage']] ?? OcrLanguage.english,
-        // Settings saved before the guide existed: the user already knows the app.
-        onboardingDone: j['onboardingDone'] as bool? ?? true,
-      );
+    serverUrl: j['serverUrl'] as String? ?? defaultServerUrl(),
+    processOnServer: j['processOnServer'] as bool? ?? false,
+    autoOcr: j['autoOcr'] as bool? ?? true,
+    theme: ThemeChoice.values.asNameMap()[j['theme']] ?? ThemeChoice.system,
+    highContrast: j['highContrast'] as bool? ?? false,
+    textScale: ((j['textScale'] as num?)?.toDouble() ?? 1.0).clamp(1.0, 2.0),
+    simpleMode: j['simpleMode'] as bool? ?? true,
+    localeCode: j['locale'] as String?,
+    spokenGuidance: j['spokenGuidance'] as bool? ?? false,
+    ocrLanguage: OcrLanguage.values.asNameMap()[j['ocrLanguage']] ?? OcrLanguage.english,
+    // Settings saved before the guide existed: the user already knows the app.
+    onboardingDone: j['onboardingDone'] as bool? ?? true,
+  );
 }
 
 const _keep = Object();
@@ -139,9 +138,8 @@ Future<Map<String, dynamic>?> _readJson(KeyValueStore s, String key) async {
   return b == null ? null : jsonDecode(utf8.decode(b)) as Map<String, dynamic>;
 }
 
-Future<void> _writeJson(KeyValueStore s, String key, Object? value) async => value == null
-    ? s.delete(key)
-    : s.put(key, Uint8List.fromList(utf8.encode(jsonEncode(value))));
+Future<void> _writeJson(KeyValueStore s, String key, Object? value) async =>
+    value == null ? s.delete(key) : s.put(key, Uint8List.fromList(utf8.encode(jsonEncode(value))));
 
 /// Loaded in main() before the app starts.
 Future<(AppSettings, Session?)> loadSettingsAndSession(KeyValueStore store) async {

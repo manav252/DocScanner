@@ -35,44 +35,43 @@ class ServerScanEngine implements ScanEngine {
 
   @override
   Future<EncodedDetection> detectEncoded(Uint8List bytes) => _orLocal(() async {
-        final r = jsonDecode((await api.process(bytes, {'detect_only': 'true'})).body) as Map<String, dynamic>;
-        return (
-          detection: Detection(
-            [for (final c in r['corners'] as List) Pt(((c as List)[0] as num).toDouble(), (c[1] as num).toDouble())],
-            found: r['found'] as bool,
-            score: r['found'] as bool ? 1.0 : 0.0,
-          ),
-          width: r['width'] as int,
-          height: r['height'] as int,
-        );
-      }, () => local.detectEncoded(bytes));
+    final r = jsonDecode((await api.process(bytes, {'detect_only': 'true'})).body) as Map<String, dynamic>;
+    return (
+      detection: Detection(
+        [for (final c in r['corners'] as List) Pt(((c as List)[0] as num).toDouble(), (c[1] as num).toDouble())],
+        found: r['found'] as bool,
+        score: r['found'] as bool ? 1.0 : 0.0,
+      ),
+      width: r['width'] as int,
+      height: r['height'] as int,
+    );
+  }, () => local.detectEncoded(bytes));
 
   @override
-  Future<Uint8List> warpEncoded(Uint8List bytes, List<Pt> corners, {int maxSide = 3000, int quality = 92}) =>
-      _orLocal(
-        () async => (await api.process(bytes, {
-          'corners': jsonEncode([for (final c in corners) [c.x, c.y]]),
-          'filter': 'original',
-          'max_side': '$maxSide',
-          'quality': '$quality',
-        }))
-            .bodyBytes,
-        () => local.warpEncoded(bytes, corners, maxSide: maxSide, quality: quality),
-      );
+  Future<Uint8List> warpEncoded(Uint8List bytes, List<Pt> corners, {int maxSide = 3000, int quality = 92}) => _orLocal(
+    () async => (await api.process(bytes, {
+      'corners': jsonEncode([
+        for (final c in corners) [c.x, c.y],
+      ]),
+      'filter': 'original',
+      'max_side': '$maxSide',
+      'quality': '$quality',
+    })).bodyBytes,
+    () => local.warpEncoded(bytes, corners, maxSide: maxSide, quality: quality),
+  );
 
   @override
   Future<Uint8List> processEncoded(Uint8List bytes, PageEdits edits, {int? maxSide, int quality = 90}) => _orLocal(
-        () async => (await api.process(bytes, {
-          'flat': 'true',
-          'filter': edits.filter.wireName,
-          'rotate': '${edits.quarterTurns}',
-          if (!edits.crop.isFull) 'crop': jsonEncode(edits.crop.toJson()),
-          'max_side': '${maxSide ?? 8000}',
-          'quality': '$quality',
-        }))
-            .bodyBytes,
-        () => local.processEncoded(bytes, edits, maxSide: maxSide, quality: quality),
-      );
+    () async => (await api.process(bytes, {
+      'flat': 'true',
+      'filter': edits.filter.wireName,
+      'rotate': '${edits.quarterTurns}',
+      if (!edits.crop.isFull) 'crop': jsonEncode(edits.crop.toJson()),
+      'max_side': '${maxSide ?? 8000}',
+      'quality': '$quality',
+    })).bodyBytes,
+    () => local.processEncoded(bytes, edits, maxSide: maxSide, quality: quality),
+  );
 
   @override
   void dispose() {} // the local engine is owned elsewhere

@@ -10,7 +10,6 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../support/fakes.dart';
 
-
 // 1x1 transparent PNG.
 final _png = Uint8List.fromList(const [
   137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0, 31, 21, 196, //
@@ -22,24 +21,24 @@ const imageSize = Size(1000, 1000);
 const start = [Pt(100, 100), Pt(900, 100), Pt(900, 900), Pt(100, 900)];
 
 Widget editor(ValueNotifier<List<Pt>> corners) => MaterialApp(
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: Scaffold(
-        body: SizedBox(
-          width: 500,
-          height: 500,
-          child: ValueListenableBuilder(
-            valueListenable: corners,
-            builder: (_, c, _) => CornerEditor(
-              image: MemoryImage(_png),
-              imageSize: imageSize,
-              corners: c,
-              onChanged: (v) => corners.value = v,
-            ),
-          ),
+  localizationsDelegates: AppLocalizations.localizationsDelegates,
+  supportedLocales: AppLocalizations.supportedLocales,
+  home: Scaffold(
+    body: SizedBox(
+      width: 500,
+      height: 500,
+      child: ValueListenableBuilder(
+        valueListenable: corners,
+        builder: (_, c, _) => CornerEditor(
+          image: MemoryImage(_png),
+          imageSize: imageSize,
+          corners: c,
+          onChanged: (v) => corners.value = v,
         ),
       ),
-    );
+    ),
+  ),
+);
 
 Finder button(String label) =>
     find.ancestor(of: find.text(label), matching: find.byWidgetPredicate((w) => w is ButtonStyleButton));
@@ -98,7 +97,10 @@ void main() {
       test(name, () {
         final r = fittedImageRect(img, box);
         // Fully inside the box, aspect ratio kept, centred, touching two opposite sides.
-        expect(r.left >= -1e-9 && r.top >= -1e-9 && r.right <= box.width + 1e-9 && r.bottom <= box.height + 1e-9, isTrue);
+        expect(
+          r.left >= -1e-9 && r.top >= -1e-9 && r.right <= box.width + 1e-9 && r.bottom <= box.height + 1e-9,
+          isTrue,
+        );
         expect(r.width / r.height, closeTo(img.width / img.height, 1e-9));
         expect(r.center.dx, closeTo(box.width / 2, 1e-9));
         expect(r.center.dy, closeTo(box.height / 2, 1e-9));
@@ -121,27 +123,29 @@ void main() {
 
   testWidgets('the photo is drawn centred and fully inside the editor (portrait photo, wide editor)', (tester) async {
     final corners = ValueNotifier<List<Pt>>(const [Pt(0, 0), Pt(1199, 0), Pt(1199, 1599), Pt(0, 1599)]);
-    await tester.pumpWidget(MaterialApp(
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: Scaffold(
-        body: Center(
-          child: SizedBox(
-            width: 800,
-            height: 400,
-            child: ValueListenableBuilder(
-              valueListenable: corners,
-              builder: (_, c, _) => CornerEditor(
-                image: MemoryImage(_png),
-                imageSize: const Size(1200, 1600),
-                corners: c,
-                onChanged: (v) => corners.value = v,
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: Center(
+            child: SizedBox(
+              width: 800,
+              height: 400,
+              child: ValueListenableBuilder(
+                valueListenable: corners,
+                builder: (_, c, _) => CornerEditor(
+                  image: MemoryImage(_png),
+                  imageSize: const Size(1200, 1600),
+                  corners: c,
+                  onChanged: (v) => corners.value = v,
+                ),
               ),
             ),
           ),
         ),
       ),
-    ));
+    );
     final editor = tester.getRect(find.byType(CornerEditor));
     final image = tester.getRect(find.byKey(const ValueKey('corner-editor-image')));
     expect(image.height, closeTo(400, 0.01));
@@ -198,24 +202,28 @@ void main() {
     testWidgets('buttons have text labels; Cancel closes without a result', (tester) async {
       CornerAdjustResult? result;
       var closed = false;
-      await tester.pumpWidget(ProviderScope(
-        overrides: [scanEngineProvider.overrideWithValue(FakeEngine(frameDetector: (_) => noPage))],
-        child: MaterialApp(
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-          home: Builder(
-            builder: (context) => TextButton(
-              onPressed: () async {
-                result = await Navigator.of(context).push<CornerAdjustResult>(MaterialPageRoute(
-                  builder: (_) => CornerAdjustPage(bytes: _png, width: 1000, height: 1000, corners: start),
-                ));
-                closed = true;
-              },
-              child: const Text('open'),
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [scanEngineProvider.overrideWithValue(FakeEngine(frameDetector: (_) => noPage))],
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Builder(
+              builder: (context) => TextButton(
+                onPressed: () async {
+                  result = await Navigator.of(context).push<CornerAdjustResult>(
+                    MaterialPageRoute(
+                      builder: (_) => CornerAdjustPage(bytes: _png, width: 1000, height: 1000, corners: start),
+                    ),
+                  );
+                  closed = true;
+                },
+                child: const Text('open'),
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.tap(find.text('open'));
       await tester.pumpAndSettle();
       for (final label in ['Cancel', 'Reset corners', 'Use full photo', 'Rotate', 'Confirm']) {
@@ -234,21 +242,25 @@ void main() {
 
     testWidgets('confirm returns the edited corners for the same photo', (tester) async {
       CornerAdjustResult? result;
-      await tester.pumpWidget(ProviderScope(
-        overrides: [scanEngineProvider.overrideWithValue(FakeEngine(frameDetector: (_) => noPage))],
-        child: MaterialApp(
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-          home: Builder(
-            builder: (context) => TextButton(
-              onPressed: () async => result = await Navigator.of(context).push<CornerAdjustResult>(MaterialPageRoute(
-                builder: (_) => CornerAdjustPage(bytes: _png, width: 1000, height: 1000, corners: start),
-              )),
-              child: const Text('open'),
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [scanEngineProvider.overrideWithValue(FakeEngine(frameDetector: (_) => noPage))],
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Builder(
+              builder: (context) => TextButton(
+                onPressed: () async => result = await Navigator.of(context).push<CornerAdjustResult>(
+                  MaterialPageRoute(
+                    builder: (_) => CornerAdjustPage(bytes: _png, width: 1000, height: 1000, corners: start),
+                  ),
+                ),
+                child: const Text('open'),
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.tap(find.text('open'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Use full photo'));
@@ -263,26 +275,30 @@ void main() {
     testWidgets('rotate turns the photo and its corners', (tester) async {
       CornerAdjustResult? result;
       final engine = FakeEngine(frameDetector: (_) => noPage);
-      await tester.pumpWidget(ProviderScope(
-        overrides: [scanEngineProvider.overrideWithValue(engine)],
-        child: MaterialApp(
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-          home: Builder(
-            builder: (context) => TextButton(
-              onPressed: () async => result = await Navigator.of(context).push<CornerAdjustResult>(MaterialPageRoute(
-                builder: (_) => CornerAdjustPage(
-                  bytes: _png,
-                  width: 400,
-                  height: 300,
-                  corners: const [Pt(10, 20), Pt(390, 20), Pt(390, 280), Pt(10, 280)],
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [scanEngineProvider.overrideWithValue(engine)],
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Builder(
+              builder: (context) => TextButton(
+                onPressed: () async => result = await Navigator.of(context).push<CornerAdjustResult>(
+                  MaterialPageRoute(
+                    builder: (_) => CornerAdjustPage(
+                      bytes: _png,
+                      width: 400,
+                      height: 300,
+                      corners: const [Pt(10, 20), Pt(390, 20), Pt(390, 280), Pt(10, 280)],
+                    ),
+                  ),
                 ),
-              )),
-              child: const Text('open'),
+                child: const Text('open'),
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.tap(find.text('open'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Rotate'));
@@ -297,14 +313,22 @@ void main() {
     });
 
     testWidgets('no page found: explains and starts from the full photo', (tester) async {
-      await tester.pumpWidget(ProviderScope(
-        overrides: [scanEngineProvider.overrideWithValue(FakeEngine(frameDetector: (_) => noPage))],
-        child: MaterialApp(
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-          home: CornerAdjustPage(bytes: _png, width: 1000, height: 1000, corners: fullBounds(1000, 1000), detected: false),
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [scanEngineProvider.overrideWithValue(FakeEngine(frameDetector: (_) => noPage))],
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: CornerAdjustPage(
+              bytes: _png,
+              width: 1000,
+              height: 1000,
+              corners: fullBounds(1000, 1000),
+              detected: false,
+            ),
+          ),
         ),
-      ));
+      );
       expect(find.text('No page edges found. Adjust the corners or keep the full photo.'), findsOneWidget);
     });
   });

@@ -70,54 +70,68 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
         ],
       ),
       body: SafeArea(
-        child: Column(children: [
-          Expanded(
-            child: PageView(
-              controller: _pages,
-              onPageChanged: (i) => setState(() => _index = i),
-              children: [
-                for (final (icon, title, body) in steps)
-                  Center(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(32),
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 520),
-                        child: Column(mainAxisSize: MainAxisSize.min, children: [
-                          Icon(icon, size: 96, color: Theme.of(context).colorScheme.primary),
-                          const SizedBox(height: 24),
-                          Semantics(
-                            header: true,
-                            child: Text(title,
-                                textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineSmall),
+        child: Column(
+          children: [
+            Expanded(
+              child: PageView(
+                controller: _pages,
+                onPageChanged: (i) => setState(() => _index = i),
+                children: [
+                  for (final (icon, title, body) in steps)
+                    Center(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(32),
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 520),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(icon, size: 96, color: Theme.of(context).colorScheme.primary),
+                              const SizedBox(height: 24),
+                              Semantics(
+                                header: true,
+                                child: Text(
+                                  title,
+                                  textAlign: TextAlign.center,
+                                  style: Theme.of(context).textTheme.headlineSmall,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(body, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyLarge),
+                            ],
                           ),
-                          const SizedBox(height: 12),
-                          Text(body, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyLarge),
-                        ]),
+                        ),
                       ),
                     ),
-                  ),
-              ],
-            ),
-          ),
-          Semantics(
-            liveRegion: true,
-            child: Text(l.guideStep(_index + 1, steps.length), key: const ValueKey('guide-step')),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(children: [
-              if (_index > 0)
-                OutlinedButton.icon(onPressed: () => _go(_index - 1), icon: const Icon(Icons.arrow_back), label: Text(l.back)),
-              const Spacer(),
-              FilledButton.icon(
-                key: const ValueKey('guide-next'),
-                onPressed: last ? _finish : () => _go(_index + 1),
-                icon: Icon(last ? Icons.check : Icons.arrow_forward),
-                label: Text(last ? l.getStarted : l.next),
+                ],
               ),
-            ]),
-          ),
-        ]),
+            ),
+            Semantics(
+              liveRegion: true,
+              child: Text(l.guideStep(_index + 1, steps.length), key: const ValueKey('guide-step')),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  if (_index > 0)
+                    OutlinedButton.icon(
+                      onPressed: () => _go(_index - 1),
+                      icon: const Icon(Icons.arrow_back),
+                      label: Text(l.back),
+                    ),
+                  const Spacer(),
+                  FilledButton.icon(
+                    key: const ValueKey('guide-next'),
+                    onPressed: last ? _finish : () => _go(_index + 1),
+                    icon: Icon(last ? Icons.check : Icons.arrow_forward),
+                    label: Text(last ? l.getStarted : l.next),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

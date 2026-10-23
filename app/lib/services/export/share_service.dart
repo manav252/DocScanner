@@ -20,12 +20,14 @@ class ShareService {
   bool get canDownload => kIsWeb;
 
   Future<void> share(List<ExportFile> files, {String? subject}) async {
-    await SharePlus.instance.share(ShareParams(
-      files: [for (final f in files) XFile.fromData(f.bytes, name: f.name, mimeType: f.mimeType)],
-      fileNameOverrides: [for (final f in files) f.name],
-      subject: subject,
-      downloadFallbackEnabled: true,
-    ));
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [for (final f in files) XFile.fromData(f.bytes, name: f.name, mimeType: f.mimeType)],
+        fileNameOverrides: [for (final f in files) f.name],
+        subject: subject,
+        downloadFallbackEnabled: true,
+      ),
+    );
   }
 
   /// Web: save each file to the Downloads folder.

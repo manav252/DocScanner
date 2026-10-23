@@ -82,18 +82,22 @@ class FakeEngine implements ScanEngine {
 
   int normalized = 0;
 
+  /// Bytes this engine cannot decode (like a corrupt photo).
+  bool Function(Uint8List bytes)? unreadable;
+
   @override
   Future<NormalizedImage> normalizeEncoded(Uint8List bytes, {int maxSide = 4000, int quality = 92}) async {
+    if (unreadable?.call(bytes) ?? false) throw StateError('cannot decode image');
     normalized++;
     return (bytes: bytes, width: stillSize.$1, height: stillSize.$2);
   }
 
   @override
   Future<EncodedDetection> detectEncoded(Uint8List bytes) async => (
-        detection: stillDetection ?? Detection(fullBounds(stillSize.$1, stillSize.$2), found: false),
-        width: stillSize.$1,
-        height: stillSize.$2,
-      );
+    detection: stillDetection ?? Detection(fullBounds(stillSize.$1, stillSize.$2), found: false),
+    width: stillSize.$1,
+    height: stillSize.$2,
+  );
 
   @override
   Future<Uint8List> warpEncoded(Uint8List bytes, List<Pt> corners, {int maxSide = 3000, int quality = 92}) async {
@@ -114,11 +118,8 @@ class FakeEngine implements ScanEngine {
 }
 
 /// A page covering ~half of a 64x48 frame, optionally shifted.
-Detection pageDetection({double dx = 0}) => Detection(
-      [Pt(12 + dx, 8), Pt(52 + dx, 8), Pt(52 + dx, 40), Pt(12 + dx, 40)],
-      found: true,
-      score: 0.4,
-    );
+Detection pageDetection({double dx = 0}) =>
+    Detection([Pt(12 + dx, 8), Pt(52 + dx, 8), Pt(52 + dx, 40), Pt(12 + dx, 40)], found: true, score: 0.4);
 
 final noPage = Detection(fullBounds(64, 48), found: false);
 

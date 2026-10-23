@@ -63,61 +63,75 @@ class HomePage extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                Wrap(spacing: 12, runSpacing: 12, children: [
-                  OutlinedButton.icon(
-                    key: const ValueKey('import-photos'),
-                    onPressed: () => importIntoNewDocument(context, ref, ImportKind.photos),
-                    icon: const Icon(Icons.photo_library_outlined),
-                    label: Text(l.importPhotos),
-                  ),
-                  OutlinedButton.icon(
-                    key: const ValueKey('import-pdf'),
-                    onPressed: () => importIntoNewDocument(context, ref, ImportKind.pdf),
-                    icon: const Icon(Icons.picture_as_pdf_outlined),
-                    label: Text(l.importPdf),
-                  ),
-                  OutlinedButton.icon(
-                    key: const ValueKey('view-documents'),
-                    onPressed: () => push(const DocumentsPage()),
-                    icon: const Icon(Icons.folder_open_outlined),
-                    label: Text(l.viewDocuments),
-                  ),
-                ]),
-                const SizedBox(height: 28),
-                Row(children: [
-                  Expanded(
-                    child: Semantics(header: true, child: Text(l.recentScans, style: theme.textTheme.titleLarge)),
-                  ),
-                  if (docs.value?.isNotEmpty ?? false)
-                    TextButton.icon(
-                      key: const ValueKey('see-all'),
-                      onPressed: () => push(const DocumentsPage()),
-                      icon: const Icon(Icons.arrow_forward),
-                      label: Text(l.seeAllDocuments),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: [
+                    OutlinedButton.icon(
+                      key: const ValueKey('import-photos'),
+                      onPressed: () => importIntoNewDocument(context, ref, ImportKind.photos),
+                      icon: const Icon(Icons.photo_library_outlined),
+                      label: Text(l.importPhotos),
                     ),
-                ]),
+                    OutlinedButton.icon(
+                      key: const ValueKey('import-pdf'),
+                      onPressed: () => importIntoNewDocument(context, ref, ImportKind.pdf),
+                      icon: const Icon(Icons.picture_as_pdf_outlined),
+                      label: Text(l.importPdf),
+                    ),
+                    OutlinedButton.icon(
+                      key: const ValueKey('view-documents'),
+                      onPressed: () => push(const DocumentsPage()),
+                      icon: const Icon(Icons.folder_open_outlined),
+                      label: Text(l.viewDocuments),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 28),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Semantics(header: true, child: Text(l.recentScans, style: theme.textTheme.titleLarge)),
+                    ),
+                    if (docs.value?.isNotEmpty ?? false)
+                      TextButton.icon(
+                        key: const ValueKey('see-all'),
+                        onPressed: () => push(const DocumentsPage()),
+                        icon: const Icon(Icons.arrow_forward),
+                        label: Text(l.seeAllDocuments),
+                      ),
+                  ],
+                ),
                 const SizedBox(height: 8),
                 switch (docs) {
                   AsyncData(value: final list) when list.isEmpty => const _FirstTimeCard(),
-                  AsyncData(value: final list) => LayoutBuilder(builder: (context, c) {
+                  AsyncData(value: final list) => LayoutBuilder(
+                    builder: (context, c) {
                       // Fixed-width cards that grow with their text (no clipped titles at large text sizes).
                       const gap = 12.0;
                       final perRow = ((c.maxWidth + gap) / (160 + gap)).floor().clamp(2, 6);
                       final width = (c.maxWidth - gap * (perRow - 1)) / perRow;
-                      return Wrap(spacing: gap, runSpacing: gap, children: [
-                        for (final d in list.take(recentCount))
-                          SizedBox(
-                            width: width,
-                            child: DocumentCard(
-                              doc: d,
-                              compact: true,
-                              onOpen: () => push(DocumentEditorPage(documentId: d.id)),
+                      return Wrap(
+                        spacing: gap,
+                        runSpacing: gap,
+                        children: [
+                          for (final d in list.take(recentCount))
+                            SizedBox(
+                              width: width,
+                              child: DocumentCard(
+                                doc: d,
+                                compact: true,
+                                onOpen: () => push(DocumentEditorPage(documentId: d.id)),
+                              ),
                             ),
-                          ),
-                      ]);
-                    }),
+                        ],
+                      );
+                    },
+                  ),
                   AsyncError(:final error) => Text('$error'),
-                  _ => const Center(child: Padding(padding: EdgeInsets.all(24), child: CircularProgressIndicator())),
+                  _ => const Center(
+                    child: Padding(padding: EdgeInsets.all(24), child: CircularProgressIndicator()),
+                  ),
                 },
               ],
             ),
@@ -149,11 +163,14 @@ class _StatusLine extends ConsumerWidget {
           };
     return Semantics(
       liveRegion: true,
-      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Icon(icon, size: 20, color: Theme.of(context).colorScheme.onSurfaceVariant),
-        const SizedBox(width: 8),
-        Expanded(child: Text(text, key: const ValueKey('home-status'))),
-      ]),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 20, color: Theme.of(context).colorScheme.onSurfaceVariant),
+          const SizedBox(width: 8),
+          Expanded(child: Text(text, key: const ValueKey('home-status'))),
+        ],
+      ),
     );
   }
 }
@@ -166,27 +183,33 @@ class _FirstTimeCard extends StatelessWidget {
     final l = context.l10n;
     final theme = Theme.of(context);
     Widget step(int n, String text) => Padding(
-          padding: const EdgeInsets.only(top: 8),
-          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            CircleAvatar(radius: 14, child: Text('$n')),
-            const SizedBox(width: 12),
-            Expanded(child: Text(text)),
-          ]),
-        );
+      padding: const EdgeInsets.only(top: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CircleAvatar(radius: 14, child: Text('$n')),
+          const SizedBox(width: 12),
+          Expanded(child: Text(text)),
+        ],
+      ),
+    );
     return Card(
       key: const ValueKey('first-time'),
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Semantics(header: true, child: Text(l.noScansYet, style: theme.textTheme.titleMedium)),
-          const SizedBox(height: 4),
-          Text(l.noScansHint),
-          const SizedBox(height: 12),
-          Text(l.howItWorksTitle, style: theme.textTheme.titleSmall),
-          step(1, l.howItWorksStep1),
-          step(2, l.howItWorksStep2),
-          step(3, l.howItWorksStep3),
-        ]),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Semantics(header: true, child: Text(l.noScansYet, style: theme.textTheme.titleMedium)),
+            const SizedBox(height: 4),
+            Text(l.noScansHint),
+            const SizedBox(height: 12),
+            Text(l.howItWorksTitle, style: theme.textTheme.titleSmall),
+            step(1, l.howItWorksStep1),
+            step(2, l.howItWorksStep2),
+            step(3, l.howItWorksStep3),
+          ],
+        ),
       ),
     );
   }

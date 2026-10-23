@@ -19,7 +19,9 @@ void main() {
   testWidgets('render Hindi OCR fixture', (tester) async {
     await tester.runAsync(() async {
       final font = FontLoader('NotoDeva')
-        ..addFont(Future.value(ByteData.sublistView(File('assets/fonts/NotoSansDevanagari-Regular.ttf').readAsBytesSync())));
+        ..addFont(
+          Future.value(ByteData.sublistView(File('assets/fonts/NotoSansDevanagari-Regular.ttf').readAsBytesSync())),
+        );
       await font.load();
       const w = 1400.0, h = 520.0;
       final rec = ui.PictureRecorder();
@@ -27,7 +29,10 @@ void main() {
       var y = 60.0;
       for (final line in lines) {
         final tp = TextPainter(
-          text: TextSpan(text: line, style: const TextStyle(fontFamily: 'NotoDeva', fontSize: 52, color: Colors.black)),
+          text: TextSpan(
+            text: line,
+            style: const TextStyle(fontFamily: 'NotoDeva', fontSize: 52, color: Colors.black),
+          ),
           textDirection: TextDirection.ltr,
         )..layout();
         tp.paint(c, Offset(70, y));

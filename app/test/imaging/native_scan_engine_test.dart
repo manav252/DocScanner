@@ -21,7 +21,10 @@ void main() {
     final r = await detector.detectEncoded(bytes);
     expect((r.width, r.height), (imageWidth, imageHeight));
     expect(r.detection.found, isTrue);
-    expect(maxCornerError(r.detection.corners, cornersOf((cases['tilted_paper'] as Map)['corners'])), lessThan(tolerance));
+    expect(
+      maxCornerError(r.detection.corners, cornersOf((cases['tilted_paper'] as Map)['corners'])),
+      lessThan(tolerance),
+    );
   });
 
   test('detectFrame accepts luma, BGRA and RGBA frames', () async {

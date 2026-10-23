@@ -1,7 +1,8 @@
 """Print the text a PDF reader extracts from each page (checks the searchable layer).
 
-    ../backend/.venv/bin/python tool/check_pdf_text.py build/test_hindi.pdf
+../backend/.venv/bin/python tool/check_pdf_text.py build/test_hindi.pdf
 """
+
 import sys
 
 import pypdfium2 as pdfium

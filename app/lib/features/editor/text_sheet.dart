@@ -50,7 +50,6 @@ class _TextSheetState extends ConsumerState<TextSheet> {
     }
   }
 
-
   Future<void> _copy(String text) async {
     await Clipboard.setData(ClipboardData(text: text));
     if (!mounted) return;
@@ -79,28 +78,33 @@ class _TextSheetState extends ConsumerState<TextSheet> {
     if (!available) {
       body = Text(l.ocrUnavailable);
     } else if (_error != null) {
-      body = Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(l.ocrFailed(_error!), style: TextStyle(color: theme.colorScheme.error)),
-        const SizedBox(height: 8),
-        FilledButton.icon(onPressed: _recognize, icon: const Icon(Icons.refresh), label: Text(l.tryAgain)),
-      ]);
+      body = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l.ocrFailed(_error!), style: TextStyle(color: theme.colorScheme.error)),
+          const SizedBox(height: 8),
+          FilledButton.icon(onPressed: _recognize, icon: const Icon(Icons.refresh), label: Text(l.tryAgain)),
+        ],
+      );
     } else if (pending) {
       body = Semantics(
         liveRegion: true,
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const LinearProgressIndicator(),
-          const SizedBox(height: 12),
-          Text(l.recognisingText),
-        ]),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [const LinearProgressIndicator(), const SizedBox(height: 12), Text(l.recognisingText)],
+        ),
       );
     } else if (text.isEmpty) {
       body = Semantics(
         liveRegion: true,
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(l.noTextFound, key: const ValueKey('no-text'), style: theme.textTheme.titleSmall),
-          const SizedBox(height: 4),
-          Text(l.noTextFoundHint),
-        ]),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(l.noTextFound, key: const ValueKey('no-text'), style: theme.textTheme.titleSmall),
+            const SizedBox(height: 4),
+            Text(l.noTextFoundHint),
+          ],
+        ),
       );
     } else {
       body = Flexible(
@@ -115,43 +119,52 @@ class _TextSheetState extends ConsumerState<TextSheet> {
         padding: EdgeInsets.fromLTRB(20, 0, 20, 16 + MediaQuery.viewInsetsOf(context).bottom),
         child: ConstrainedBox(
           constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.8),
-          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            Semantics(header: true, child: Text(l.textOnPage, style: theme.textTheme.titleLarge)),
-            const SizedBox(height: 12),
-            body,
-            const SizedBox(height: 16),
-            if (available) ...[
-              Text(l.readAs, style: theme.textTheme.labelLarge),
-              const SizedBox(height: 6),
-              ChoiceRow<OcrLanguage>(
-                values: OcrLanguage.values,
-                selected: settings.ocrLanguage,
-                label: (o) => o == OcrLanguage.english ? l.langEnglish : l.langHindi,
-                onSelected: (o) async {
-                  await ref.read(appSettingsProvider.notifier).update(settings.copyWith(ocrLanguage: o));
-                  await _recognize();
-                },
-              ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Semantics(header: true, child: Text(l.textOnPage, style: theme.textTheme.titleLarge)),
               const SizedBox(height: 12),
-            ],
-            Wrap(spacing: 8, runSpacing: 8, alignment: WrapAlignment.end, children: [
-              if (available && !pending && page != null)
-                OutlinedButton.icon(
-                  onPressed: () async {
-                    await ref.read(documentProvider(widget.documentId).notifier).invalidateOcr(page.id);
+              body,
+              const SizedBox(height: 16),
+              if (available) ...[
+                Text(l.readAs, style: theme.textTheme.labelLarge),
+                const SizedBox(height: 6),
+                ChoiceRow<OcrLanguage>(
+                  values: OcrLanguage.values,
+                  selected: settings.ocrLanguage,
+                  label: (o) => o == OcrLanguage.english ? l.langEnglish : l.langHindi,
+                  onSelected: (o) async {
+                    await ref.read(appSettingsProvider.notifier).update(settings.copyWith(ocrLanguage: o));
                     await _recognize();
                   },
-                  icon: const Icon(Icons.refresh),
-                  label: Text(l.recogniseAgain),
                 ),
-              FilledButton.icon(
-                key: const ValueKey('copy-text'),
-                onPressed: text.isEmpty || pending ? null : () => _copy(text),
-                icon: Icon(_copied ? Icons.check : Icons.copy),
-                label: Text(_copied ? l.copied : l.copyText),
+                const SizedBox(height: 12),
+              ],
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                alignment: WrapAlignment.end,
+                children: [
+                  if (available && !pending && page != null)
+                    OutlinedButton.icon(
+                      onPressed: () async {
+                        await ref.read(documentProvider(widget.documentId).notifier).invalidateOcr(page.id);
+                        await _recognize();
+                      },
+                      icon: const Icon(Icons.refresh),
+                      label: Text(l.recogniseAgain),
+                    ),
+                  FilledButton.icon(
+                    key: const ValueKey('copy-text'),
+                    onPressed: text.isEmpty || pending ? null : () => _copy(text),
+                    icon: Icon(_copied ? Icons.check : Icons.copy),
+                    label: Text(_copied ? l.copied : l.copyText),
+                  ),
+                ],
               ),
-            ]),
-          ]),
+            ],
+          ),
         ),
       ),
     );

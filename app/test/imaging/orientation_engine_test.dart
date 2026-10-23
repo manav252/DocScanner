@@ -45,7 +45,9 @@ void main() {
       final d = await engine.detectEncoded(photo.bytes);
       expect((d.width, d.height), (photo.width, photo.height), reason: 'detector sees the same pixels');
       expect(d.detection.found, isTrue);
-      final expected = [for (final p in c['corners'] as List) Pt(((p as List)[0] as num) * scale, (p[1] as num) * scale)];
+      final expected = [
+        for (final p in c['corners'] as List) Pt(((p as List)[0] as num) * scale, (p[1] as num) * scale),
+      ];
       final err = maxCornerError(d.detection.corners, orderCorners(expected));
       expect(err, lessThan(0.01 * (photo.width + photo.height)), reason: 'corner error $err px');
     });

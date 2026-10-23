@@ -38,7 +38,14 @@ Future<ScanPage> addPage(Device d, String id, Uint8List bytes) async {
   for (final k in [PageImage.source, PageImage.render, PageImage.thumb]) {
     await d.repo.putPageImage(id, k, bytes);
   }
-  return ScanPage(id: id, sourceWidth: 1200, sourceHeight: 1600, corners: fullBounds(1200, 1600), renderWidth: 1200, renderHeight: 1600);
+  return ScanPage(
+    id: id,
+    sourceWidth: 1200,
+    sourceHeight: 1600,
+    corners: fullBounds(1200, 1600),
+    renderWidth: 1200,
+    renderHeight: 1600,
+  );
 }
 
 void main() {
@@ -53,7 +60,9 @@ void main() {
   test('A creates and pushes a document', () async {
     await a.api.register(email, 'correct horse battery');
     final pages = [await addPage(a, 'p1', photo), await addPage(a, 'p2', other)];
-    await a.repo.save(ScanDocument(id: 'doc1', title: 'Lease', createdAt: t0, updatedAt: t0, pages: pages, backup: true).edit(now: t0));
+    await a.repo.save(
+      ScanDocument(id: 'doc1', title: 'Lease', createdAt: t0, updatedAt: t0, pages: pages, backup: true).edit(now: t0),
+    );
     final r = await a.sync.sync();
     expect(r.pushed, 1);
     final d = await a.doc('doc1');
@@ -75,7 +84,10 @@ void main() {
 
   test('B edits (rename, remove a page, change a filter); A receives it', () async {
     final d = await b.doc('doc1');
-    final p1 = d.pages.first.copyWith(edits: const PageEdits(filter: PageFilter.bw), revision: d.pages.first.revision + 1);
+    final p1 = d.pages.first.copyWith(
+      edits: const PageEdits(filter: PageFilter.bw),
+      revision: d.pages.first.revision + 1,
+    );
     await b.repo.save(d.edit(title: 'Lease 2026', pages: [p1], now: t0.add(const Duration(minutes: 1))));
     expect((await b.sync.sync()).pushed, 1);
     final r = await a.sync.sync();

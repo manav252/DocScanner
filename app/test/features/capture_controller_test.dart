@@ -17,11 +17,13 @@ void main() {
   late ProviderContainer container;
 
   ProviderContainer makeContainer({Duration cooldown = Duration.zero}) {
-    final c = ProviderContainer(overrides: [
-      scanEngineProvider.overrideWithValue(engine),
-      cameraFactoryProvider.overrideWithValue(() => camera),
-      captureTuningProvider.overrideWithValue(CaptureTuning(autoCaptureCooldown: cooldown, steadyFrames: 5)),
-    ]);
+    final c = ProviderContainer(
+      overrides: [
+        scanEngineProvider.overrideWithValue(engine),
+        cameraFactoryProvider.overrideWithValue(() => camera),
+        captureTuningProvider.overrideWithValue(CaptureTuning(autoCaptureCooldown: cooldown, steadyFrames: 5)),
+      ],
+    );
     addTearDown(c.dispose);
     // Keep the autoDispose provider alive.
     c.listen(captureControllerProvider, (_, _) {});
@@ -37,7 +39,11 @@ void main() {
   });
 
   test('a steady page is auto-captured exactly once', () async {
-    engine.stillDetection = Detection(const [Pt(10, 10), Pt(900, 20), Pt(890, 1300), Pt(20, 1290)], found: true, score: .8);
+    engine.stillDetection = Detection(
+      const [Pt(10, 10), Pt(900, 20), Pt(890, 1300), Pt(20, 1290)],
+      found: true,
+      score: .8,
+    );
     container = makeContainer();
     await waitFor(() => read().status == CaptureStatus.reviewing);
     final cap = read().pendingCapture!;

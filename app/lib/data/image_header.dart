@@ -29,7 +29,9 @@ import 'dart:typed_data';
     }
     return null;
   }
-  if (b.length > 30 && String.fromCharCodes(b.sublist(0, 4)) == 'RIFF' && String.fromCharCodes(b.sublist(8, 12)) == 'WEBP') {
+  if (b.length > 30 &&
+      String.fromCharCodes(b.sublist(0, 4)) == 'RIFF' &&
+      String.fromCharCodes(b.sublist(8, 12)) == 'WEBP') {
     final chunk = String.fromCharCodes(b.sublist(12, 16));
     if (chunk == 'VP8X') return (1 + (b[24] | b[25] << 8 | b[26] << 16), 1 + (b[27] | b[28] << 8 | b[29] << 16));
     if (chunk == 'VP8 ') return ((b[26] | b[27] << 8) & 0x3fff, (b[28] | b[29] << 8) & 0x3fff);

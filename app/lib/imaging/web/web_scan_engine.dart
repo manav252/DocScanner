@@ -18,7 +18,8 @@ ScanEngine createScanEngine() => WebScanEngine();
 const assetVersion = String.fromEnvironment('ASSET_VERSION', defaultValue: 'dev');
 
 class WebScanEngine implements ScanEngine {
-  WebScanEngine({String? workerUrl}) : _worker = web.Worker((workerUrl ?? 'opencv/scanner_worker.js?v=$assetVersion').toJS) {
+  WebScanEngine({String? workerUrl})
+    : _worker = web.Worker((workerUrl ?? 'opencv/scanner_worker.js?v=$assetVersion').toJS) {
     _worker.onmessage = _onMessage.toJS;
     _worker.onerror = ((web.Event e) {
       if (!_ready.isCompleted) _ready.completeError(StateError('failed to start the OpenCV worker'));
@@ -97,7 +98,11 @@ class WebScanEngine implements ScanEngine {
   @override
   Future<NormalizedImage> normalizeEncoded(Uint8List bytes, {int maxSide = 4000, int quality = 92}) async {
     final buf = Uint8List.fromList(bytes).buffer.toJS;
-    final r = await _call('normalizeEncoded', {'bytes': buf, 'maxSide': maxSide.toJS, 'quality': (quality / 100).toJS}, [buf]);
+    final r = await _call(
+      'normalizeEncoded',
+      {'bytes': buf, 'maxSide': maxSide.toJS, 'quality': (quality / 100).toJS},
+      [buf],
+    );
     return (
       bytes: r.getProperty<JSArrayBuffer>('data'.toJS).toDart.asUint8List(),
       width: r.getProperty<JSNumber>('width'.toJS).toDartInt,
@@ -108,24 +113,29 @@ class WebScanEngine implements ScanEngine {
   @override
   Future<Uint8List> warpEncoded(Uint8List bytes, List<Pt> corners, {int maxSide = 3000, int quality = 92}) async {
     final buf = Uint8List.fromList(bytes).buffer.toJS;
-    final r = await _call('warpEncoded', {
-      'bytes': buf,
-      'corners': [for (final p in corners) [p.x.toJS, p.y.toJS].toJS].toJS,
-      'maxSide': maxSide.toJS,
-      'quality': (quality / 100).toJS,
-    }, [buf]);
+    final r = await _call(
+      'warpEncoded',
+      {
+        'bytes': buf,
+        'corners': [
+          for (final p in corners) [p.x.toJS, p.y.toJS].toJS,
+        ].toJS,
+        'maxSide': maxSide.toJS,
+        'quality': (quality / 100).toJS,
+      },
+      [buf],
+    );
     return (r as JSArrayBuffer).toDart.asUint8List();
   }
 
   @override
   Future<Uint8List> processEncoded(Uint8List bytes, PageEdits edits, {int? maxSide, int quality = 90}) async {
     final buf = Uint8List.fromList(bytes).buffer.toJS;
-    final r = await _call('processEncoded', {
-      'bytes': buf,
-      'edits': edits.toJson().jsify(),
-      'maxSide': maxSide?.toJS,
-      'quality': (quality / 100).toJS,
-    }, [buf]);
+    final r = await _call(
+      'processEncoded',
+      {'bytes': buf, 'edits': edits.toJson().jsify(), 'maxSide': maxSide?.toJS, 'quality': (quality / 100).toJS},
+      [buf],
+    );
     return (r as JSArrayBuffer).toDart.asUint8List();
   }
 

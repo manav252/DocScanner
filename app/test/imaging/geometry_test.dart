@@ -12,8 +12,10 @@ void main() {
         const c = Pt(200, 250);
         final rot = [
           for (final p in rect)
-            Pt(c.x + (p.x - c.x) * math.cos(a) - (p.y - c.y) * math.sin(a),
-                c.y + (p.x - c.x) * math.sin(a) + (p.y - c.y) * math.cos(a)),
+            Pt(
+              c.x + (p.x - c.x) * math.cos(a) - (p.y - c.y) * math.sin(a),
+              c.y + (p.x - c.x) * math.sin(a) + (p.y - c.y) * math.cos(a),
+            ),
         ];
         for (final perm in [
           [0, 1, 2, 3],

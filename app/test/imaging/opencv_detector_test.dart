@@ -55,7 +55,11 @@ void main() {
   });
 
   test('warp produces a page-shaped image, capped by maxSide', () {
-    final out = warpPerspectiveMat(load('tilted_paper'), cornersOf((cases['tilted_paper'] as Map)['corners']), maxSide: 800);
+    final out = warpPerspectiveMat(
+      load('tilted_paper'),
+      cornersOf((cases['tilted_paper'] as Map)['corners']),
+      maxSide: 800,
+    );
     expect([out.rows, out.cols].reduce((a, b) => a > b ? a : b), 800);
     expect(out.cols / out.rows, inInclusiveRange(0.65, 0.85));
   });

@@ -11,7 +11,6 @@ import '../../imaging/geometry.dart';
 
 const samples = ['tilted_paper', 'low_contrast', 'cluttered_background', 'strong_perspective'];
 
-
 typedef SampleResult = ({String name, Uint8List bytes, EncodedDetection result, double ms});
 
 final diagnosticsProvider = FutureProvider<List<SampleResult>>((ref) async {
@@ -45,12 +44,15 @@ class DetectorDiagnosticsPage extends ConsumerWidget {
         ],
       ),
       body: results.when(
-        loading: () => const Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 12),
-              Text('Loading OpenCV…'),
-            ])),
-        error: (e, _) => Center(child: Padding(padding: const EdgeInsets.all(24), child: Text('Detector failed: $e'))),
+        loading: () => const Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [CircularProgressIndicator(), SizedBox(height: 12), Text('Loading OpenCV…')],
+          ),
+        ),
+        error: (e, _) => Center(
+          child: Padding(padding: const EdgeInsets.all(24), child: Text('Detector failed: $e')),
+        ),
         data: (items) => GridView.extent(
           maxCrossAxisExtent: 320,
           childAspectRatio: 0.68,
@@ -74,24 +76,27 @@ class _SampleTile extends StatelessWidget {
     return Card(
       key: ValueKey('sample-${s.name}'),
       clipBehavior: Clip.antiAlias,
-      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Expanded(
-          child: AspectRatio(
-            aspectRatio: s.result.width / s.result.height,
-            child: CustomPaint(
-              foregroundPainter: QuadPainter(d.normalized(s.result.width, s.result.height), found: d.found),
-              child: Image.memory(s.bytes, fit: BoxFit.fill),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: AspectRatio(
+              aspectRatio: s.result.width / s.result.height,
+              child: CustomPaint(
+                foregroundPainter: QuadPainter(d.normalized(s.result.width, s.result.height), found: d.found),
+                child: Image.memory(s.bytes, fit: BoxFit.fill),
+              ),
             ),
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(8),
-          child: Text(
-            '${s.name}\n${d.found ? 'found' : 'not found'} · ${s.ms.toStringAsFixed(0)} ms (incl. decode)',
-            style: Theme.of(context).textTheme.bodySmall,
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: Text(
+              '${s.name}\n${d.found ? 'found' : 'not found'} · ${s.ms.toStringAsFixed(0)} ms (incl. decode)',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
           ),
-        ),
-      ]),
+        ],
+      ),
     );
   }
 }
@@ -106,13 +111,19 @@ class QuadPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final pts = [for (final p in corners) Offset(p.x * size.width, p.y * size.height)];
     final color = found ? const Color(0xFF2E7D32) : const Color(0xFFC62828);
-    canvas.drawPath(Path()..addPolygon(pts, true), Paint()
-      ..color = color.withValues(alpha: 0.18)
-      ..style = PaintingStyle.fill);
-    canvas.drawPath(Path()..addPolygon(pts, true), Paint()
-      ..color = color
-      ..strokeWidth = 3
-      ..style = PaintingStyle.stroke);
+    canvas.drawPath(
+      Path()..addPolygon(pts, true),
+      Paint()
+        ..color = color.withValues(alpha: 0.18)
+        ..style = PaintingStyle.fill,
+    );
+    canvas.drawPath(
+      Path()..addPolygon(pts, true),
+      Paint()
+        ..color = color
+        ..strokeWidth = 3
+        ..style = PaintingStyle.stroke,
+    );
     for (final p in pts) {
       canvas.drawCircle(p, 6, Paint()..color = Colors.white);
       canvas.drawCircle(p, 4, Paint()..color = color);

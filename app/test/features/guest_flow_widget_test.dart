@@ -38,21 +38,28 @@ Future<(MemoryStore, FakeEngine)> seed({bool empty = false}) async {
           await repo.putPageImage(p.id, k, png);
         }
       }
-      await repo.save(ScanDocument(
-          id: id, title: title, createdAt: DateTime(2026), updatedAt: DateTime(2026, 1, id == 'a' ? 2 : 1), pages: ps));
+      await repo.save(
+        ScanDocument(
+          id: id,
+          title: title,
+          createdAt: DateTime(2026),
+          updatedAt: DateTime(2026, 1, id == 'a' ? 2 : 1),
+          pages: ps,
+        ),
+      );
     }
   }
   return (store, FakeEngine(frameDetector: (_) => noPage));
 }
 
 List<Override> overrides(MemoryStore store, FakeEngine engine, {AppSettings? settings}) => [
-      keyValueStoreProvider.overrideWithValue(store),
-      scanEngineProvider.overrideWithValue(engine),
-      if (settings != null) appSettingsProvider.overrideWith(() => AppSettingsNotifier(settings)),
-      pageRendererProvider.overrideWith(
-        (ref) => PageRenderer(engine, ref.watch(documentRepositoryProvider), measure: (_) async => (1, 1)),
-      ),
-    ];
+  keyValueStoreProvider.overrideWithValue(store),
+  scanEngineProvider.overrideWithValue(engine),
+  if (settings != null) appSettingsProvider.overrideWith(() => AppSettingsNotifier(settings)),
+  pageRendererProvider.overrideWith(
+    (ref) => PageRenderer(engine, ref.watch(documentRepositoryProvider), measure: (_) async => (1, 1)),
+  ),
+];
 
 Future<void> settle(WidgetTester tester) async {
   await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 60)));
@@ -64,7 +71,14 @@ void main() {
     final (store, engine) = (await tester.runAsync(seed))!;
     await tester.pumpWidget(testApp(const HomePage(), overrides: overrides(store, engine)));
     await settle(tester);
-    for (final label in ['Scan Document', 'Import Photos', 'Import PDF', 'View Documents', 'Settings', 'See all documents']) {
+    for (final label in [
+      'Scan Document',
+      'Import Photos',
+      'Import PDF',
+      'View Documents',
+      'Settings',
+      'See all documents',
+    ]) {
       expect(find.text(label), findsOneWidget, reason: label);
     }
     expect(find.text('Scans are saved on this device'), findsOneWidget);
@@ -125,8 +139,12 @@ void main() {
 
   testWidgets('first-run guide: next, back, skip', (tester) async {
     final (store, engine) = (await tester.runAsync(seed))!;
-    await tester.pumpWidget(testApp(const OnboardingPage(),
-        overrides: overrides(store, engine, settings: AppSettings(serverUrl: 'http://x', onboardingDone: false))));
+    await tester.pumpWidget(
+      testApp(
+        const OnboardingPage(),
+        overrides: overrides(store, engine, settings: AppSettings(serverUrl: 'http://x', onboardingDone: false)),
+      ),
+    );
     await settle(tester);
     expect(find.text('Step 1 of 3'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('guide-next')));
@@ -164,14 +182,31 @@ void main() {
     await settle(tester);
   }
 
-  Future<List<String>> pageIds(WidgetTester tester, MemoryStore store) async =>
-      [for (final p in (await tester.runAsync(() => DocumentRepository(store).get('a')))!.pages) p.id];
+  Future<List<String>> pageIds(WidgetTester tester, MemoryStore store) async => [
+    for (final p in (await tester.runAsync(() => DocumentRepository(store).get('a')))!.pages) p.id,
+  ];
 
   testWidgets('editor: every page tool is labelled; no icon-only buttons or hidden menus', (tester) async {
     final (store, engine) = (await tester.runAsync(seed))!;
     await openEditor(tester, store, engine);
-    for (final label in ['Rename', 'Export', 'Previous page', 'Next page', 'Add pages', 'Filters', 'Rotate', 'Crop',
-        'Corners', 'Markup', 'Text', 'Retake', 'Move earlier', 'Move later', 'Delete page', 'Delete document']) {
+    for (final label in [
+      'Rename',
+      'Export',
+      'Previous page',
+      'Next page',
+      'Add pages',
+      'Filters',
+      'Rotate',
+      'Crop',
+      'Corners',
+      'Markup',
+      'Text',
+      'Retake',
+      'Move earlier',
+      'Move later',
+      'Delete page',
+      'Delete document',
+    ]) {
       expect(find.text(label), findsWidgets, reason: label);
     }
     expect(find.byType(IconButton), findsNothing);

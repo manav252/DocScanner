@@ -50,14 +50,16 @@ class NativeScanEngine implements ScanEngine {
 
   @override
   Future<Detection> detectFrame(FrameData f) async {
-    final r = await _call(_Request(
-      _Kind.frame,
-      TransferableTypedData.fromList([f.bytes]),
-      width: f.width,
-      height: f.height,
-      stride: f.rowStride,
-      format: f.format.index,
-    ));
+    final r = await _call(
+      _Request(
+        _Kind.frame,
+        TransferableTypedData.fromList([f.bytes]),
+        width: f.width,
+        height: f.height,
+        stride: f.rowStride,
+        format: f.format.index,
+      ),
+    );
     return _decodeDetection(r! as List<Object?>);
   }
 
@@ -69,32 +71,43 @@ class NativeScanEngine implements ScanEngine {
 
   @override
   Future<NormalizedImage> normalizeEncoded(Uint8List bytes, {int maxSide = 4000, int quality = 92}) async {
-    final r = await _call(_Request(_Kind.normalize, TransferableTypedData.fromList([bytes]), maxSide: maxSide, quality: quality))
-        as List<Object?>;
-    return (bytes: (r[0]! as TransferableTypedData).materialize().asUint8List(), width: r[1]! as int, height: r[2]! as int);
+    final r = await _call(
+      _Request(_Kind.normalize, TransferableTypedData.fromList([bytes]), maxSide: maxSide, quality: quality),
+    ) as List<Object?>;
+    return (
+      bytes: (r[0]! as TransferableTypedData).materialize().asUint8List(),
+      width: r[1]! as int,
+      height: r[2]! as int,
+    );
   }
 
   @override
   Future<Uint8List> warpEncoded(Uint8List bytes, List<Pt> corners, {int maxSide = 3000, int quality = 92}) async {
-    final r = await _call(_Request(
-      _Kind.warp,
-      TransferableTypedData.fromList([bytes]),
-      corners: Float64List.fromList([for (final p in corners) ...[p.x, p.y]]),
-      maxSide: maxSide,
-      quality: quality,
-    ));
+    final r = await _call(
+      _Request(
+        _Kind.warp,
+        TransferableTypedData.fromList([bytes]),
+        corners: Float64List.fromList([
+          for (final p in corners) ...[p.x, p.y],
+        ]),
+        maxSide: maxSide,
+        quality: quality,
+      ),
+    );
     return (r! as TransferableTypedData).materialize().asUint8List();
   }
 
   @override
   Future<Uint8List> processEncoded(Uint8List bytes, PageEdits edits, {int? maxSide, int quality = 90}) async {
-    final r = await _call(_Request(
-      _Kind.process,
-      TransferableTypedData.fromList([bytes]),
-      edits: edits.toJson(),
-      maxSide: maxSide ?? 0,
-      quality: quality,
-    ));
+    final r = await _call(
+      _Request(
+        _Kind.process,
+        TransferableTypedData.fromList([bytes]),
+        edits: edits.toJson(),
+        maxSide: maxSide ?? 0,
+        quality: quality,
+      ),
+    );
     return (r! as TransferableTypedData).materialize().asUint8List();
   }
 
@@ -133,17 +146,22 @@ class _Request {
 
 // Wire format: [corners as 8 doubles, found, score, (width, height)]
 List<Object?> _encodeDetection(Detection d, [int? w, int? h]) => [
-      Float64List.fromList([for (final p in d.corners) ...[p.x, p.y]]),
-      d.found,
-      d.score,
-      w,
-      h,
-    ];
+  Float64List.fromList([
+    for (final p in d.corners) ...[p.x, p.y],
+  ]),
+  d.found,
+  d.score,
+  w,
+  h,
+];
 
 Detection _decodeDetection(List<Object?> r) {
   final c = r[0]! as Float64List;
-  return Detection([for (var i = 0; i < 4; i++) Pt(c[2 * i], c[2 * i + 1])],
-      found: r[1]! as bool, score: r[2]! as double);
+  return Detection(
+    [for (var i = 0; i < 4; i++) Pt(c[2 * i], c[2 * i + 1])],
+    found: r[1]! as bool,
+    score: r[2]! as double,
+  );
 }
 
 /// Pack a possibly row-padded buffer into a dense Mat.
@@ -177,23 +195,43 @@ void _worker(SendPort out) {
           // imdecode already applied the EXIF orientation; imencode writes no EXIF.
           final longest = m.cols > m.rows ? m.cols : m.rows;
           final scaled = longest > req.maxSide
-              ? cv.resize(m, ((m.cols * req.maxSide / longest).round(), (m.rows * req.maxSide / longest).round()),
-                  interpolation: cv.INTER_AREA)
+              ? cv.resize(m, (
+                  (m.cols * req.maxSide / longest).round(),
+                  (m.rows * req.maxSide / longest).round(),
+                ), interpolation: cv.INTER_AREA)
               : m.clone();
-          final (ok, jpeg) = cv.imencode('.jpg', scaled, params: cv.VecI32.fromList([cv.IMWRITE_JPEG_QUALITY, req.quality]));
+          final (ok, jpeg) = cv.imencode(
+            '.jpg',
+            scaled,
+            params: cv.VecI32.fromList([cv.IMWRITE_JPEG_QUALITY, req.quality]),
+          );
           final size = (scaled.cols, scaled.rows);
           scaled.dispose();
           if (!ok) throw StateError('JPEG encoding failed');
-          out.send((id, true, [TransferableTypedData.fromList([jpeg]), size.$1, size.$2]));
+          out.send((
+            id,
+            true,
+            [
+              TransferableTypedData.fromList([jpeg]),
+              size.$1,
+              size.$2,
+            ],
+          ));
         } else {
           final cv.Mat result;
           if (req.kind == _Kind.warp) {
             final c = req.corners!;
-            result = warpPerspectiveMat(m, [for (var i = 0; i < 4; i++) Pt(c[2 * i], c[2 * i + 1])], maxSide: req.maxSide);
+            result = warpPerspectiveMat(m, [
+              for (var i = 0; i < 4; i++) Pt(c[2 * i], c[2 * i + 1]),
+            ], maxSide: req.maxSide);
           } else {
             result = applyEdits(m, PageEdits.fromJson(req.edits!), maxSide: req.maxSide == 0 ? null : req.maxSide);
           }
-          final (ok, jpeg) = cv.imencode('.jpg', result, params: cv.VecI32.fromList([cv.IMWRITE_JPEG_QUALITY, req.quality]));
+          final (ok, jpeg) = cv.imencode(
+            '.jpg',
+            result,
+            params: cv.VecI32.fromList([cv.IMWRITE_JPEG_QUALITY, req.quality]),
+          );
           result.dispose();
           if (!ok) throw StateError('JPEG encoding failed');
           out.send((id, true, TransferableTypedData.fromList([jpeg])));

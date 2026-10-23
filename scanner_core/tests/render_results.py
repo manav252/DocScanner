@@ -2,6 +2,7 @@
 
 Usage: python tests/render_results.py ../docs/stage1_results.jpg
 """
+
 import sys
 from pathlib import Path
 
@@ -23,7 +24,7 @@ def fit(img, label):
     img = cv2.resize(img, (round(img.shape[1] * s), round(img.shape[0] * s)), interpolation=cv2.INTER_AREA)
     tile = np.full((TH + 34, 330, 3), 255, np.uint8)
     x, y = (330 - img.shape[1]) // 2, 34 + (TH - img.shape[0]) // 2
-    tile[y:y + img.shape[0], x:x + img.shape[1]] = img
+    tile[y : y + img.shape[0], x : x + img.shape[1]] = img
     cv2.putText(tile, label, (8, 24), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (30, 30, 30), 1, cv2.LINE_AA)
     return tile
 

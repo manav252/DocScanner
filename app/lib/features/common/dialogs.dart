@@ -34,8 +34,16 @@ class _RenameDialogState extends State<RenameDialog> {
         onSubmitted: (v) => Navigator.of(context).pop(v),
       ),
       actions: [
-        TextButton.icon(onPressed: () => Navigator.of(context).pop(), icon: const Icon(Icons.close), label: Text(l.cancel)),
-        FilledButton.icon(onPressed: () => Navigator.of(context).pop(_c.text), icon: const Icon(Icons.check), label: Text(l.save)),
+        TextButton.icon(
+          onPressed: () => Navigator.of(context).pop(),
+          icon: const Icon(Icons.close),
+          label: Text(l.cancel),
+        ),
+        FilledButton.icon(
+          onPressed: () => Navigator.of(context).pop(_c.text),
+          icon: const Icon(Icons.check),
+          label: Text(l.save),
+        ),
       ],
     );
   }
@@ -48,7 +56,11 @@ Future<bool> confirmDelete(BuildContext context, String title, String body) asyn
         title: Text(title),
         content: Text(body),
         actions: [
-          TextButton.icon(onPressed: () => Navigator.of(c).pop(false), icon: const Icon(Icons.close), label: Text(c.l10n.cancel)),
+          TextButton.icon(
+            onPressed: () => Navigator.of(c).pop(false),
+            icon: const Icon(Icons.close),
+            label: Text(c.l10n.cancel),
+          ),
           FilledButton.icon(
             style: FilledButton.styleFrom(backgroundColor: Theme.of(c).colorScheme.error),
             onPressed: () => Navigator.of(c).pop(true),

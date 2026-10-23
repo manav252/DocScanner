@@ -53,8 +53,10 @@ class LibraryActions {
   }
 
   /// Documents on this device that are not backed up (offered for upload after sign-in).
-  Future<List<ScanDocument>> localOnly() async =>
-      [for (final d in await _ref.read(documentRepositoryProvider).list()) if (!d.backup) d];
+  Future<List<ScanDocument>> localOnly() async => [
+    for (final d in await _ref.read(documentRepositoryProvider).list())
+      if (!d.backup) d,
+  ];
 
   /// Opt documents into backup; sync uploads them.
   Future<void> backUp(Iterable<ScanDocument> docs) async {

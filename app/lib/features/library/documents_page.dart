@@ -30,7 +30,10 @@ class _DocumentsPageState extends ConsumerState<DocumentsPage> {
   void _setQuery(String q) => ref.read(libraryQueryProvider.notifier).set(q);
 
   Future<void> _rename(ScanDocument doc) async {
-    final title = await showDialog<String>(context: context, builder: (_) => RenameDialog(initial: doc.title));
+    final title = await showDialog<String>(
+      context: context,
+      builder: (_) => RenameDialog(initial: doc.title),
+    );
     if (title != null) await ref.read(libraryActionsProvider).rename(doc, title);
   }
 
@@ -52,59 +55,62 @@ class _DocumentsPageState extends ConsumerState<DocumentsPage> {
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 840),
-          child: Column(children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-              child: TextField(
-                key: const ValueKey('library-search'),
-                controller: _search,
-                onChanged: _setQuery,
-                textInputAction: TextInputAction.search,
-                decoration: InputDecoration(
-                  labelText: l.searchDocuments,
-                  prefixIcon: const Icon(Icons.search),
-                  suffixIcon: query.isEmpty
-                      ? null
-                      : Padding(
-                          padding: const EdgeInsets.only(right: 4),
-                          child: TextButton.icon(
-                            key: const ValueKey('clear-search'),
-                            icon: const Icon(Icons.clear),
-                            label: Text(l.clearSearch),
-                            onPressed: () {
-                              _search.clear();
-                              _setQuery('');
-                            },
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                child: TextField(
+                  key: const ValueKey('library-search'),
+                  controller: _search,
+                  onChanged: _setQuery,
+                  textInputAction: TextInputAction.search,
+                  decoration: InputDecoration(
+                    labelText: l.searchDocuments,
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: query.isEmpty
+                        ? null
+                        : Padding(
+                            padding: const EdgeInsets.only(right: 4),
+                            child: TextButton.icon(
+                              key: const ValueKey('clear-search'),
+                              icon: const Icon(Icons.clear),
+                              label: Text(l.clearSearch),
+                              onPressed: () {
+                                _search.clear();
+                                _setQuery('');
+                              },
+                            ),
                           ),
-                        ),
+                  ),
                 ),
               ),
-            ),
-            Expanded(
-              child: switch (docs) {
-                AsyncData(value: final list) when list.isEmpty => query.isEmpty
-                    ? _Empty(
-                        title: l.noScansYet,
-                        body: l.noScansHint,
-                        action: FilledButton.icon(
-                          onPressed: () => Navigator.of(context)
-                              .push(MaterialPageRoute<void>(builder: (_) => const CapturePage())),
-                          icon: const Icon(Icons.document_scanner_outlined),
-                          label: Text(l.scanDocument),
-                        ),
-                      )
-                    : _Empty(
-                        title: l.noResults(query),
-                        action: OutlinedButton.icon(
-                          onPressed: () {
-                            _search.clear();
-                            _setQuery('');
-                          },
-                          icon: const Icon(Icons.clear),
-                          label: Text(l.clearSearch),
-                        ),
-                      ),
-                AsyncData(value: final list) => ListView.separated(
+              Expanded(
+                child: switch (docs) {
+                  AsyncData(value: final list) when list.isEmpty =>
+                    query.isEmpty
+                        ? _Empty(
+                            title: l.noScansYet,
+                            body: l.noScansHint,
+                            action: FilledButton.icon(
+                              onPressed: () =>
+                                  Navigator.of(context)
+                                      .push(MaterialPageRoute<void>(builder: (_) => const CapturePage())),
+                              icon: const Icon(Icons.document_scanner_outlined),
+                              label: Text(l.scanDocument),
+                            ),
+                          )
+                        : _Empty(
+                            title: l.noResults(query),
+                            action: OutlinedButton.icon(
+                              onPressed: () {
+                                _search.clear();
+                                _setQuery('');
+                              },
+                              icon: const Icon(Icons.clear),
+                              label: Text(l.clearSearch),
+                            ),
+                          ),
+                  AsyncData(value: final list) => ListView.separated(
                     padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
                     itemCount: list.length,
                     separatorBuilder: (_, _) => const SizedBox(height: 12),
@@ -117,11 +123,12 @@ class _DocumentsPageState extends ConsumerState<DocumentsPage> {
                       onDelete: () => _delete(list[i]),
                     ),
                   ),
-                AsyncError(:final error) => _Empty(title: '$error'),
-                _ => const Center(child: CircularProgressIndicator()),
-              },
-            ),
-          ]),
+                  AsyncError(:final error) => _Empty(title: '$error'),
+                  _ => const Center(child: CircularProgressIndicator()),
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -136,18 +143,21 @@ class _Empty extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(32),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Icon(Icons.folder_open_outlined, size: 56, color: Theme.of(context).colorScheme.onSurfaceVariant),
-            const SizedBox(height: 12),
-            Semantics(
-              header: true,
-              child: Text(title, textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleMedium),
-            ),
-            if (body != null) ...[const SizedBox(height: 8), Text(body!, textAlign: TextAlign.center)],
-            if (action != null) ...[const SizedBox(height: 20), action!],
-          ]),
-        ),
-      );
+    child: SingleChildScrollView(
+      padding: const EdgeInsets.all(32),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.folder_open_outlined, size: 56, color: Theme.of(context).colorScheme.onSurfaceVariant),
+          const SizedBox(height: 12),
+          Semantics(
+            header: true,
+            child: Text(title, textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleMedium),
+          ),
+          if (body != null) ...[const SizedBox(height: 8), Text(body!, textAlign: TextAlign.center)],
+          if (action != null) ...[const SizedBox(height: 20), action!],
+        ],
+      ),
+    ),
+  );
 }

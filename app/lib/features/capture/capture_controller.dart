@@ -140,24 +140,23 @@ class CaptureState {
     double? fps,
     Object? pendingCapture = _unset,
     Object? message = _unset,
-  }) =>
-      CaptureState(
-        status: status ?? this.status,
-        failure: identical(failure, _unset) ? this.failure : failure as CameraFailure?,
-        corners: identical(corners, _unset) ? this.corners : corners as List<Pt>?,
-        steadyProgress: steadyProgress ?? this.steadyProgress,
-        autoCapture: autoCapture ?? this.autoCapture,
-        lowLight: lowLight ?? this.lowLight,
-        tooSmall: tooSmall ?? this.tooSmall,
-        awaitingNextPage: awaitingNextPage ?? this.awaitingNextPage,
-        torchOn: torchOn ?? this.torchOn,
-        supportsTorch: supportsTorch ?? this.supportsTorch,
-        cameraCount: cameraCount ?? this.cameraCount,
-        previewAspectRatio: previewAspectRatio ?? this.previewAspectRatio,
-        fps: fps ?? this.fps,
-        pendingCapture: identical(pendingCapture, _unset) ? this.pendingCapture : pendingCapture as CaptureResult?,
-        message: identical(message, _unset) ? this.message : message as CaptureMessage?,
-      );
+  }) => CaptureState(
+    status: status ?? this.status,
+    failure: identical(failure, _unset) ? this.failure : failure as CameraFailure?,
+    corners: identical(corners, _unset) ? this.corners : corners as List<Pt>?,
+    steadyProgress: steadyProgress ?? this.steadyProgress,
+    autoCapture: autoCapture ?? this.autoCapture,
+    lowLight: lowLight ?? this.lowLight,
+    tooSmall: tooSmall ?? this.tooSmall,
+    awaitingNextPage: awaitingNextPage ?? this.awaitingNextPage,
+    torchOn: torchOn ?? this.torchOn,
+    supportsTorch: supportsTorch ?? this.supportsTorch,
+    cameraCount: cameraCount ?? this.cameraCount,
+    previewAspectRatio: previewAspectRatio ?? this.previewAspectRatio,
+    fps: fps ?? this.fps,
+    pendingCapture: identical(pendingCapture, _unset) ? this.pendingCapture : pendingCapture as CaptureResult?,
+    message: identical(message, _unset) ? this.message : message as CaptureMessage?,
+  );
 }
 
 class CaptureController extends Notifier<CaptureState> {
@@ -245,7 +244,9 @@ class CaptureController extends Notifier<CaptureState> {
       if (gen != _generation) return;
       if (state.status != CaptureStatus.running) continue;
       final f = frame.data;
-      final detection = await engine.detectFrame(f).catchError((Object _) => Detection(fullBounds(f.width, f.height), found: false));
+      final detection = await engine
+          .detectFrame(f)
+          .catchError((Object _) => Detection(fullBounds(f.width, f.height), found: false));
       if (gen != _generation || state.status != CaptureStatus.running) continue;
 
       final good = detection.found && detection.score >= _tuning.minDocumentArea;
@@ -272,7 +273,9 @@ class CaptureController extends Notifier<CaptureState> {
         fps: fps,
       );
       _updateArming(upright);
-      if (state.awaitingNextPage != (_lastCaptured != null)) state = state.copyWith(awaitingNextPage: _lastCaptured != null);
+      if (state.awaitingNextPage != (_lastCaptured != null)) {
+        state = state.copyWith(awaitingNextPage: _lastCaptured != null);
+      }
       if (steady && state.autoCapture && _lastCaptured == null && _clock.elapsed >= _autoCaptureAllowedAt) {
         await capture();
       }
@@ -439,5 +442,4 @@ class CaptureController extends Notifier<CaptureState> {
   }
 }
 
-final captureControllerProvider =
-    NotifierProvider.autoDispose<CaptureController, CaptureState>(CaptureController.new);
+final captureControllerProvider = NotifierProvider.autoDispose<CaptureController, CaptureState>(CaptureController.new);

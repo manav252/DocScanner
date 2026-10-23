@@ -58,23 +58,25 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     openedIndexes = [];
-    await tester.pumpWidget(testApp(
-      const CapturePage(),
-      overrides: [
-        keyValueStoreProvider.overrideWithValue(MemoryStore()),
-        scanEngineProvider.overrideWithValue(FakeEngine(frameDetector: (_) => noPage, stillDetection: null)),
-        appSettingsProvider.overrideWith(() => AppSettingsNotifier(settings)),
-        cameraFactoryProvider.overrideWith((ref) {
-          final index = ref.watch(cameraIndexProvider);
-          return () {
-            openedIndexes.add(index);
-            return FakeCamera(failure: failure)..cameraCount = cameras;
-          };
-        }),
-        if (importer != null) importServiceProvider.overrideWithValue(importer),
-        if (speaker != null) speakerProvider.overrideWithValue(speaker),
-      ],
-    ));
+    await tester.pumpWidget(
+      testApp(
+        const CapturePage(),
+        overrides: [
+          keyValueStoreProvider.overrideWithValue(MemoryStore()),
+          scanEngineProvider.overrideWithValue(FakeEngine(frameDetector: (_) => noPage, stillDetection: null)),
+          appSettingsProvider.overrideWith(() => AppSettingsNotifier(settings)),
+          cameraFactoryProvider.overrideWith((ref) {
+            final index = ref.watch(cameraIndexProvider);
+            return () {
+              openedIndexes.add(index);
+              return FakeCamera(failure: failure)..cameraCount = cameras;
+            };
+          }),
+          if (importer != null) importServiceProvider.overrideWithValue(importer),
+          if (speaker != null) speakerProvider.overrideWithValue(speaker),
+        ],
+      ),
+    );
     for (var i = 0; i < 5; i++) {
       await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
       await tester.pump();
@@ -148,23 +150,33 @@ void main() {
   });
 
   group('guidance', () {
-    Future<(ScanGuidance, BuildContext, FakeSpeaker)> harness(WidgetTester tester, {required bool spoken, Locale locale = const Locale('en')}) async {
+    Future<(ScanGuidance, BuildContext, FakeSpeaker)> harness(
+      WidgetTester tester, {
+      required bool spoken,
+      Locale locale = const Locale('en'),
+    }) async {
       final speaker = FakeSpeaker();
       late BuildContext ctx;
       late ScanGuidance g;
-      await tester.pumpWidget(testApp(
-        Consumer(builder: (context, ref, _) {
-          ctx = context;
-          g = ref.watch(scanGuidanceProvider);
-          return const SizedBox();
-        }),
-        locale: locale,
-        overrides: [
-          keyValueStoreProvider.overrideWithValue(MemoryStore()),
-          appSettingsProvider.overrideWith(() => AppSettingsNotifier(AppSettings(serverUrl: '', spokenGuidance: spoken))),
-          speakerProvider.overrideWithValue(speaker),
-        ],
-      ));
+      await tester.pumpWidget(
+        testApp(
+          Consumer(
+            builder: (context, ref, _) {
+              ctx = context;
+              g = ref.watch(scanGuidanceProvider);
+              return const SizedBox();
+            },
+          ),
+          locale: locale,
+          overrides: [
+            keyValueStoreProvider.overrideWithValue(MemoryStore()),
+            appSettingsProvider.overrideWith(
+              () => AppSettingsNotifier(AppSettings(serverUrl: '', spokenGuidance: spoken)),
+            ),
+            speakerProvider.overrideWithValue(speaker),
+          ],
+        ),
+      );
       return (g, ctx, speaker);
     }
 

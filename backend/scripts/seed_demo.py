@@ -4,6 +4,7 @@
 
 Demo credentials (local development only): demo@example.com / demo-password
 """
+
 import json
 import sys
 import urllib.error
@@ -32,11 +33,17 @@ except urllib.error.HTTPError:
     token = call("POST", "/auth/login", cred)["access_token"]
     print(f"{EMAIL} already exists")
 
-pdf = img2pdf.convert([(FIXTURES / "strong_perspective.jpg").read_bytes(), (FIXTURES / "narrow_receipt.jpg").read_bytes()])
+pdf = img2pdf.convert(
+    [(FIXTURES / "strong_perspective.jpg").read_bytes(), (FIXTURES / "narrow_receipt.jpg").read_bytes()]
+)
 boundary = "----docscanner-seed"
 body = (
-    f'--{boundary}\r\nContent-Disposition: form-data; name="files"; filename="Sample contract.pdf"\r\n'
-    f"Content-Type: application/pdf\r\n\r\n"
-).encode() + pdf + f"\r\n--{boundary}--\r\n".encode()
+    (
+        f'--{boundary}\r\nContent-Disposition: form-data; name="files"; filename="Sample contract.pdf"\r\n'
+        f"Content-Type: application/pdf\r\n\r\n"
+    ).encode()
+    + pdf
+    + f"\r\n--{boundary}--\r\n".encode()
+)
 doc = call("POST", "/documents/upload", body, token, f"multipart/form-data; boundary={boundary}")
 print(f"uploaded '{doc['title']}' ({len(doc['pages'])} pages)")

@@ -39,5 +39,8 @@ class MemoryStore implements KeyValueStore {
   Future<void> deletePrefix(String prefix) async => data.removeWhere((k, _) => k.startsWith(prefix));
 
   @override
-  Future<List<String>> keys(String prefix) async => [for (final k in data.keys) if (k.startsWith(prefix)) k];
+  Future<List<String>> keys(String prefix) async => [
+    for (final k in data.keys)
+      if (k.startsWith(prefix)) k,
+  ];
 }

@@ -40,60 +40,85 @@ class _CropPageState extends ConsumerState<CropPage> {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(backgroundColor: Colors.black, foregroundColor: Colors.white, title: Text(context.l10n.cropTitle)),
-      body: Column(children: [
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: switch (preview) {
-              AsyncData(:final value) => CropEditor(
+      body: Column(
+        children: [
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: switch (preview) {
+                AsyncData(:final value) => CropEditor(
                   image: MemoryImage(value),
                   imageSize: size,
                   crop: _crop,
                   onChanged: (c) => setState(() => _crop = c),
                 ),
-              AsyncError() => Center(child: Text(context.l10n.previewFailed, style: const TextStyle(color: Colors.white))),
-              _ => const Center(child: CircularProgressIndicator()),
-            },
+                AsyncError() => Center(
+                  child: Text(context.l10n.previewFailed, style: const TextStyle(color: Colors.white)),
+                ),
+                _ => const Center(child: CircularProgressIndicator()),
+              },
+            ),
           ),
-        ),
-        SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: [
-              Text(context.l10n.cropHint, style: const TextStyle(color: Colors.white)),
-              const SizedBox(height: 8),
-              Wrap(spacing: 8, runSpacing: 8, alignment: WrapAlignment.end, children: [
-                OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(foregroundColor: Colors.white, side: const BorderSide(color: Colors.white70)),
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.close),
-                  label: Text(context.l10n.cancel),
-                ),
-                OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(foregroundColor: Colors.white, side: const BorderSide(color: Colors.white70)),
-                  onPressed: () => setState(() => _crop = CropRect.full),
-                  icon: const Icon(Icons.restart_alt),
-                  label: Text(context.l10n.reset),
-                ),
-                FilledButton.icon(
-                  key: const ValueKey('apply-crop'),
-                  onPressed: () => Navigator.of(context).pop(_crop),
-                  icon: const Icon(Icons.check),
-                  label: Text(context.l10n.apply),
-                ),
-              ]),
-            ]),
+          SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(context.l10n.cropHint, style: const TextStyle(color: Colors.white)),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    alignment: WrapAlignment.end,
+                    children: [
+                      OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          side: const BorderSide(color: Colors.white70),
+                        ),
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: const Icon(Icons.close),
+                        label: Text(context.l10n.cancel),
+                      ),
+                      OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          side: const BorderSide(color: Colors.white70),
+                        ),
+                        onPressed: () => setState(() => _crop = CropRect.full),
+                        icon: const Icon(Icons.restart_alt),
+                        label: Text(context.l10n.reset),
+                      ),
+                      FilledButton.icon(
+                        key: const ValueKey('apply-crop'),
+                        onPressed: () => Navigator.of(context).pop(_crop),
+                        icon: const Icon(Icons.check),
+                        label: Text(context.l10n.apply),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ),
-        ),
-      ]),
+        ],
+      ),
     );
   }
 }
 
 /// Axis-aligned crop box over an image: drag corners, edges, or the inside to move it.
 class CropEditor extends StatefulWidget {
-  const CropEditor({super.key, required this.image, required this.imageSize, required this.crop, required this.onChanged});
+  const CropEditor({
+    super.key,
+    required this.image,
+    required this.imageSize,
+    required this.crop,
+    required this.onChanged,
+  });
   final ImageProvider image;
   final Size imageSize;
   final CropRect crop;
@@ -114,11 +139,11 @@ class _CropEditorState extends State<CropEditor> {
   CropRect _startCrop = CropRect.full;
 
   Rect get _cropRect => Rect.fromLTWH(
-        _imageRect.left + widget.crop.left * _imageRect.width,
-        _imageRect.top + widget.crop.top * _imageRect.height,
-        widget.crop.width * _imageRect.width,
-        widget.crop.height * _imageRect.height,
-      );
+    _imageRect.left + widget.crop.left * _imageRect.width,
+    _imageRect.top + widget.crop.top * _imageRect.height,
+    widget.crop.width * _imageRect.width,
+    widget.crop.height * _imageRect.height,
+  );
 
   _Grip? _gripAt(Offset p) {
     final r = _cropRect;
@@ -167,26 +192,35 @@ class _CropEditorState extends State<CropEditor> {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(builder: (_, constraints) {
-      final box = constraints.biggest;
-      final fitted = applyBoxFit(BoxFit.contain, widget.imageSize, box).destination;
-      _imageRect = Alignment.center.inscribe(fitted, Offset.zero & box);
-      return GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        dragStartBehavior: DragStartBehavior.down,
-        onPanStart: (d) {
-          _grip = _gripAt(d.localPosition);
-          _start = d.localPosition;
-          _startCrop = widget.crop;
-        },
-        onPanUpdate: (d) => _update(d.localPosition),
-        onPanEnd: (_) => _grip = null,
-        child: Stack(children: [
-          Positioned.fromRect(rect: _imageRect, child: Image(image: widget.image, fit: BoxFit.fill)),
-          Positioned.fill(child: CustomPaint(painter: _CropPainter(_cropRect, Theme.of(context).colorScheme.primary))),
-        ]),
-      );
-    });
+    return LayoutBuilder(
+      builder: (_, constraints) {
+        final box = constraints.biggest;
+        final fitted = applyBoxFit(BoxFit.contain, widget.imageSize, box).destination;
+        _imageRect = Alignment.center.inscribe(fitted, Offset.zero & box);
+        return GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          dragStartBehavior: DragStartBehavior.down,
+          onPanStart: (d) {
+            _grip = _gripAt(d.localPosition);
+            _start = d.localPosition;
+            _startCrop = widget.crop;
+          },
+          onPanUpdate: (d) => _update(d.localPosition),
+          onPanEnd: (_) => _grip = null,
+          child: Stack(
+            children: [
+              Positioned.fromRect(
+                rect: _imageRect,
+                child: Image(image: widget.image, fit: BoxFit.fill),
+              ),
+              Positioned.fill(
+                child: CustomPaint(painter: _CropPainter(_cropRect, Theme.of(context).colorScheme.primary)),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 }
 
@@ -214,8 +248,16 @@ class _CropPainter extends CustomPainter {
       ..color = Colors.white38
       ..strokeWidth = 1;
     for (var i = 1; i < 3; i++) {
-      canvas.drawLine(Offset(rect.left + rect.width * i / 3, rect.top), Offset(rect.left + rect.width * i / 3, rect.bottom), thin);
-      canvas.drawLine(Offset(rect.left, rect.top + rect.height * i / 3), Offset(rect.right, rect.top + rect.height * i / 3), thin);
+      canvas.drawLine(
+        Offset(rect.left + rect.width * i / 3, rect.top),
+        Offset(rect.left + rect.width * i / 3, rect.bottom),
+        thin,
+      );
+      canvas.drawLine(
+        Offset(rect.left, rect.top + rect.height * i / 3),
+        Offset(rect.right, rect.top + rect.height * i / 3),
+        thin,
+      );
     }
     final grip = Paint()..color = color;
     for (final o in [rect.topLeft, rect.topRight, rect.bottomRight, rect.bottomLeft]) {

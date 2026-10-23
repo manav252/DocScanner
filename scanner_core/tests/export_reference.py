@@ -4,6 +4,7 @@ against it to prove they behave the same as this reference implementation.
 
 Usage: python tests/export_reference.py
 """
+
 import json
 import sys
 from pathlib import Path

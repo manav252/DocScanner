@@ -63,50 +63,53 @@ sealed class MarkupItem {
     final color = (j['c'] as int?) ?? MarkupColor.black.argb;
     return switch (kind) {
       MarkupKind.text => TextMarkup(
-          id: id,
-          text: j['text'] as String? ?? '',
-          x: d('x'),
-          y: d('y'),
-          width: d('w', 0.6),
-          size: d('s', 0.04),
-          color: color,
-          bold: j['b'] as bool? ?? false,
-          background: TextBackground.values.asNameMap()[j['bg']] ?? TextBackground.none,
-          rotation: d('r'),
-        ),
+        id: id,
+        text: j['text'] as String? ?? '',
+        x: d('x'),
+        y: d('y'),
+        width: d('w', 0.6),
+        size: d('s', 0.04),
+        color: color,
+        bold: j['b'] as bool? ?? false,
+        background: TextBackground.values.asNameMap()[j['bg']] ?? TextBackground.none,
+        rotation: d('r'),
+      ),
       MarkupKind.pen || MarkupKind.highlighter => StrokeMarkup(
-          id: id,
-          highlighter: kind == MarkupKind.highlighter,
-          color: color,
-          width: d('w', 0.006),
-          points: pts('p'),
-        ),
+        id: id,
+        highlighter: kind == MarkupKind.highlighter,
+        color: color,
+        width: d('w', 0.006),
+        points: pts('p'),
+      ),
       MarkupKind.signature => SignatureMarkup(
-          id: id,
-          x: d('x'),
-          y: d('y'),
-          width: d('w', 0.4),
-          height: d('h', 0.15),
-          rotation: d('r'),
-          color: color,
-          strokes: [for (final s in (j['strokes'] as List? ?? const [])) _pts(s as List)],
-        ),
+        id: id,
+        x: d('x'),
+        y: d('y'),
+        width: d('w', 0.4),
+        height: d('h', 0.15),
+        rotation: d('r'),
+        color: color,
+        strokes: [for (final s in (j['strokes'] as List? ?? const [])) _pts(s as List)],
+      ),
       MarkupKind.rect || MarkupKind.arrow || MarkupKind.line || MarkupKind.whiteout => ShapeMarkup(
-          id: id,
-          kind: kind,
-          color: color,
-          width: d('w', 0.006),
-          a: Pt(d('ax'), d('ay')),
-          b: Pt(d('bx'), d('by')),
-        ),
+        id: id,
+        kind: kind,
+        color: color,
+        width: d('w', 0.006),
+        a: Pt(d('ax'), d('ay')),
+        b: Pt(d('bx'), d('by')),
+      ),
     };
   }
 
-  static List<Pt> _pts(List v) =>
-      [for (var i = 0; i + 1 < v.length; i += 2) Pt((v[i] as num).toDouble(), (v[i + 1] as num).toDouble())];
+  static List<Pt> _pts(List v) => [
+    for (var i = 0; i + 1 < v.length; i += 2) Pt((v[i] as num).toDouble(), (v[i + 1] as num).toDouble()),
+  ];
 }
 
-List<double> _flat(List<Pt> pts) => [for (final p in pts) ...[_r(p.x), _r(p.y)]];
+List<double> _flat(List<Pt> pts) => [
+  for (final p in pts) ...[_r(p.x), _r(p.y)],
+];
 double _r(double v) => (v * 10000).roundToDouble() / 10000;
 
 Pt _rotPt(Pt p) => Pt(1 - p.y, p.x);
@@ -154,34 +157,33 @@ class TextMarkup extends MarkupItem {
     bool? bold,
     TextBackground? background,
     double? rotation,
-  }) =>
-      TextMarkup(
-        id: id,
-        text: text ?? this.text,
-        x: x ?? this.x,
-        y: y ?? this.y,
-        width: width ?? this.width,
-        size: size ?? this.size,
-        color: color ?? this.color,
-        bold: bold ?? this.bold,
-        background: background ?? this.background,
-        rotation: rotation ?? this.rotation,
-      );
+  }) => TextMarkup(
+    id: id,
+    text: text ?? this.text,
+    x: x ?? this.x,
+    y: y ?? this.y,
+    width: width ?? this.width,
+    size: size ?? this.size,
+    color: color ?? this.color,
+    bold: bold ?? this.bold,
+    background: background ?? this.background,
+    rotation: rotation ?? this.rotation,
+  );
 
   @override
   Map<String, Object?> toJson() => {
-        'k': kind.name,
-        'id': id,
-        'text': text,
-        'x': _r(x),
-        'y': _r(y),
-        'w': _r(width),
-        's': _r(size),
-        'c': color,
-        'b': bold,
-        'bg': background.name,
-        'r': _r(rotation),
-      };
+    'k': kind.name,
+    'id': id,
+    'text': text,
+    'x': _r(x),
+    'y': _r(y),
+    'w': _r(width),
+    's': _r(size),
+    'c': color,
+    'b': bold,
+    'bg': background.name,
+    'r': _r(rotation),
+  };
 
   @override
   TextMarkup translate(double dx, double dy) => copyWith(x: x + dx, y: y + dy);
@@ -208,8 +210,13 @@ class TextMarkup extends MarkupItem {
 }
 
 class StrokeMarkup extends MarkupItem {
-  const StrokeMarkup({required String id, required this.highlighter, required this.color, required this.width, required this.points})
-      : super(id);
+  const StrokeMarkup({
+    required String id,
+    required this.highlighter,
+    required this.color,
+    required this.width,
+    required this.points,
+  }) : super(id);
   final bool highlighter;
   final int color;
 
@@ -220,7 +227,8 @@ class StrokeMarkup extends MarkupItem {
   @override
   MarkupKind get kind => highlighter ? MarkupKind.highlighter : MarkupKind.pen;
 
-  StrokeMarkup withPoints(List<Pt> p) => StrokeMarkup(id: id, highlighter: highlighter, color: color, width: width, points: p);
+  StrokeMarkup withPoints(List<Pt> p) =>
+      StrokeMarkup(id: id, highlighter: highlighter, color: color, width: width, points: p);
 
   @override
   Map<String, Object?> toJson() => {'k': kind.name, 'id': id, 'c': color, 'w': _r(width), 'p': _flat(points)};
@@ -233,12 +241,12 @@ class StrokeMarkup extends MarkupItem {
 
   @override
   StrokeMarkup recropped(List<double> from, List<double> to, double unitScale) => StrokeMarkup(
-        id: id,
-        highlighter: highlighter,
-        color: color,
-        width: width * unitScale,
-        points: [for (final p in points) _recrop(p, from, to)],
-      );
+    id: id,
+    highlighter: highlighter,
+    color: color,
+    width: width * unitScale,
+    points: [for (final p in points) _recrop(p, from, to)],
+  );
 
   @override
   ({double l, double t, double r, double b}) bounds({double aspect = 1, double textHeight = 0, double textWidth = 0}) {
@@ -248,8 +256,14 @@ class StrokeMarkup extends MarkupItem {
 }
 
 class ShapeMarkup extends MarkupItem {
-  const ShapeMarkup({required String id, required this.kind, required this.color, required this.width, required this.a, required this.b})
-      : super(id);
+  const ShapeMarkup({
+    required String id,
+    required this.kind,
+    required this.color,
+    required this.width,
+    required this.a,
+    required this.b,
+  }) : super(id);
   @override
   final MarkupKind kind;
   final int color;
@@ -258,12 +272,26 @@ class ShapeMarkup extends MarkupItem {
   /// Start/end (line, arrow) or opposite corners (rect, whiteout), normalised.
   final Pt a, b;
 
-  ShapeMarkup copyWith({Pt? a, Pt? b, int? color, double? width}) =>
-      ShapeMarkup(id: id, kind: kind, color: color ?? this.color, width: width ?? this.width, a: a ?? this.a, b: b ?? this.b);
+  ShapeMarkup copyWith({Pt? a, Pt? b, int? color, double? width}) => ShapeMarkup(
+    id: id,
+    kind: kind,
+    color: color ?? this.color,
+    width: width ?? this.width,
+    a: a ?? this.a,
+    b: b ?? this.b,
+  );
 
   @override
-  Map<String, Object?> toJson() =>
-      {'k': kind.name, 'id': id, 'c': color, 'w': _r(width), 'ax': _r(a.x), 'ay': _r(a.y), 'bx': _r(b.x), 'by': _r(b.y)};
+  Map<String, Object?> toJson() => {
+    'k': kind.name,
+    'id': id,
+    'c': color,
+    'w': _r(width),
+    'ax': _r(a.x),
+    'ay': _r(a.y),
+    'bx': _r(b.x),
+    'by': _r(b.y),
+  };
 
   @override
   ShapeMarkup translate(double dx, double dy) => copyWith(a: Pt(a.x + dx, a.y + dy), b: Pt(b.x + dx, b.y + dy));
@@ -320,16 +348,16 @@ class SignatureMarkup extends MarkupItem {
 
   @override
   Map<String, Object?> toJson() => {
-        'k': kind.name,
-        'id': id,
-        'x': _r(x),
-        'y': _r(y),
-        'w': _r(width),
-        'h': _r(height),
-        'r': _r(rotation),
-        'c': color,
-        'strokes': [for (final s in strokes) _flat(s)],
-      };
+    'k': kind.name,
+    'id': id,
+    'x': _r(x),
+    'y': _r(y),
+    'w': _r(width),
+    'h': _r(height),
+    'r': _r(rotation),
+    'c': color,
+    'strokes': [for (final s in strokes) _flat(s)],
+  };
 
   @override
   SignatureMarkup translate(double dx, double dy) => copyWith(x: x + dx, y: y + dy);
@@ -356,9 +384,9 @@ class SignatureMarkup extends MarkupItem {
 List<Map<String, Object?>> markupToJson(List<MarkupItem> items) => [for (final i in items) i.toJson()];
 
 List<MarkupItem> markupFromJson(List<dynamic>? j) => [
-      for (final m in j ?? const [])
-        if (m is Map) _tryParse(m.cast<String, dynamic>()),
-    ].whereType<MarkupItem>().toList();
+  for (final m in j ?? const [])
+    if (m is Map) _tryParse(m.cast<String, dynamic>()),
+].whereType<MarkupItem>().toList();
 
 MarkupItem? _tryParse(Map<String, dynamic> m) {
   try {

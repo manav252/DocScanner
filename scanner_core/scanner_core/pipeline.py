@@ -1,4 +1,5 @@
 """One-call scan used by the backend /process endpoint."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -15,7 +16,7 @@ from .warp import warp_perspective
 class ScanResult:
     corners: np.ndarray  # TL, TR, BR, BL in source pixels
     found: bool
-    image: np.ndarray    # flattened + filtered page
+    image: np.ndarray  # flattened + filtered page
 
 
 def decode_image(data: bytes) -> np.ndarray:
@@ -34,8 +35,13 @@ def encode_image(image: np.ndarray, fmt: str = "jpg", quality: int = 90) -> byte
     return buf.tobytes()
 
 
-def scan(image: np.ndarray, corners: np.ndarray | None = None, filter: Filter | str = Filter.MAGIC_COLOR,
-         quarter_turns: int = 0, max_side: int = 3000) -> ScanResult:
+def scan(
+    image: np.ndarray,
+    corners: np.ndarray | None = None,
+    filter: Filter | str = Filter.MAGIC_COLOR,
+    quarter_turns: int = 0,
+    max_side: int = 3000,
+) -> ScanResult:
     if corners is None:
         det = detect_document(image)
         corners, found = det.corners, det.found

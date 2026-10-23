@@ -6,11 +6,7 @@ const _seed = Color(0xFF1F5FAF); // restrained blue
 /// Builds the theme. [highContrast] maxes out the colour contrast and thickens
 /// outlines; [reduceMotion] removes page transition animations.
 ThemeData buildTheme({required Brightness brightness, bool highContrast = false, bool reduceMotion = false}) {
-  var scheme = ColorScheme.fromSeed(
-    seedColor: _seed,
-    brightness: brightness,
-    contrastLevel: highContrast ? 1.0 : 0.0,
-  );
+  var scheme = ColorScheme.fromSeed(seedColor: _seed, brightness: brightness, contrastLevel: highContrast ? 1.0 : 0.0);
   if (highContrast) {
     final dark = brightness == Brightness.dark;
     scheme = scheme.copyWith(
@@ -21,13 +17,15 @@ ThemeData buildTheme({required Brightness brightness, bool highContrast = false,
       outlineVariant: dark ? Colors.white70 : Colors.black87,
     );
   }
-  final focusRing = highContrast ? (brightness == Brightness.dark ? Colors.yellowAccent : Colors.black) : scheme.tertiary;
+  final focusRing = highContrast
+      ? (brightness == Brightness.dark ? Colors.yellowAccent : Colors.black)
+      : scheme.tertiary;
   final borderWidth = highContrast ? 2.0 : 1.0;
 
   // Every button: at least 48x48, a thick outline when focused by keyboard.
   WidgetStateProperty<BorderSide?> focusSide(BorderSide? normal) => WidgetStateProperty.resolveWith(
-        (s) => s.contains(WidgetState.focused) ? BorderSide(color: focusRing, width: 3) : normal,
-      );
+    (s) => s.contains(WidgetState.focused) ? BorderSide(color: focusRing, width: 3) : normal,
+  );
   const minSize = Size(48, 48);
   const padding = EdgeInsets.symmetric(horizontal: 16, vertical: 12);
 
@@ -91,7 +89,10 @@ ThemeData buildTheme({required Brightness brightness, bool highContrast = false,
       style: ButtonStyle(minimumSize: const WidgetStatePropertyAll(minSize), side: focusSide(null)),
     ),
     segmentedButtonTheme: SegmentedButtonThemeData(
-      style: ButtonStyle(minimumSize: const WidgetStatePropertyAll(minSize), side: focusSide(BorderSide(color: scheme.outline, width: borderWidth))),
+      style: ButtonStyle(
+        minimumSize: const WidgetStatePropertyAll(minSize),
+        side: focusSide(BorderSide(color: scheme.outline, width: borderWidth)),
+      ),
     ),
     inputDecorationTheme: InputDecorationTheme(
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -108,14 +109,16 @@ ThemeData buildTheme({required Brightness brightness, bool highContrast = false,
     dividerTheme: DividerThemeData(color: scheme.outlineVariant, thickness: borderWidth),
     snackBarTheme: const SnackBarThemeData(behavior: SnackBarBehavior.floating),
     pageTransitionsTheme: reduceMotion
-        ? const PageTransitionsTheme(builders: {
-            TargetPlatform.android: _NoTransition(),
-            TargetPlatform.iOS: _NoTransition(),
-            TargetPlatform.macOS: _NoTransition(),
-            TargetPlatform.windows: _NoTransition(),
-            TargetPlatform.linux: _NoTransition(),
-            TargetPlatform.fuchsia: _NoTransition(),
-          })
+        ? const PageTransitionsTheme(
+            builders: {
+              TargetPlatform.android: _NoTransition(),
+              TargetPlatform.iOS: _NoTransition(),
+              TargetPlatform.macOS: _NoTransition(),
+              TargetPlatform.windows: _NoTransition(),
+              TargetPlatform.linux: _NoTransition(),
+              TargetPlatform.fuchsia: _NoTransition(),
+            },
+          )
         : base.pageTransitionsTheme,
   );
 }
@@ -124,7 +127,11 @@ class _NoTransition extends PageTransitionsBuilder {
   const _NoTransition();
 
   @override
-  Widget buildTransitions<T>(PageRoute<T> route, BuildContext context, Animation<double> animation,
-          Animation<double> secondaryAnimation, Widget child) =>
-      child;
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) => child;
 }

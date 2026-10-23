@@ -14,11 +14,8 @@ class LiveQuadOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => IgnorePointer(
-        child: CustomPaint(
-          size: Size.infinite,
-          painter: _LiveQuadPainter(corners, progress, color),
-        ),
-      );
+    child: CustomPaint(size: Size.infinite, painter: _LiveQuadPainter(corners, progress, color)),
+  );
 }
 
 class _LiveQuadPainter extends CustomPainter {

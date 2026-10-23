@@ -4,7 +4,13 @@ import 'package:flutter/material.dart';
 
 /// Round shutter button with a ring that fills while the page is held steady.
 class ShutterButton extends StatelessWidget {
-  const ShutterButton({super.key, required this.onPressed, required this.progress, this.busy = false, this.label = 'Capture'});
+  const ShutterButton({
+    super.key,
+    required this.onPressed,
+    required this.progress,
+    this.busy = false,
+    this.label = 'Capture',
+  });
 
   final VoidCallback? onPressed;
   final double progress;
@@ -38,7 +44,9 @@ class ShutterButton extends StatelessWidget {
                   shape: BoxShape.circle,
                   color: onPressed == null ? Colors.white38 : Colors.white,
                 ),
-                child: busy ? const Padding(padding: EdgeInsets.all(12), child: CircularProgressIndicator(strokeWidth: 3)) : null,
+                child: busy
+                    ? const Padding(padding: EdgeInsets.all(12), child: CircularProgressIndicator(strokeWidth: 3))
+                    : null,
               ),
             ),
           ),
@@ -56,16 +64,26 @@ class _RingPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
-    canvas.drawCircle(rect.center, size.width / 2 - 2, Paint()
-      ..color = Colors.white70
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3);
-    if (progress > 0) {
-      canvas.drawArc(rect.deflate(2), -math.pi / 2, 2 * math.pi * progress, false, Paint()
-        ..color = color
+    canvas.drawCircle(
+      rect.center,
+      size.width / 2 - 2,
+      Paint()
+        ..color = Colors.white70
         ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round
-        ..strokeWidth = 5);
+        ..strokeWidth = 3,
+    );
+    if (progress > 0) {
+      canvas.drawArc(
+        rect.deflate(2),
+        -math.pi / 2,
+        2 * math.pi * progress,
+        false,
+        Paint()
+          ..color = color
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round
+          ..strokeWidth = 5,
+      );
     }
   }
 

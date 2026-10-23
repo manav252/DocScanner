@@ -25,7 +25,8 @@ final localScanEngineProvider = Provider<ScanEngine>((ref) {
 /// "Process on server" is on and the user is signed in.
 final scanEngineProvider = Provider<ScanEngine>((ref) {
   final local = ref.watch(localScanEngineProvider);
-  final useServer = ref.watch(appSettingsProvider.select((s) => s.processOnServer)) && ref.watch(sessionProvider) != null;
+  final useServer =
+      ref.watch(appSettingsProvider.select((s) => s.processOnServer)) && ref.watch(sessionProvider) != null;
   return useServer ? ServerScanEngine(local, ref.watch(apiClientProvider)) : local;
 });
 

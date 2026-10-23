@@ -1,4 +1,5 @@
 """S3-compatible object storage (MinIO locally) for page images."""
+
 from __future__ import annotations
 
 import boto3
@@ -75,7 +76,7 @@ class Storage:
     async def delete_keys(self, keys: list[str]) -> None:
         def _delete() -> None:
             for i in range(0, len(keys), 1000):
-                chunk = keys[i:i + 1000]
+                chunk = keys[i : i + 1000]
                 if chunk:
                     self._s3.delete_objects(Bucket=self.bucket, Delete={"Objects": [{"Key": k} for k in chunk]})
 

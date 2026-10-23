@@ -20,5 +20,4 @@ double get tolerance => 0.01 * math.sqrt(imageWidth * imageWidth + imageHeight *
 
 List<Pt> cornersOf(dynamic json) => [for (final p in json as List) Pt.fromJson(p as List)];
 
-double maxCornerError(List<Pt> a, List<Pt> b) =>
-    [for (var i = 0; i < 4; i++) a[i].distanceTo(b[i])].reduce(math.max);
+double maxCornerError(List<Pt> a, List<Pt> b) => [for (var i = 0; i < 4; i++) a[i].distanceTo(b[i])].reduce(math.max);

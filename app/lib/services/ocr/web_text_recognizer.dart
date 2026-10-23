@@ -25,8 +25,14 @@ class WebTextRecognizer implements TextRecognizer {
       for (final l in r.getProperty<JSArray<JSObject>>('lines'.toJS).toDart)
         () {
           final box = l.getProperty<JSArray<JSNumber>>('box'.toJS).toDart.map((n) => n.toDartDouble).toList();
-          return OcrLine(l.getProperty<JSString>('text'.toJS).toDart, box[0], box[1], box[2], box[3],
-              confidence: l.getProperty<JSNumber>('confidence'.toJS).toDartDouble);
+          return OcrLine(
+            l.getProperty<JSString>('text'.toJS).toDart,
+            box[0],
+            box[1],
+            box[2],
+            box[3],
+            confidence: l.getProperty<JSNumber>('confidence'.toJS).toDartDouble,
+          );
         }(),
     ];
     return OcrResult(r.getProperty<JSString>('text'.toJS).toDart, lines);

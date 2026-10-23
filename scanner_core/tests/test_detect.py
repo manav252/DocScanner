@@ -94,7 +94,14 @@ def test_params_match_shared_json():
     from pathlib import Path
 
     from scanner_core import detect as D
+
     p = json.loads((Path(__file__).resolve().parents[2] / "shared" / "detector_params.json").read_text())
     assert (D.MAX_DIM, D.MIN_AREA_RATIO, D.MIN_FILL_RATIO, D.MAX_EDGE_DEVIATION, D.MIN_ANGLE, D.MAX_ANGLE) == (
-        p["max_dim"], p["min_area_ratio"], p["min_fill_ratio"], p["max_edge_deviation"], p["min_angle"], p["max_angle"])
+        p["max_dim"],
+        p["min_area_ratio"],
+        p["min_fill_ratio"],
+        p["max_edge_deviation"],
+        p["min_angle"],
+        p["max_angle"],
+    )
     assert list(D.APPROX_EPSILONS) == p["approx_epsilons"]

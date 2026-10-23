@@ -5,6 +5,7 @@
 
 Counts come only from the reports the test runners wrote.
 """
+
 import json
 import subprocess
 import sys
@@ -21,7 +22,7 @@ SUITES = [
 
 
 def dart(path: Path) -> list[dict]:
-    names, groups, tests, out = {}, {}, {}, []
+    tests, out = {}, []
     for line in path.read_text().splitlines():
         try:
             e = json.loads(line)
@@ -48,7 +49,9 @@ def junit(path: Path) -> list[dict]:
             status = "skipped"
         else:
             status = "passed"
-        out.append({"name": case.get("name"), "file": case.get("classname") or case.get("file") or "", "status": status})
+        out.append(
+            {"name": case.get("name"), "file": case.get("classname") or case.get("file") or "", "status": status}
+        )
     return out
 
 
@@ -70,7 +73,9 @@ def main() -> None:
             s["reason"] = skipped.read_text().strip() if skipped.exists() else "no report was produced (see the log)"
         suites.append(s)
     try:
-        commit = subprocess.run(["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True, check=True).stdout.strip()
+        commit = subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True, check=True
+        ).stdout.strip()
     except Exception:  # noqa: BLE001
         commit = None
     ran = [s for s in suites if s["status"] == "run"]
@@ -83,8 +88,10 @@ def main() -> None:
     dest.parent.mkdir(parents=True, exist_ok=True)
     dest.write_text(json.dumps(summary, indent=1) + "\n")
     t = summary["totals"]
-    print(f"passed {t['passed']}, failed {t['failed']}, skipped {t['skipped']}; "
-          + ", ".join(f"{s['id']}: {s['status']}" for s in suites))
+    print(
+        f"passed {t['passed']}, failed {t['failed']}, skipped {t['skipped']}; "
+        + ", ".join(f"{s['id']}: {s['status']}" for s in suites)
+    )
 
 
 if __name__ == "__main__":

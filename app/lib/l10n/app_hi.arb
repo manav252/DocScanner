@@ -52,6 +52,7 @@
   "importing": "जोड़ा जा रहा है…",
   "importProgress": "{count, plural, =1{1 पेज जोड़ा} other{{count} पेज जोड़े}} · {name}",
   "importFailed": "जोड़ नहीं सके: {message}",
+  "importSkipped": "ये फ़ाइलें खुल नहीं सकीं और छोड़ दी गईं: {names}",
   "importNothing": "जोड़ने के लिए कुछ नहीं। JPG, PNG या PDF फ़ाइलें चुनें।",
   "appearance": "रूप",
   "theme": "थीम",

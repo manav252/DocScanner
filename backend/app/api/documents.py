@@ -7,6 +7,7 @@ Sync protocol used by the app:
   3. pull changes:       GET /documents?since=<cursor>  (includes tombstones)
   4. delete:             DELETE /documents/{id}?base_version=N  (leaves a tombstone)
 """
+
 import uuid
 from datetime import UTC, datetime
 from urllib.parse import quote
@@ -62,7 +63,9 @@ def _conflict(doc: Document) -> JSONResponse:
 
 @router.get("", response_model=DocumentList)
 async def list_documents(
-    since: int | None = Query(None, ge=0, description="Cursor from a previous call; returns changes after it, including deletions"),
+    since: int | None = Query(
+        None, ge=0, description="Cursor from a previous call; returns changes after it, including deletions"
+    ),
     limit: int = Query(200, ge=1, le=500),
     user: User = Depends(current_user),
     session: AsyncSession = Depends(get_session),
@@ -135,9 +138,7 @@ async def put_document(
         stale_keys: list[str] = []
     else:
         keep = {p.id for p in body.pages}
-        stale_keys = sorted(
-            k for k in present if k.split("/pages/")[1].split("/")[0] not in keep
-        )
+        stale_keys = sorted(k for k in present if k.split("/pages/")[1].split("/")[0] not in keep)
         doc.title, doc.updated_at, doc.pages = body.title, body.updated_at, pages
         doc.deleted = False
         doc.version += 1
@@ -160,7 +161,9 @@ async def put_document(
 @router.delete("/{doc_id}", status_code=status.HTTP_204_NO_CONTENT, responses={409: {"model": Conflict}})
 async def delete_document(
     doc_id: str = DocId,
-    base_version: int | None = Query(None, ge=0, description="If given, only delete when the server is at this version"),
+    base_version: int | None = Query(
+        None, ge=0, description="If given, only delete when the server is at this version"
+    ),
     user: User = Depends(current_user),
     session: AsyncSession = Depends(get_session),
     store: Storage = Depends(storage),
@@ -233,7 +236,9 @@ async def download_pdf(
         images.append(obj[0])
     pdf = await run_in_threadpool(imaging.build_pdf, images, doc.title)
     filename = quote(f"{doc.title}.pdf")
-    return Response(pdf, media_type="application/pdf", headers={"Content-Disposition": f"attachment; filename*=UTF-8''{filename}"})
+    return Response(
+        pdf, media_type="application/pdf", headers={"Content-Disposition": f"attachment; filename*=UTF-8''{filename}"}
+    )
 
 
 @router.post("/upload", response_model=DocumentOut, status_code=status.HTTP_201_CREATED)
@@ -272,7 +277,11 @@ async def upload_files(
             page_id = uuid.uuid4().hex
             if filt is None:  # PDF page: already flat
                 w, h = await run_in_threadpool(imaging.image_size, source)
-                corners, render, edits = [[0, 0], [w - 1, 0], [w - 1, h - 1], [0, h - 1]], source, {"filter": "original"}
+                corners, render, edits = (
+                    [[0, 0], [w - 1, 0], [w - 1, h - 1], [0, h - 1]],
+                    source,
+                    {"filter": "original"},
+                )
             else:
                 try:
                     det = await run_in_threadpool(imaging.process, source, detect_only=True)

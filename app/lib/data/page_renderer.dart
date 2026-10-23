@@ -14,7 +14,7 @@ import 'models.dart';
 
 class PageRenderer {
   PageRenderer(this._engine, this._repo, {Future<(int, int)> Function(Uint8List)? measure})
-      : _measure = measure ?? imageSize;
+    : _measure = measure ?? imageSize;
   final ScanEngine _engine;
   final DocumentRepository _repo;
   final Future<(int, int)> Function(Uint8List) _measure;

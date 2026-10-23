@@ -8,6 +8,7 @@ If nothing qualifies, a second pass runs on a contrast-equalised (CLAHE) image
 to catch low-contrast pages. If that also fails the full image bounds are
 returned with ``found=False``.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -16,9 +17,9 @@ import cv2
 import numpy as np
 
 # Tunables. Mirror any change in app/lib/imaging/detector_params.dart.
-MAX_DIM = 500               # longest side of the working image
-MIN_AREA_RATIO = 0.08       # quad must cover at least 8% of the frame
-MIN_FILL_RATIO = 0.85       # contour area / quad area: rejects hulls of scattered clutter
+MAX_DIM = 500  # longest side of the working image
+MIN_AREA_RATIO = 0.08  # quad must cover at least 8% of the frame
+MIN_FILL_RATIO = 0.85  # contour area / quad area: rejects hulls of scattered clutter
 MAX_EDGE_DEVIATION = 0.025  # 90th pct distance of contour to quad edges, as fraction of quad diagonal
 MIN_ANGLE, MAX_ANGLE = 35.0, 145.0  # interior angle sanity range (degrees)
 APPROX_EPSILONS = (0.02, 0.03, 0.04)
@@ -28,7 +29,7 @@ APPROX_EPSILONS = (0.02, 0.03, 0.04)
 class Detection:
     corners: np.ndarray  # float32 (4, 2) in source-image pixels, ordered TL, TR, BR, BL
     found: bool
-    score: float = 0.0   # area ratio of the detected quad (0 when not found)
+    score: float = 0.0  # area ratio of the detected quad (0 when not found)
 
 
 def order_corners(pts: np.ndarray) -> np.ndarray:
@@ -36,8 +37,8 @@ def order_corners(pts: np.ndarray) -> np.ndarray:
     pts = np.asarray(pts, np.float32).reshape(4, 2)
     c = pts.mean(axis=0)
     ang = np.arctan2(pts[:, 1] - c[1], pts[:, 0] - c[0])
-    pts = pts[np.argsort(ang)]                 # clockwise on screen, starting anywhere
-    start = int(np.argmin(pts.sum(axis=1)))    # top-left = smallest x + y
+    pts = pts[np.argsort(ang)]  # clockwise on screen, starting anywhere
+    start = int(np.argmin(pts.sum(axis=1)))  # top-left = smallest x + y
     return np.roll(pts, -start, axis=0)
 
 
@@ -80,8 +81,9 @@ def _line_intersection(p1, p2, p3, p4):
         return None
     a = p1[0] * p2[1] - p1[1] * p2[0]
     b = p3[0] * p4[1] - p3[1] * p4[0]
-    return np.float32([(a * (p3[0] - p4[0]) - (p1[0] - p2[0]) * b) / d,
-                       (a * (p3[1] - p4[1]) - (p1[1] - p2[1]) * b) / d])
+    return np.float32(
+        [(a * (p3[0] - p4[0]) - (p1[0] - p2[0]) * b) / d, (a * (p3[1] - p4[1]) - (p1[1] - p2[1]) * b) / d]
+    )
 
 
 def _quad_from_long_sides(poly: np.ndarray) -> np.ndarray | None:
@@ -172,11 +174,11 @@ def refine_corners(quad: np.ndarray, gray: np.ndarray, bands=(10, 5, 3), min_gra
             length = float(np.linalg.norm(ab))
             n = np.float32([-ab[1], ab[0]]) / (length + 1e-6)
             ts = np.linspace(0.1, 0.9, max(12, int(length / 3)), dtype=np.float32)
-            base = a + ts[:, None] * ab                                    # (S, 2)
-            cand = base[:, None, :] + offs[None, :, None] * n             # (S, K, 2)
+            base = a + ts[:, None] * ab  # (S, 2)
+            cand = base[:, None, :] + offs[None, :, None] * n  # (S, K, 2)
             xi = np.clip(np.rint(cand[..., 0]).astype(int), 0, w - 1)
             yi = np.clip(np.rint(cand[..., 1]).astype(int), 0, h - 1)
-            resp = np.abs(gx[yi, xi] * n[0] + gy[yi, xi] * n[1])           # gradient across the side
+            resp = np.abs(gx[yi, xi] * n[0] + gy[yi, xi] * n[1])  # gradient across the side
             k = resp.argmax(axis=1)
             ok = (resp[np.arange(len(k)), k] > min_grad) & (k > 0) & (k < len(offs) - 1)
             peaks = cand[np.arange(len(k)), k][ok]
@@ -210,7 +212,9 @@ def detect_document(image: np.ndarray, max_dim: int = MAX_DIM) -> Detection:
         raise ValueError("empty image")
     h, w = image.shape[:2]
     scale = min(1.0, max_dim / max(h, w))
-    small = cv2.resize(image, (round(w * scale), round(h * scale)), interpolation=cv2.INTER_AREA) if scale < 1 else image
+    small = (
+        cv2.resize(image, (round(w * scale), round(h * scale)), interpolation=cv2.INTER_AREA) if scale < 1 else image
+    )
     gray = cv2.cvtColor(small, cv2.COLOR_BGR2GRAY) if small.ndim == 3 else small
     # Pad by a few pixels so a page touching the border still forms a closed contour.
     pad = 4

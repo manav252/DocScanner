@@ -35,18 +35,18 @@ class Session {
 
   Map<String, String> toJson() => {'access': accessToken, 'refresh': refreshToken, 'userId': userId, 'email': email};
   static Session fromJson(Map<String, dynamic> j) => Session(
-        accessToken: j['access'] as String,
-        refreshToken: j['refresh'] as String,
-        userId: j['userId'] as String,
-        email: j['email'] as String,
-      );
+    accessToken: j['access'] as String,
+    refreshToken: j['refresh'] as String,
+    userId: j['userId'] as String,
+    email: j['email'] as String,
+  );
 
   static Session fromTokenResponse(Map<String, dynamic> j) => Session(
-        accessToken: j['access_token'] as String,
-        refreshToken: j['refresh_token'] as String,
-        userId: (j['user'] as Map)['id'] as String,
-        email: (j['user'] as Map)['email'] as String,
-      );
+    accessToken: j['access_token'] as String,
+    refreshToken: j['refresh_token'] as String,
+    userId: (j['user'] as Map)['id'] as String,
+    email: (j['user'] as Map)['email'] as String,
+  );
 }
 
 class ApiClient {
@@ -100,8 +100,16 @@ class ApiClient {
       throw OfflineException(e);
     }
     if (res.statusCode == 401 && auth && retry && session != null && await _refresh()) {
-      return _send(method, path,
-          query: query, json: json, bytes: bytes, contentType: contentType, retry: false, timeout: timeout);
+      return _send(
+        method,
+        path,
+        query: query,
+        json: json,
+        bytes: bytes,
+        contentType: contentType,
+        retry: false,
+        timeout: timeout,
+      );
     }
     if (res.statusCode >= 400) {
       Object? body;
@@ -109,7 +117,9 @@ class ApiClient {
         body = jsonDecode(res.body);
       } catch (_) {}
       final detail = body is Map ? body['detail'] : null;
-      final message = detail is String ? detail : (detail is Map ? '${detail['message'] ?? detail}' : res.reasonPhrase ?? 'HTTP ${res.statusCode}');
+      final message = detail is String
+          ? detail
+          : (detail is Map ? '${detail['message'] ?? detail}' : res.reasonPhrase ?? 'HTTP ${res.statusCode}');
       if (res.statusCode == 401 && auth) {
         session = null;
         onSessionChanged?.call(null);
@@ -157,11 +167,8 @@ class ApiClient {
 
   // ---------- documents ----------
 
-  Future<Map<String, dynamic>> listDocuments({int? since, int limit = 200}) async => _json(await _send(
-        'GET',
-        '/documents',
-        query: {if (since != null) 'since': '$since', 'limit': '$limit'},
-      ));
+  Future<Map<String, dynamic>> listDocuments({int? since, int limit = 200}) async =>
+      _json(await _send('GET', '/documents', query: {if (since != null) 'since': '$since', 'limit': '$limit'}));
 
   /// Upsert; throws [ConflictException] when [json]'s base_version is stale.
   Future<Map<String, dynamic>> putDocument(String id, Map<String, dynamic> json) async {
@@ -180,12 +187,20 @@ class ApiClient {
   }
 
   Future<void> putPageFile(String docId, String pageId, String kind, List<int> bytes) async {
-    await _send('PUT', '/documents/$docId/pages/$pageId/files/$kind',
-        bytes: bytes, contentType: 'image/jpeg', timeout: const Duration(minutes: 2));
+    await _send(
+      'PUT',
+      '/documents/$docId/pages/$pageId/files/$kind',
+      bytes: bytes,
+      contentType: 'image/jpeg',
+      timeout: const Duration(minutes: 2),
+    );
   }
 
-  Future<List<int>> getPageFile(String docId, String pageId, String kind) async =>
-      (await _send('GET', '/documents/$docId/pages/$pageId/files/$kind', timeout: const Duration(minutes: 2))).bodyBytes;
+  Future<List<int>> getPageFile(String docId, String pageId, String kind) async => (await _send(
+    'GET',
+    '/documents/$docId/pages/$pageId/files/$kind',
+    timeout: const Duration(minutes: 2),
+  )).bodyBytes;
 
   // ---------- server-side processing ----------
 

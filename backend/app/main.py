@@ -1,4 +1,5 @@
 """DocScanner API: accounts, cloud sync of scanned documents, server-side scanning."""
+
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -41,7 +42,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_credentials=False,
         allow_methods=["*"],
         allow_headers=["*"],
-        expose_headers=["X-Document-Found", "X-Document-Corners", "X-Image-Width", "X-Image-Height", "Content-Disposition"],
+        expose_headers=[
+            "X-Document-Found",
+            "X-Document-Corners",
+            "X-Image-Width",
+            "X-Image-Height",
+            "Content-Disposition",
+        ],
     )
     app.include_router(auth.router)
     app.include_router(documents.router)

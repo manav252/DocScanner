@@ -32,9 +32,9 @@ Offset imageToScreen(Pt p, Rect imageRect, Size imageSize) =>
 
 /// Screen position -> image pixel (clamped to the image).
 Pt screenToImage(Offset o, Rect imageRect, Size imageSize) => Pt(
-      ((o.dx - imageRect.left) * imageSize.width / imageRect.width).clamp(0, imageSize.width - 1).toDouble(),
-      ((o.dy - imageRect.top) * imageSize.height / imageRect.height).clamp(0, imageSize.height - 1).toDouble(),
-    );
+  ((o.dx - imageRect.left) * imageSize.width / imageRect.width).clamp(0, imageSize.width - 1).toDouble(),
+  ((o.dy - imageRect.top) * imageSize.height / imageRect.height).clamp(0, imageSize.height - 1).toDouble(),
+);
 
 class CornerEditor extends StatefulWidget {
   const CornerEditor({
@@ -254,92 +254,103 @@ class CornerEditorState extends State<CornerEditor> {
           CustomSemanticsAction(label: l.moveCornerUp): () => nudge(const Offset(0, -1)),
           CustomSemanticsAction(label: l.moveCornerDown): () => nudge(const Offset(0, 1)),
         },
-        child: LayoutBuilder(builder: (context, constraints) {
-          final box = constraints.biggest;
-          _imageRect = fittedImageRect(widget.imageSize, box);
-          final focus = _focusPoint;
-          Offset? loupeCenter;
-          if (focus != null) {
-            // Above the finger; flip below when too close to the top edge.
-            final above = focus.dy - loupeGap - loupeSize / 2 >= 0;
-            loupeCenter = Offset(
-              focus.dx.clamp(loupeSize / 2, math.max(loupeSize / 2, box.width - loupeSize / 2)),
-              above ? focus.dy - loupeGap : focus.dy + loupeGap,
-            );
-          }
-          return GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            // Pick the handle under the finger-down point, not where the drag slop ended.
-            dragStartBehavior: DragStartBehavior.down,
-            onTapDown: (d) {
-              _keyboard = false;
-              _focus.requestFocus();
-              final h = _handleAt(d.localPosition);
-              if (h != null && h < 4) selectCorner(h);
-            },
-            onPanStart: (d) {
-              _keyboard = false;
-              _focus.requestFocus();
-              _onPanStart(d);
-            },
-            onPanUpdate: _onPanUpdate,
-            onPanEnd: _onPanEnd,
-            onPanCancel: _onPanEnd,
-            child: SizedBox.fromSize(
-              size: box,
-              child: Stack(children: [
-                Positioned.fromRect(
-                  rect: _imageRect,
-                  child: Image(
-                    key: const ValueKey('corner-editor-image'),
-                    image: widget.image,
-                    fit: BoxFit.fill,
-                    gaplessPlayback: true,
-                  ),
-                ),
-                Positioned.fill(
-                  child: CustomPaint(
-                    painter: _EditorPainter(
-                      _handles(),
-                      imageRect: _imageRect,
-                      color: color,
-                      active: activeHandle,
-                      selected: _focused && _keyboard ? selectedCorner : null,
-                      focusRing: _focused ? scheme.tertiary : null,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final box = constraints.biggest;
+            _imageRect = fittedImageRect(widget.imageSize, box);
+            final focus = _focusPoint;
+            Offset? loupeCenter;
+            if (focus != null) {
+              // Above the finger; flip below when too close to the top edge.
+              final above = focus.dy - loupeGap - loupeSize / 2 >= 0;
+              loupeCenter = Offset(
+                focus.dx.clamp(loupeSize / 2, math.max(loupeSize / 2, box.width - loupeSize / 2)),
+                above ? focus.dy - loupeGap : focus.dy + loupeGap,
+              );
+            }
+            return GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              // Pick the handle under the finger-down point, not where the drag slop ended.
+              dragStartBehavior: DragStartBehavior.down,
+              onTapDown: (d) {
+                _keyboard = false;
+                _focus.requestFocus();
+                final h = _handleAt(d.localPosition);
+                if (h != null && h < 4) selectCorner(h);
+              },
+              onPanStart: (d) {
+                _keyboard = false;
+                _focus.requestFocus();
+                _onPanStart(d);
+              },
+              onPanUpdate: _onPanUpdate,
+              onPanEnd: _onPanEnd,
+              onPanCancel: _onPanEnd,
+              child: SizedBox.fromSize(
+                size: box,
+                child: Stack(
+                  children: [
+                    Positioned.fromRect(
+                      rect: _imageRect,
+                      child: Image(
+                        key: const ValueKey('corner-editor-image'),
+                        image: widget.image,
+                        fit: BoxFit.fill,
+                        gaplessPlayback: true,
+                      ),
                     ),
-                  ),
-                ),
-                if (loupeCenter != null)
-                  Positioned(
-                    key: const ValueKey('loupe'),
-                    left: loupeCenter.dx - loupeSize / 2,
-                    top: loupeCenter.dy - loupeSize / 2,
-                    child: IgnorePointer(
+                    Positioned.fill(
                       child: CustomPaint(
-                        size: const Size.square(loupeSize),
-                        painter: _LoupePainter(
-                          image: _decoded,
-                          imageSize: widget.imageSize,
-                          center: _handleImagePoint(_loupeHandle!),
-                          // 2.5x the on-screen size of the photo.
-                          imagePxPerLoupePx: widget.imageSize.width / _imageRect.width / 2.5,
-                          corners: widget.corners,
+                        painter: _EditorPainter(
+                          _handles(),
+                          imageRect: _imageRect,
                           color: color,
+                          active: activeHandle,
+                          selected: _focused && _keyboard ? selectedCorner : null,
+                          focusRing: _focused ? scheme.tertiary : null,
                         ),
                       ),
                     ),
-                  ),
-              ]),
-            ),
-          );
-        }),
+                    if (loupeCenter != null)
+                      Positioned(
+                        key: const ValueKey('loupe'),
+                        left: loupeCenter.dx - loupeSize / 2,
+                        top: loupeCenter.dy - loupeSize / 2,
+                        child: IgnorePointer(
+                          child: CustomPaint(
+                            size: const Size.square(loupeSize),
+                            painter: _LoupePainter(
+                              image: _decoded,
+                              imageSize: widget.imageSize,
+                              center: _handleImagePoint(_loupeHandle!),
+                              // 2.5x the on-screen size of the photo.
+                              imagePxPerLoupePx: widget.imageSize.width / _imageRect.width / 2.5,
+                              corners: widget.corners,
+                              color: color,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
       ),
     );
   }
 }
 
 class _EditorPainter extends CustomPainter {
-  _EditorPainter(this.handles, {required this.imageRect, required this.color, this.active, this.selected, this.focusRing});
+  _EditorPainter(
+    this.handles, {
+    required this.imageRect,
+    required this.color,
+    this.active,
+    this.selected,
+    this.focusRing,
+  });
   final List<Offset> handles;
   final Rect imageRect;
   final Color color;
@@ -361,26 +372,40 @@ class _EditorPainter extends CustomPainter {
     );
     canvas.restore();
     if (focusRing != null) {
-      canvas.drawRect(imageRect.inflate(3), Paint()
-        ..color = focusRing!
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 3);
+      canvas.drawRect(
+        imageRect.inflate(3),
+        Paint()
+          ..color = focusRing!
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 3,
+      );
     }
-    canvas.drawPath(Path()..addPolygon(corners, true), Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.5);
+    canvas.drawPath(
+      Path()..addPolygon(corners, true),
+      Paint()
+        ..color = color
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.5,
+    );
     for (var i = 0; i < handles.length; i++) {
       final isCorner = i < 4, isActive = i == active || i == selected;
       final r = isCorner ? (isActive ? 14.0 : 11.0) : (isActive ? 9.0 : 7.0);
       canvas.drawCircle(handles[i], r + 2, Paint()..color = Colors.white);
-      canvas.drawCircle(handles[i], r, Paint()..color = isActive ? Colors.white : color.withValues(alpha: isCorner ? 0.9 : 0.6));
+      canvas.drawCircle(
+        handles[i],
+        r,
+        Paint()..color = isActive ? Colors.white : color.withValues(alpha: isCorner ? 0.9 : 0.6),
+      );
       if (i == selected) {
         // Non-colour cue for the selected corner: a ring.
-        canvas.drawCircle(handles[i], r + 6, Paint()
-          ..color = color
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 3);
+        canvas.drawCircle(
+          handles[i],
+          r + 6,
+          Paint()
+            ..color = color
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 3,
+        );
       }
     }
   }
@@ -388,7 +413,6 @@ class _EditorPainter extends CustomPainter {
   @override
   bool shouldRepaint(_EditorPainter old) => true;
 }
-
 
 /// Circular magnifier drawn from the photo's own pixels around [center].
 class _LoupePainter extends CustomPainter {
@@ -422,7 +446,12 @@ class _LoupePainter extends CustomPainter {
       // The decoded image may be smaller than the declared size (e.g. downsampled); scale accordingly.
       final sx = img.width / imageSize.width, sy = img.height / imageSize.height;
       final half = r * imagePxPerLoupePx;
-      final src = Rect.fromLTRB((center.x - half) * sx, (center.y - half) * sy, (center.x + half) * sx, (center.y + half) * sy);
+      final src = Rect.fromLTRB(
+        (center.x - half) * sx,
+        (center.y - half) * sy,
+        (center.x + half) * sx,
+        (center.y + half) * sy,
+      );
       canvas.drawImageRect(img, src, circle, Paint()..filterQuality = FilterQuality.medium);
     }
     canvas.drawPath(
@@ -440,13 +469,21 @@ class _LoupePainter extends CustomPainter {
     canvas.drawLine(c - const Offset(arm, 0), c + const Offset(arm, 0), p);
     canvas.drawLine(c - const Offset(0, arm), c + const Offset(0, arm), p);
     canvas.restore();
-    canvas.drawCircle(c, r - 1.5, Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3);
+    canvas.drawCircle(
+      c,
+      r - 1.5,
+      Paint()
+        ..color = Colors.white
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3,
+    );
   }
 
   @override
   bool shouldRepaint(_LoupePainter old) =>
-      old.image != image || old.center != center || old.imagePxPerLoupePx != imagePxPerLoupePx || old.corners != corners || old.color != color;
+      old.image != image ||
+      old.center != center ||
+      old.imagePxPerLoupePx != imagePxPerLoupePx ||
+      old.corners != corners ||
+      old.color != color;
 }

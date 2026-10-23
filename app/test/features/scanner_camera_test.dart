@@ -20,8 +20,12 @@ void main() {
 
   test('rotation 180 and 270', () {
     expect(AnalysisFrame(lumaFrame(), rotationDegrees: 180).toUpright(sensor).first.x, closeTo(0.6, 1e-9));
-    expect(AnalysisFrame(lumaFrame(), rotationDegrees: 270).toUpright(sensor),
-        const [Pt(0.1, 0.6), Pt(0.6, 0.6), Pt(0.6, 0.9), Pt(0.1, 0.9)]);
+    expect(AnalysisFrame(lumaFrame(), rotationDegrees: 270).toUpright(sensor), const [
+      Pt(0.1, 0.6),
+      Pt(0.6, 0.6),
+      Pt(0.6, 0.9),
+      Pt(0.1, 0.9),
+    ]);
   });
 
   test('brightness estimate', () {

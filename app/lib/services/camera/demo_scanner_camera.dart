@@ -47,9 +47,9 @@ class DemoScannerCamera implements ScannerCamera {
 
   @override
   Widget buildPreview() => ValueListenableBuilder<int>(
-        valueListenable: index,
-        builder: (_, i, _) => Image.memory(_images[i].jpeg, fit: BoxFit.fill, gaplessPlayback: true),
-      );
+    valueListenable: index,
+    builder: (_, i, _) => Image.memory(_images[i].jpeg, fit: BoxFit.fill, gaplessPlayback: true),
+  );
 
   @override
   Future<AnalysisFrame> nextFrame() async {

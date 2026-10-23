@@ -38,10 +38,13 @@ class _StoredPageImageState extends ConsumerState<StoredPageImage> {
     }
     final shown = _last;
     if (shown != null) {
-      return Stack(alignment: Alignment.center, children: [
-        _withMarkup(shown, _lastPage ?? p),
-        if (bytes.isLoading) const SizedBox.square(dimension: 24, child: CircularProgressIndicator(strokeWidth: 2)),
-      ]);
+      return Stack(
+        alignment: Alignment.center,
+        children: [
+          _withMarkup(shown, _lastPage ?? p),
+          if (bytes.isLoading) const SizedBox.square(dimension: 24, child: CircularProgressIndicator(strokeWidth: 2)),
+        ],
+      );
     }
     return switch (bytes) {
       AsyncError() => const Center(child: Icon(Icons.broken_image_outlined)),
@@ -60,10 +63,13 @@ class _StoredPageImageState extends ConsumerState<StoredPageImage> {
       clipBehavior: Clip.hardEdge,
       child: SizedBox.fromSize(
         size: size,
-        child: Stack(fit: StackFit.expand, children: [
-          Image.memory(bytes, fit: BoxFit.fill, gaplessPlayback: true),
-          CustomPaint(painter: MarkupPainter(p.markup)),
-        ]),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.memory(bytes, fit: BoxFit.fill, gaplessPlayback: true),
+            CustomPaint(painter: MarkupPainter(p.markup)),
+          ],
+        ),
       ),
     );
   }

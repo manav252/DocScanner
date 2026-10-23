@@ -89,13 +89,22 @@ class WebScannerCamera implements ScannerCamera {
     _sinceLastFrame.start();
   }
 
-  static Future<List<web.MediaDeviceInfo>> _videoInputs(web.MediaDevices devices) async =>
-      [for (final d in (await devices.enumerateDevices().toDart).toDart) if (d.kind == 'videoinput' && d.deviceId.isNotEmpty) d];
+  static Future<List<web.MediaDeviceInfo>> _videoInputs(web.MediaDevices devices) async => [
+    for (final d in (await devices.enumerateDevices().toDart).toDart)
+      if (d.kind == 'videoinput' && d.deviceId.isNotEmpty) d,
+  ];
 
   /// DOMException name from a caught JS error (works under dart2js and dart2wasm).
   static String _domErrorName(Object e) {
     final s = e.toString();
-    const names = ['NotAllowedError', 'SecurityError', 'NotFoundError', 'OverconstrainedError', 'NotReadableError', 'AbortError'];
+    const names = [
+      'NotAllowedError',
+      'SecurityError',
+      'NotFoundError',
+      'OverconstrainedError',
+      'NotReadableError',
+      'AbortError',
+    ];
     return names.firstWhere(s.contains, orElse: () => '');
   }
 
@@ -156,11 +165,14 @@ class WebScannerCamera implements ScannerCamera {
     final t = _track;
     if (t == null) return;
     await t
-        .applyConstraints({
-          'advanced': [
-            {'torch': on},
-          ],
-        }.jsify()! as web.MediaTrackConstraints)
+        .applyConstraints(
+          {
+                'advanced': [
+                  {'torch': on},
+                ],
+              }.jsify()!
+              as web.MediaTrackConstraints,
+        )
         .toDart;
   }
 

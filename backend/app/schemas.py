@@ -11,6 +11,7 @@ FileKind = Literal["source", "render", "thumb"]
 
 # ---------- auth ----------
 
+
 class Credentials(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8, max_length=128)
@@ -35,6 +36,7 @@ class TokenOut(BaseModel):
 
 # ---------- documents ----------
 
+
 class Edits(BaseModel):
     model_config = ConfigDict(extra="forbid")
     filter: FilterName = "magic_color"
@@ -44,8 +46,8 @@ class Edits(BaseModel):
     @field_validator("crop")
     @classmethod
     def _crop_in_unit_square(cls, v: list[float]) -> list[float]:
-        l, t, w, h = v
-        if not (0 <= l < 1 and 0 <= t < 1 and 0 < w <= 1.0001 - l and 0 < h <= 1.0001 - t):
+        left, top, w, h = v
+        if not (0 <= left < 1 and 0 <= top < 1 and 0 < w <= 1.0001 - left and 0 < h <= 1.0001 - top):
             raise ValueError("crop must lie inside [0, 1]")
         return v
 

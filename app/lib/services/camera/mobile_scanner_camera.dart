@@ -69,12 +69,11 @@ class MobileScannerCamera implements ScannerCamera {
   }
 
   CameraFailure _map(CameraException e) => switch (e.code) {
-        'CameraAccessDenied' ||
-        'CameraAccessDeniedWithoutPrompt' ||
-        'CameraAccessRestricted' =>
-          CameraFailure(CameraFailureKind.permissionDenied, e.description ?? ''),
-        _ => CameraFailure(CameraFailureKind.other, '${e.code}: ${e.description}'),
-      };
+    'CameraAccessDenied' ||
+    'CameraAccessDeniedWithoutPrompt' ||
+    'CameraAccessRestricted' => CameraFailure(CameraFailureKind.permissionDenied, e.description ?? ''),
+    _ => CameraFailure(CameraFailureKind.other, '${e.code}: ${e.description}'),
+  };
 
   Future<void> _startStream() async {
     if (_streaming) return;

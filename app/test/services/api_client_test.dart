@@ -8,12 +8,12 @@ import 'package:test/test.dart';
 const old = Session(accessToken: 'old', refreshToken: 'r1', userId: 'u', email: 'e@x.com');
 
 String tokens(String access) => jsonEncode({
-      'access_token': access,
-      'refresh_token': 'r2',
-      'token_type': 'bearer',
-      'expires_in': 3600,
-      'user': {'id': 'u', 'email': 'e@x.com'},
-    });
+  'access_token': access,
+  'refresh_token': 'r2',
+  'token_type': 'bearer',
+  'expires_in': 3600,
+  'user': {'id': 'u', 'email': 'e@x.com'},
+});
 
 void main() {
   test('expired access token is refreshed once and the request retried', () async {
@@ -44,7 +44,10 @@ void main() {
       onSessionChanged: (s) => stored = s,
       httpClient: MockClient((req) async => http.Response('{"detail":"nope"}', 401)),
     );
-    await expectLater(client.listDocuments(), throwsA(isA<ApiException>().having((e) => e.isUnauthorized, '401', true)));
+    await expectLater(
+      client.listDocuments(),
+      throwsA(isA<ApiException>().having((e) => e.isUnauthorized, '401', true)),
+    );
     expect(stored, isNull);
     expect(client.session, isNull);
   });
@@ -53,8 +56,15 @@ void main() {
     final client = ApiClient(
       baseUrl: 'http://api',
       session: old,
-      httpClient: MockClient((req) async =>
-          http.Response(jsonEncode({'detail': 'changed', 'document': {'id': 'd', 'version': 3}}), 409)),
+      httpClient: MockClient(
+        (req) async => http.Response(
+          jsonEncode({
+            'detail': 'changed',
+            'document': {'id': 'd', 'version': 3},
+          }),
+          409,
+        ),
+      ),
     );
     await expectLater(
       client.putDocument('d', {}),
@@ -75,7 +85,9 @@ void main() {
       baseUrl: 'http://api',
       httpClient: MockClient((req) async => http.Response('{"detail":"Wrong email or password"}', 401)),
     );
-    await expectLater(client.login('e@x.com', 'password1'),
-        throwsA(isA<ApiException>().having((e) => e.message, 'message', 'Wrong email or password')));
+    await expectLater(
+      client.login('e@x.com', 'password1'),
+      throwsA(isA<ApiException>().having((e) => e.message, 'message', 'Wrong email or password')),
+    );
   });
 }

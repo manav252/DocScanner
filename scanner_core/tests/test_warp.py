@@ -19,7 +19,10 @@ def test_warp_recovers_flat_page():
     scene = mf.place(mf.bg_wood(rng), paper, corners).astype(np.uint8)
     flat = warp_perspective(scene, np.float32(corners)[[2, 0, 3, 1]])  # order must not matter
     ref = cv2.resize(paper, (flat.shape[1], flat.shape[0]), interpolation=cv2.INTER_AREA)
-    g = lambda im: cv2.GaussianBlur(cv2.cvtColor(im, cv2.COLOR_BGR2GRAY), (5, 5), 0)
+
+    def g(im):
+        return cv2.GaussianBlur(cv2.cvtColor(im, cv2.COLOR_BGR2GRAY), (5, 5), 0)
+
     assert ncc(g(flat), g(ref)) > 0.9
 
 

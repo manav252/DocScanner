@@ -25,7 +25,9 @@ def verify_password(password: str, hashed: str) -> bool:
 
 def create_token(settings: Settings, user_id: uuid.UUID, kind: str) -> tuple[str, int]:
     lifetime = (
-        timedelta(minutes=settings.access_token_minutes) if kind == "access" else timedelta(days=settings.refresh_token_days)
+        timedelta(minutes=settings.access_token_minutes)
+        if kind == "access"
+        else timedelta(days=settings.refresh_token_days)
     )
     now = datetime.now(UTC)
     token = jwt.encode(

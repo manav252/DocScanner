@@ -42,14 +42,16 @@ void main() {
       stillSize: (100, 140),
     );
     store = MemoryStore();
-    c = ProviderContainer(overrides: [
-      keyValueStoreProvider.overrideWithValue(store),
-      scanEngineProvider.overrideWithValue(engine),
-      importServiceProvider.overrideWithValue(const FakeImporter()),
-      pageRendererProvider.overrideWith(
-        (ref) => PageRenderer(engine, ref.watch(documentRepositoryProvider), measure: (_) async => (80, 120)),
-      ),
-    ]);
+    c = ProviderContainer(
+      overrides: [
+        keyValueStoreProvider.overrideWithValue(store),
+        scanEngineProvider.overrideWithValue(engine),
+        importServiceProvider.overrideWithValue(const FakeImporter()),
+        pageRendererProvider.overrideWith(
+          (ref) => PageRenderer(engine, ref.watch(documentRepositoryProvider), measure: (_) async => (80, 120)),
+        ),
+      ],
+    );
     addTearDown(c.dispose);
     id = (await c.read(libraryActionsProvider).createDocument(title: 'Test')).id;
     c.listen(documentProvider(id), (_, _) {});
@@ -142,12 +144,24 @@ void main() {
       ImportedFile('a.jpg', Uint8List.fromList([1, 2])),
       ImportedFile('b.pdf', Uint8List.fromList('%PDF-1.7'.codeUnits)),
     ]);
-    expect(n, 3);
+    expect(n.added, 3);
+    expect(n.failed, isEmpty);
     final pages = (await saved()).pages;
     expect(pages[0].corners.first, const Pt(10, 10));
     expect(pages[0].edits.filter, PageFilter.magicColor);
     expect(pages[1].edits.filter, PageFilter.original);
     expect(pages[2].corners, fullBounds(100, 140), reason: 'PDF page uses its own (normalised) bounds');
+  });
+
+  test('import: an unreadable file is skipped and named; the other files are still added', () async {
+    engine.unreadable = (b) => b.first == 0xFF;
+    final r = await c.read(importFlowProvider).importFiles(id, [
+      ImportedFile('broken.jpg', Uint8List.fromList([0xFF, 0xD8])),
+      ImportedFile('good.jpg', Uint8List.fromList([1, 2])),
+    ]);
+    expect(r.added, 1);
+    expect(r.failed, ['broken.jpg']);
+    expect((await saved()).pages, hasLength(1));
   });
 
   test('export PDF and JPGs', () async {

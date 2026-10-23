@@ -52,38 +52,54 @@ Future<MemoryStore> seed() async {
       await repo.putPageImage(p.id, k, png);
     }
   }
-  await repo.save(ScanDocument(id: 'd', title: 'Lease agreement', createdAt: DateTime(2026), updatedAt: DateTime(2026), pages: pages));
+  await repo.save(
+    ScanDocument(id: 'd', title: 'Lease agreement', createdAt: DateTime(2026), updatedAt: DateTime(2026), pages: pages),
+  );
   return store;
 }
 
 enum Look { light, dark, highContrast }
 
-Future<void> pumpScreen(WidgetTester tester, Widget screen, MemoryStore store,
-    {double textScale = 1, Look look = Look.light, Size size = const Size(420, 900), CameraFailure? cameraFailure}) async {
+Future<void> pumpScreen(
+  WidgetTester tester,
+  Widget screen,
+  MemoryStore store, {
+  double textScale = 1,
+  Look look = Look.light,
+  Size size = const Size(420, 900),
+  CameraFailure? cameraFailure,
+}) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   final engine = FakeEngine(frameDetector: (_) => noPage);
   final dark = look == Look.dark;
-  await tester.pumpWidget(testApp(
-    MediaQuery.withClampedTextScaling(
-      minScaleFactor: textScale,
-      maxScaleFactor: textScale,
-      child: Theme(
-        data: buildTheme(brightness: dark ? Brightness.dark : Brightness.light, highContrast: look == Look.highContrast),
-        child: screen,
+  await tester.pumpWidget(
+    testApp(
+      MediaQuery.withClampedTextScaling(
+        minScaleFactor: textScale,
+        maxScaleFactor: textScale,
+        child: Theme(
+          data: buildTheme(
+            brightness: dark ? Brightness.dark : Brightness.light,
+            highContrast: look == Look.highContrast,
+          ),
+          child: screen,
+        ),
       ),
+      overrides: [
+        keyValueStoreProvider.overrideWithValue(store),
+        scanEngineProvider.overrideWithValue(engine),
+        appSettingsProvider.overrideWith(
+          () => AppSettingsNotifier(const AppSettings(serverUrl: 'http://localhost:8000')),
+        ),
+        pageRendererProvider.overrideWith(
+          (ref) => PageRenderer(engine, ref.watch(documentRepositoryProvider), measure: (_) async => (583, 800)),
+        ),
+        cameraFactoryProvider.overrideWithValue(() => FakeCamera(failure: cameraFailure)),
+      ],
     ),
-    overrides: [
-      keyValueStoreProvider.overrideWithValue(store),
-      scanEngineProvider.overrideWithValue(engine),
-      appSettingsProvider.overrideWith(() => AppSettingsNotifier(const AppSettings(serverUrl: 'http://localhost:8000'))),
-      pageRendererProvider.overrideWith(
-        (ref) => PageRenderer(engine, ref.watch(documentRepositoryProvider), measure: (_) async => (583, 800)),
-      ),
-      cameraFactoryProvider.overrideWithValue(() => FakeCamera(failure: cameraFailure)),
-    ],
-  ));
+  );
   for (var i = 0; i < 6; i++) {
     await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 30)));
     await tester.pump();
@@ -160,7 +176,11 @@ void main() {
       final ctx = FocusManager.instance.primaryFocus?.context;
       return ctx == null
           ? ''
-          : find.descendant(of: find.byWidget(ctx.widget), matching: find.byType(Text)).evaluate().map((e) => (e.widget as Text).data).join(' ');
+          : find
+                .descendant(of: find.byWidget(ctx.widget), matching: find.byType(Text))
+                .evaluate()
+                .map((e) => (e.widget as Text).data)
+                .join(' ');
     }
 
     final order = <String>[];

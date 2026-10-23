@@ -20,9 +20,12 @@ class SyncStatus {
   /// Documents edited on two devices in the last sync (newer edit kept).
   final List<String> conflicts;
 
-  SyncStatus copyWith(SyncPhase phase, {DateTime? lastSynced, String? message, List<String>? conflicts}) =>
-      SyncStatus(phase,
-          lastSynced: lastSynced ?? this.lastSynced, message: message, conflicts: conflicts ?? this.conflicts);
+  SyncStatus copyWith(SyncPhase phase, {DateTime? lastSynced, String? message, List<String>? conflicts}) => SyncStatus(
+    phase,
+    lastSynced: lastSynced ?? this.lastSynced,
+    message: message,
+    conflicts: conflicts ?? this.conflicts,
+  );
 }
 
 class SyncController extends Notifier<SyncStatus> {

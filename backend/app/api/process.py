@@ -1,4 +1,5 @@
 """Server-side scanning: a fallback for devices too slow to run OpenCV themselves."""
+
 import json
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile, status
@@ -20,14 +21,18 @@ def _json_list(raw: str | None, name: str, shape: tuple[int, ...]) -> list | Non
     try:
         v = json.loads(raw)
         if len(shape) == 2:
-            ok = len(v) == shape[0] and all(len(p) == shape[1] and all(isinstance(x, (int, float)) for x in p) for p in v)
+            ok = len(v) == shape[0] and all(
+                len(p) == shape[1] and all(isinstance(x, (int, float)) for x in p) for p in v
+            )
         else:
             ok = len(v) == shape[0] and all(isinstance(x, (int, float)) for x in v)
         if not ok:
             raise ValueError
         return v
     except (ValueError, TypeError) as e:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, f"{name} must be a JSON array of shape {shape}") from e
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT, f"{name} must be a JSON array of shape {shape}"
+        ) from e
 
 
 @router.post(
@@ -60,8 +65,8 @@ async def process_image(
     quad = _json_list(corners, "corners", (4, 2))
     crop_rect = _json_list(crop, "crop", (4,))
     if crop_rect is not None:
-        l, t, w, h = crop_rect
-        if not (0 <= l < 1 and 0 <= t < 1 and 0 < w <= 1.0001 - l and 0 < h <= 1.0001 - t):
+        left, top, w, h = crop_rect
+        if not (0 <= left < 1 and 0 <= top < 1 and 0 < w <= 1.0001 - left and 0 < h <= 1.0001 - top):
             raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "crop must lie inside [0, 1]")
     try:
         r = await run_in_threadpool(

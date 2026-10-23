@@ -1,4 +1,5 @@
 """Perspective correction: map the 4 page corners onto a flat rectangle."""
+
 from __future__ import annotations
 
 import cv2

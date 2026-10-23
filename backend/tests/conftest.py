@@ -3,6 +3,7 @@
 A fresh database `docscanner_test` is created and migrated with Alembic for
 each session, and a separate bucket `docscanner-test` is emptied.
 """
+
 import asyncio
 import json
 import os
@@ -69,7 +70,12 @@ async def register(client: AsyncClient, email: str | None = None, password: str 
     r = await client.post("/auth/register", json={"email": email, "password": password})
     assert r.status_code == 201, r.text
     body = r.json()
-    return {"email": email, "password": password, "headers": {"Authorization": f"Bearer {body['access_token']}"}, **body}
+    return {
+        "email": email,
+        "password": password,
+        "headers": {"Authorization": f"Bearer {body['access_token']}"},
+        **body,
+    }
 
 
 @pytest.fixture

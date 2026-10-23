@@ -6,7 +6,8 @@ import 'package:opencv_dart/opencv_dart.dart' as cv;
 
 import 'fixtures.dart';
 
-cv.Mat png(String name, [int flags = cv.IMREAD_UNCHANGED]) => cv.imread('${fixturesDir.path}/filters/$name.png', flags: flags);
+cv.Mat png(String name, [int flags = cv.IMREAD_UNCHANGED]) =>
+    cv.imread('${fixturesDir.path}/filters/$name.png', flags: flags);
 
 double meanAbsDiff(cv.Mat a, cv.Mat b) {
   expect((a.rows, a.cols, a.channels), (b.rows, b.cols, b.channels));

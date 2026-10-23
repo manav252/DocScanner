@@ -42,7 +42,11 @@ class Exporter {
   const Exporter(this._ref);
   final Ref _ref;
 
-  Future<List<ExportFile>> build(ScanDocument doc, {required ExportFormat format, PdfPageSize pageSize = PdfPageSize.fit}) {
+  Future<List<ExportFile>> build(
+    ScanDocument doc, {
+    required ExportFormat format,
+    PdfPageSize pageSize = PdfPageSize.fit,
+  }) {
     final engine = _ref.read(scanEngineProvider);
     return buildExport(
       _ref.read(documentRepositoryProvider),
@@ -77,29 +81,29 @@ Future<List<ExportFile>> buildExport(
   if (images.isEmpty) throw StateError('This document has no pages');
   return switch (format) {
     ExportFormat.pdf => [
-        ExportFile(
-          '$name.pdf',
-          await buildPdf(
-            [
-              for (final (p, b) in images)
-                PdfPageInput(
-                  jpeg: b,
-                  width: p.renderWidth,
-                  height: p.renderHeight,
-                  text: p.ocrText,
-                  lines: p.needsOcr ? null : await _ocrLines(repo, p.id),
-                ),
-            ],
-            title: doc.title,
-            size: pageSize,
-            devanagariFont: await _devanagariFont(),
-          ),
-          'application/pdf',
+      ExportFile(
+        '$name.pdf',
+        await buildPdf(
+          [
+            for (final (p, b) in images)
+              PdfPageInput(
+                jpeg: b,
+                width: p.renderWidth,
+                height: p.renderHeight,
+                text: p.ocrText,
+                lines: p.needsOcr ? null : await _ocrLines(repo, p.id),
+              ),
+          ],
+          title: doc.title,
+          size: pageSize,
+          devanagariFont: await _devanagariFont(),
         ),
-      ],
+        'application/pdf',
+      ),
+    ],
     ExportFormat.jpg => [
-        for (final (i, (_, b)) in images.indexed)
-          ExportFile(images.length == 1 ? '$name.jpg' : '$name - ${i + 1}.jpg', b, 'image/jpeg'),
-      ],
+      for (final (i, (_, b)) in images.indexed)
+        ExportFile(images.length == 1 ? '$name.jpg' : '$name - ${i + 1}.jpg', b, 'image/jpeg'),
+    ],
   };
 }

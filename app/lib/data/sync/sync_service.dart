@@ -37,19 +37,21 @@ class SyncState {
   static const key = 'sync/state.json';
 
   Map<String, Object?> toJson() => {
-        'userId': userId,
-        'cursor': cursor,
-        'pages': {for (final e in pages.entries) e.key: [e.value.$1, e.value.$2]},
-      };
+    'userId': userId,
+    'cursor': cursor,
+    'pages': {
+      for (final e in pages.entries) e.key: [e.value.$1, e.value.$2],
+    },
+  };
 
   static SyncState fromJson(Map<String, dynamic> j) => SyncState(
-        userId: j['userId'] as String?,
-        cursor: j['cursor'] as int? ?? 0,
-        pages: {
-          for (final e in ((j['pages'] as Map?) ?? {}).entries)
-            e.key as String: ((e.value as List)[0] as int, (e.value as List)[1] as int),
-        },
-      );
+    userId: j['userId'] as String?,
+    cursor: j['cursor'] as int? ?? 0,
+    pages: {
+      for (final e in ((j['pages'] as Map?) ?? {}).entries)
+        e.key as String: ((e.value as List)[0] as int, (e.value as List)[1] as int),
+    },
+  );
 }
 
 class SyncReport {
@@ -169,7 +171,11 @@ class SyncService {
     final needSource = done == null || done.$2 != p.sourceVersion;
     final needRender = done == null || done.$1 != p.revision;
     if (!needSource && !needRender) return;
-    for (final kind in [if (needSource) PageImage.source, if (needRender) PageImage.render, if (needRender) PageImage.thumb]) {
+    for (final kind in [
+      if (needSource) PageImage.source,
+      if (needRender) PageImage.render,
+      if (needRender) PageImage.thumb,
+    ]) {
       final bytes = await repo.pageImage(p.id, kind);
       if (bytes == null) throw StateError('page ${p.id} is missing its ${kind.name} image');
       await api.putPageFile(docId, p.id, _kinds[kind]!, bytes);
@@ -234,7 +240,11 @@ class SyncService {
       final have = local?.pages.where((p) => p.id == page.id).firstOrNull;
       final needSource = known == null || known.$2 != page.sourceVersion || have == null;
       final needRender = known == null || known.$1 != page.revision || have == null;
-      for (final kind in [if (needSource) PageImage.source, if (needRender) PageImage.render, if (needRender) PageImage.thumb]) {
+      for (final kind in [
+        if (needSource) PageImage.source,
+        if (needRender) PageImage.render,
+        if (needRender) PageImage.thumb,
+      ]) {
         final bytes = await api.getPageFile(id, page.id, _kinds[kind]!);
         await repo.putPageImage(page.id, kind, Uint8List.fromList(bytes));
       }
@@ -252,18 +262,20 @@ class SyncService {
       }
     }
     final rev = (local?.revision ?? 0) + 1;
-    await repo.save(ScanDocument(
-      id: id,
-      title: s['title'] as String,
-      createdAt: DateTime.parse(s['created_at'] as String).toLocal(),
-      updatedAt: serverUpdated,
-      pages: pages,
-      revision: rev,
-      remoteId: id,
-      syncedRevision: rev,
-      serverVersion: version,
-      backup: true,
-    ));
+    await repo.save(
+      ScanDocument(
+        id: id,
+        title: s['title'] as String,
+        createdAt: DateTime.parse(s['created_at'] as String).toLocal(),
+        updatedAt: serverUpdated,
+        pages: pages,
+        revision: rev,
+        remoteId: id,
+        syncedRevision: rev,
+        serverVersion: version,
+        backup: true,
+      ),
+    );
     await _saveState(state);
     return true;
   }
@@ -276,31 +288,29 @@ class SyncService {
   // ---------------- mapping ----------------
 
   static Map<String, dynamic> _toServer(ScanDocument d, {int? baseVersion}) => {
-        'title': d.title,
-        'created_at': d.createdAt.toUtc().toIso8601String(),
-        'updated_at': d.updatedAt.toUtc().toIso8601String(),
-        'base_version': baseVersion,
-        'pages': [
-          for (final p in d.pages)
-            {
-              'id': p.id,
-              'source_width': p.sourceWidth,
-              'source_height': p.sourceHeight,
-              'corners': [for (final c in p.corners) [c.x, c.y]],
-              'edits': {
-                'filter': p.edits.filter.wireName,
-                'turns': p.edits.quarterTurns,
-                'crop': p.edits.crop.toJson(),
-              },
-              'revision': p.revision,
-              'source_version': p.sourceVersion,
-              'render_width': p.renderWidth,
-              'render_height': p.renderHeight,
-              if (p.ocrText != null) 'ocr_text': p.ocrText,
-              if (p.markup.isNotEmpty) 'markup': markupToJson(p.markup),
-            },
-        ],
-      };
+    'title': d.title,
+    'created_at': d.createdAt.toUtc().toIso8601String(),
+    'updated_at': d.updatedAt.toUtc().toIso8601String(),
+    'base_version': baseVersion,
+    'pages': [
+      for (final p in d.pages)
+        {
+          'id': p.id,
+          'source_width': p.sourceWidth,
+          'source_height': p.sourceHeight,
+          'corners': [
+            for (final c in p.corners) [c.x, c.y],
+          ],
+          'edits': {'filter': p.edits.filter.wireName, 'turns': p.edits.quarterTurns, 'crop': p.edits.crop.toJson()},
+          'revision': p.revision,
+          'source_version': p.sourceVersion,
+          'render_width': p.renderWidth,
+          'render_height': p.renderHeight,
+          if (p.ocrText != null) 'ocr_text': p.ocrText,
+          if (p.markup.isNotEmpty) 'markup': markupToJson(p.markup),
+        },
+    ],
+  };
 
   static ScanPage _pageFromServer(Map<String, dynamic> j) {
     final e = (j['edits'] as Map).cast<String, dynamic>();

@@ -213,6 +213,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String importSkipped(String names) {
+    return 'These files could not be opened and were skipped: $names';
+  }
+
+  @override
   String get importNothing =>
       'Nothing to import. Choose JPG, PNG or PDF files.';
 

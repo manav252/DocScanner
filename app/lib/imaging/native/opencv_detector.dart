@@ -44,9 +44,8 @@ Detection detectDocumentMat(cv.Mat image, {int maxDim = _P.maxDim}) {
 /// already a grayscale image, so no colour conversion is needed.
 Detection detectDocumentLuma(Uint8List luma, int width, int height, {int? rowStride, int maxDim = _P.maxDim}) {
   final stride = rowStride ?? width;
-  final packed = stride == width
-      ? luma.sublist(0, width * height)
-      : Uint8List(width * height)..setAll(0, [for (var r = 0; r < height; r++) ...luma.sublist(r * stride, r * stride + width)]);
+  final packed = stride == width ? luma.sublist(0, width * height) : Uint8List(width * height)
+    ..setAll(0, [for (var r = 0; r < height; r++) ...luma.sublist(r * stride, r * stride + width)]);
   final m = cv.Mat.fromList(height, width, cv.MatType.CV_8UC1, packed);
   final d = detectDocumentMat(m, maxDim: maxDim);
   m.dispose();
@@ -72,10 +71,12 @@ Detection _detectSmallGray(cv.Mat graySmall, int w, int h, double scale) {
       edges.dispose();
       if (res != null) {
         final q = _refineCorners(res.$1, gray)
-            .map((p) => Pt(
-                  ((p.x - pad + 0.5) / scale - 0.5).clamp(0, w - 1).toDouble(),
-                  ((p.y - pad + 0.5) / scale - 0.5).clamp(0, h - 1).toDouble(),
-                ))
+            .map(
+              (p) => Pt(
+                ((p.x - pad + 0.5) / scale - 0.5).clamp(0, w - 1).toDouble(),
+                ((p.y - pad + 0.5) / scale - 0.5).clamp(0, h - 1).toDouble(),
+              ),
+            )
             .toList();
         return Detection(q, found: true, score: res.$2);
       }

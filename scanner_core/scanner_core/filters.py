@@ -1,4 +1,5 @@
 """Enhancement filters applied to a flattened page, plus rotate and crop."""
+
 from __future__ import annotations
 
 from enum import Enum
@@ -58,11 +59,11 @@ def magic_color(image: np.ndarray) -> np.ndarray:
         image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
     flat = remove_shadows(image)
     lab = cv2.cvtColor(flat, cv2.COLOR_BGR2LAB)
-    l, a, b = cv2.split(lab)
-    l = cv2.createCLAHE(clipLimit=1.5, tileGridSize=(8, 8)).apply(l)
+    lightness, a, b = cv2.split(lab)
+    lightness = cv2.createCLAHE(clipLimit=1.5, tileGridSize=(8, 8)).apply(lightness)
     # push near-white paper to pure white and deepen ink
-    l = cv2.LUT(l, np.clip((np.arange(256) - 20) * 255 / 215, 0, 255).astype(np.uint8))
-    out = cv2.cvtColor(cv2.merge([l, a, b]), cv2.COLOR_LAB2BGR)
+    lightness = cv2.LUT(lightness, np.clip((np.arange(256) - 20) * 255 / 215, 0, 255).astype(np.uint8))
+    out = cv2.cvtColor(cv2.merge([lightness, a, b]), cv2.COLOR_LAB2BGR)
     hsv = cv2.cvtColor(out, cv2.COLOR_BGR2HSV).astype(np.float32)
     hsv[..., 1] = np.clip(hsv[..., 1] * 1.25, 0, 255)
     return cv2.cvtColor(hsv.astype(np.uint8), cv2.COLOR_HSV2BGR)

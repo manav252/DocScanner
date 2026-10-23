@@ -2,6 +2,7 @@
 
 Usage: python tests/debug_detect.py [out.jpg]
 """
+
 import json
 import sys
 import time

@@ -113,7 +113,9 @@ async def test_file_validation(client, user, small_jpeg):
     assert (await client.put(url, content=b"not an image at all", headers=h)).status_code == 415
     assert (await client.put(url, content=b"\xff\xd8\xff" + b"0" * (3 * 1024 * 1024), headers=h)).status_code == 413
     assert (await client.put("/documents/d4/pages/p/files/other", content=small_jpeg, headers=h)).status_code == 422
-    assert (await client.put("/documents/bad%20id/pages/p/files/render", content=small_jpeg, headers=h)).status_code == 422
+    assert (
+        await client.put("/documents/bad%20id/pages/p/files/render", content=small_jpeg, headers=h)
+    ).status_code == 422
     assert (await client.put(url, content=small_jpeg, headers=h)).status_code == 204
     r = await client.get(url, headers=h)
     assert r.status_code == 200 and r.content == small_jpeg and r.headers["content-type"] == "image/jpeg"
@@ -138,15 +140,20 @@ async def test_pdf_download(client, user, photo):
     await client.put("/documents/pdfdoc", json=doc(page("one"), page("two"), title="Tax: 2026"), headers=h)
     r = await client.get("/documents/pdfdoc/pdf", headers=h)
     assert r.status_code == 200 and r.content.startswith(b"%PDF")
-    assert r.content.count(b"/Type /Page\n") + r.content.count(b"/Type /Page ") + r.content.count(b"/Type/Page") >= 2 or \
-        len(__import__("pypdfium2").PdfDocument(r.content)) == 2
+    assert (
+        r.content.count(b"/Type /Page\n") + r.content.count(b"/Type /Page ") + r.content.count(b"/Type/Page") >= 2
+        or len(__import__("pypdfium2").PdfDocument(r.content)) == 2
+    )
     assert "Tax%3A%202026.pdf" in r.headers["content-disposition"]
 
 
 async def test_upload_pdf_and_photo(client, user, photo):
     h = user["headers"]
     pdf = img2pdf.convert([photo, photo])
-    files = [("files", ("scan.pdf", io.BytesIO(pdf), "application/pdf")), ("files", ("page.jpg", io.BytesIO(photo), "image/jpeg"))]
+    files = [
+        ("files", ("scan.pdf", io.BytesIO(pdf), "application/pdf")),
+        ("files", ("page.jpg", io.BytesIO(photo), "image/jpeg")),
+    ]
     r = await client.post("/documents/upload", files=files, headers=h)
     assert r.status_code == 201, r.text
     d = r.json()
@@ -157,7 +164,9 @@ async def test_upload_pdf_and_photo(client, user, photo):
     assert 0.65 < photo_page["render_width"] / photo_page["render_height"] < 0.85
     for p in d["pages"]:
         for kind in ("source", "render", "thumb"):
-            assert (await client.get(f"/documents/{d['id']}/pages/{p['id']}/files/{kind}", headers=h)).status_code == 200
+            assert (
+                await client.get(f"/documents/{d['id']}/pages/{p['id']}/files/{kind}", headers=h)
+            ).status_code == 200
     # It shows up for sync.
     assert d["id"] in [x["id"] for x in (await client.get("/documents", headers=h)).json()["documents"]]
 
@@ -166,7 +175,9 @@ async def test_upload_rejects_bad_files(client, user):
     h = user["headers"]
     r = await client.post("/documents/upload", files=[("files", ("x.txt", b"hello", "text/plain"))], headers=h)
     assert r.status_code == 415
-    r = await client.post("/documents/upload", files=[("files", ("x.pdf", b"%PDF-1.4 broken", "application/pdf"))], headers=h)
+    r = await client.post(
+        "/documents/upload", files=[("files", ("x.pdf", b"%PDF-1.4 broken", "application/pdf"))], headers=h
+    )
     assert r.status_code == 422
 
 
@@ -179,4 +190,6 @@ async def test_markup_round_trip_and_limits(client, user, small_jpeg):
     bad = await client.put("/documents/mk", json=doc(page("p", markup=[{"x": 1}]), base_version=1), headers=h)
     assert bad.status_code == 422
     huge = [{"k": "pen", "id": str(i), "p": [0.1] * 400} for i in range(1500)]
-    assert (await client.put("/documents/mk", json=doc(page("p", markup=huge), base_version=1), headers=h)).status_code == 422
+    assert (
+        await client.put("/documents/mk", json=doc(page("p", markup=huge), base_version=1), headers=h)
+    ).status_code == 422

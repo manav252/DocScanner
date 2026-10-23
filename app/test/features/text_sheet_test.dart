@@ -37,23 +37,39 @@ Future<MemoryStore> seed() async {
   final store = MemoryStore();
   final repo = DocumentRepository(store);
   final png = File('${fixturesDir.path}/filters/input.png').readAsBytesSync();
-  const p = ScanPage(id: 'p', sourceWidth: 1, sourceHeight: 1, corners: [Pt(0, 0), Pt(0, 0), Pt(0, 0), Pt(0, 0)], revision: 1, renderWidth: 1, renderHeight: 1);
+  const p = ScanPage(
+    id: 'p',
+    sourceWidth: 1,
+    sourceHeight: 1,
+    corners: [Pt(0, 0), Pt(0, 0), Pt(0, 0), Pt(0, 0)],
+    revision: 1,
+    renderWidth: 1,
+    renderHeight: 1,
+  );
   for (final k in PageImage.values) {
     await repo.putPageImage('p', k, png);
   }
-  await repo.save(ScanDocument(id: 'd', title: 'T', createdAt: DateTime(2026), updatedAt: DateTime(2026), pages: const [p]));
+  await repo.save(
+    ScanDocument(id: 'd', title: 'T', createdAt: DateTime(2026), updatedAt: DateTime(2026), pages: const [p]),
+  );
   return store;
 }
 
 Future<void> open(WidgetTester tester, MemoryStore store, TextRecognizer r) async {
-  await tester.pumpWidget(testApp(
-    Builder(builder: (context) => const Scaffold(body: TextSheet(documentId: 'd', pageId: 'p'))),
-    overrides: [
-      keyValueStoreProvider.overrideWithValue(store),
-      scanEngineProvider.overrideWithValue(FakeEngine(frameDetector: (_) => noPage)),
-      textRecognizerProvider.overrideWithValue(r),
-    ],
-  ));
+  await tester.pumpWidget(
+    testApp(
+      Builder(
+        builder: (context) => const Scaffold(
+          body: TextSheet(documentId: 'd', pageId: 'p'),
+        ),
+      ),
+      overrides: [
+        keyValueStoreProvider.overrideWithValue(store),
+        scanEngineProvider.overrideWithValue(FakeEngine(frameDetector: (_) => noPage)),
+        textRecognizerProvider.overrideWithValue(r),
+      ],
+    ),
+  );
   // Keep the document controller alive like the editor does.
   for (var i = 0; i < 6; i++) {
     await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 40)));
@@ -67,7 +83,8 @@ void main() {
     await open(tester, store, ScriptedRecognizer(const OcrResult('l1 ~ |', [OcrLine('~ |', 0, 0, 1, 1)])));
     expect(find.text('No text found on this page'), findsOneWidget);
     final copy = tester.widget<ButtonStyleButton>(
-        find.ancestor(of: find.text('Copy text'), matching: find.byWidgetPredicate((w) => w is ButtonStyleButton)));
+      find.ancestor(of: find.text('Copy text'), matching: find.byWidgetPredicate((w) => w is ButtonStyleButton)),
+    );
     expect(copy.onPressed, isNull);
   });
 

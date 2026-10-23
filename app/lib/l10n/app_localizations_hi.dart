@@ -213,6 +213,11 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String importSkipped(String names) {
+    return 'ये फ़ाइलें खुल नहीं सकीं और छोड़ दी गईं: $names';
+  }
+
+  @override
   String get importNothing =>
       'जोड़ने के लिए कुछ नहीं। JPG, PNG या PDF फ़ाइलें चुनें।';
 

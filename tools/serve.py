@@ -8,6 +8,7 @@ updated test results show up on the next reload.
 Use --host 0.0.0.0 to open it from a phone on the same Wi-Fi (camera access on
 a phone browser needs https; see the README).
 """
+
 import argparse
 import functools
 import http.server
@@ -30,7 +31,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def translate_path(self, path: str) -> str:
         clean = path.split("?", 1)[0].split("#", 1)[0]
         if clean == "/app" or clean.startswith("/app/"):
-            rel = clean[len("/app"):].lstrip("/")
+            rel = clean[len("/app") :].lstrip("/")
             base = APP
         else:
             rel = clean.lstrip("/")

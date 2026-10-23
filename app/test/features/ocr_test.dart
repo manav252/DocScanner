@@ -50,14 +50,16 @@ void main() {
     recognizer = FakeRecognizer();
     store = MemoryStore();
     final engine = FakeEngine(frameDetector: (_) => noPage);
-    c = ProviderContainer(overrides: [
-      keyValueStoreProvider.overrideWithValue(store),
-      scanEngineProvider.overrideWithValue(engine),
-      textRecognizerProvider.overrideWithValue(recognizer),
-      pageRendererProvider.overrideWith(
-        (ref) => PageRenderer(engine, ref.watch(documentRepositoryProvider), measure: (_) async => (1000, 1400)),
-      ),
-    ]);
+    c = ProviderContainer(
+      overrides: [
+        keyValueStoreProvider.overrideWithValue(store),
+        scanEngineProvider.overrideWithValue(engine),
+        textRecognizerProvider.overrideWithValue(recognizer),
+        pageRendererProvider.overrideWith(
+          (ref) => PageRenderer(engine, ref.watch(documentRepositoryProvider), measure: (_) async => (1000, 1400)),
+        ),
+      ],
+    );
     addTearDown(c.dispose);
     id = (await c.read(libraryActionsProvider).createDocument(title: 'Bills')).id;
     c.listen(documentProvider(id), (_, _) {});
@@ -75,7 +77,8 @@ void main() {
     final ps = await pages();
     expect(ps.every((p) => !p.needsOcr && p.ocrText == 'INVOICE 42\nTotal 99.50'), isTrue);
     final boxes = OcrResult.fromJson(
-        jsonDecode(utf8.decode((await c.read(documentRepositoryProvider).pageOcr(ps.first.id))!)) as Map<String, dynamic>);
+      jsonDecode(utf8.decode((await c.read(documentRepositoryProvider).pageOcr(ps.first.id))!)) as Map<String, dynamic>,
+    );
     expect(boxes.lines.first.text, 'INVOICE 42');
     expect(await c.read(ocrRunnerProvider).run(id), 0, reason: 'nothing stale');
     expect(recognizer.calls, 2);
@@ -106,10 +109,15 @@ void main() {
   test('searchable PDF: invisible text placed over the image', () async {
     final jpg = File('${fixturesDir.path}/tilted_paper.jpg').readAsBytesSync();
     final pdf = await buildPdf([
-      PdfPageInput(jpeg: jpg, width: 1200, height: 1600, lines: const [
-        OcrLine('QUARTERLY REPORT', 0.1, 0.05, 0.6, 0.03),
-        OcrLine('total – “quoted” 中', 0.1, 0.1, 0.6, 0.02),
-      ]),
+      PdfPageInput(
+        jpeg: jpg,
+        width: 1200,
+        height: 1600,
+        lines: const [
+          OcrLine('QUARTERLY REPORT', 0.1, 0.05, 0.6, 0.03),
+          OcrLine('total – “quoted” 中', 0.1, 0.1, 0.6, 0.02),
+        ],
+      ),
     ], compress: false);
     final s = latin1.decode(pdf);
     expect(s, contains('3 Tr'), reason: 'text rendering mode 3 = invisible');
@@ -125,23 +133,27 @@ void main() {
   });
 
   test('cleanOcr strips border junk and empty lines', () {
-    final r = cleanOcr(const OcrResult('', [
-      OcrLine('|', 0, 0, 0.01, 0.1),
-      OcrLine('QUARTERLY REPORT |', 0, 0, 1, 1),
-      OcrLine('| invoice receipt', 0, 0, 1, 1),
-      OcrLine('[ —— ]', 0, 0, 1, 1),
-      OcrLine('Total: 42', 0, 0, 1, 1),
-    ]));
+    final r = cleanOcr(
+      const OcrResult('', [
+        OcrLine('|', 0, 0, 0.01, 0.1),
+        OcrLine('QUARTERLY REPORT |', 0, 0, 1, 1),
+        OcrLine('| invoice receipt', 0, 0, 1, 1),
+        OcrLine('[ —— ]', 0, 0, 1, 1),
+        OcrLine('Total: 42', 0, 0, 1, 1),
+      ]),
+    );
     expect(r.text, 'QUARTERLY REPORT\ninvoice receipt\nTotal: 42');
   });
 
   test('cleanOcr drops low-confidence lines and non-words; Hindi passes', () {
-    final r = cleanOcr(const OcrResult('', [
-      OcrLine('Invoice 42', 0, 0, 1, 1, confidence: 0.9),
-      OcrLine('Rrnm qx', 0, 0, 1, 1, confidence: 0.2),
-      OcrLine('~ | ;', 0, 0, 1, 1, confidence: 0.95),
-      OcrLine('भारत एक विशाल देश है।', 0, 0, 1, 1, confidence: 0.94),
-    ]));
+    final r = cleanOcr(
+      const OcrResult('', [
+        OcrLine('Invoice 42', 0, 0, 1, 1, confidence: 0.9),
+        OcrLine('Rrnm qx', 0, 0, 1, 1, confidence: 0.2),
+        OcrLine('~ | ;', 0, 0, 1, 1, confidence: 0.95),
+        OcrLine('भारत एक विशाल देश है।', 0, 0, 1, 1, confidence: 0.94),
+      ]),
+    );
     expect(r.lines.map((l) => l.text), ['Invoice 42', 'भारत एक विशाल देश है।']);
     expect(meaningfulText('i'), isFalse);
     expect(meaningfulText('—— ——'), isFalse);
@@ -160,10 +172,16 @@ void main() {
 
   test('searchable PDF keeps Hindi text when the Devanagari font is supplied', () async {
     final jpg = File('${fixturesDir.path}/tilted_paper.jpg').readAsBytesSync();
-    final font = pw.Font.ttf(ByteData.sublistView(File('assets/fonts/NotoSansDevanagari-Regular.ttf').readAsBytesSync()));
-    final pdf = await buildPdf([
-      PdfPageInput(jpeg: jpg, width: 1200, height: 1600, lines: const [OcrLine('भारत देश', 0.1, 0.1, 0.5, 0.05)]),
-    ], compress: false, devanagariFont: font);
+    final font = pw.Font.ttf(
+      ByteData.sublistView(File('assets/fonts/NotoSansDevanagari-Regular.ttf').readAsBytesSync()),
+    );
+    final pdf = await buildPdf(
+      [
+        PdfPageInput(jpeg: jpg, width: 1200, height: 1600, lines: const [OcrLine('भारत देश', 0.1, 0.1, 0.5, 0.05)]),
+      ],
+      compress: false,
+      devanagariFont: font,
+    );
     final s = latin1.decode(pdf);
     expect(s, contains('NotoSansDevanagari'), reason: 'font embedded');
     expect(s, contains('/ToUnicode'), reason: 'text maps back to Unicode for search/copy');
