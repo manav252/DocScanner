@@ -1,5 +1,7 @@
 # DocScanner
 
+**Code:** https://github.com/manav252/DocScanner
+
 A document scanner in the spirit of Adobe Scan / CamScanner: one Flutter app for
 **Android, iPhone and the web** (your Mac's webcam works in the browser), an optional
 **FastAPI** backend for backup and sync, and a showcase **website**.
@@ -153,14 +155,12 @@ without full Xcode it uses a small `xcodebuild` stand-in for that run only.
 
 ## Source code on GitHub
 
-Not published yet. To publish (needs the GitHub CLI, signed in):
+**https://github.com/manav252/DocScanner**
 
 ```bash
-gh auth login
-gh repo create DocScanner --public --source . --push
+git clone https://github.com/manav252/DocScanner.git
+cd DocScanner && ./start.sh
 ```
-
-Then put the repository URL in `website/data/site.json` (`"githubUrl"`) and here.
 
 ## Documentation
 
