@@ -1,5 +1,7 @@
 # Technical decisions
 
+(For a component-by-component walkthrough of how the system works, see [`ARCHITECTURE.md`](ARCHITECTURE.md).)
+
 Why DocScanner is built the way it is, what was considered instead, how a scan
 flows through the system, what it cannot do, and questions to expect in a viva.
 
@@ -19,10 +21,10 @@ flowchart LR
     UI <--> STORE
     UI --> EXP
   end
-  subgraph Server["Optional backend (Docker)"]
+  subgraph Server["Optional backend (Docker: Render + Neon + R2 in production)"]
     API["FastAPI<br/>auth, documents, /process"]
-    PG[("PostgreSQL<br/>users, documents, pages")]
-    S3[("MinIO<br/>page images")]
+    PG[("PostgreSQL (Neon)<br/>users, documents, pages")]
+    S3[("S3 storage<br/>MinIO locally · Cloudflare R2 live")]
     CORE["scanner_core<br/>(Python reference)"]
     API --> PG
     API --> S3

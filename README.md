@@ -2,6 +2,15 @@
 
 **Code:** https://github.com/manav252/DocScanner
 
+| Live | |
+|---|---|
+| Website | https://manav252.github.io/DocScanner/ |
+| Web app (try it) | https://manav252.github.io/DocScanner/app/ |
+| Backend API | https://docscanner-api-vwgz.onrender.com ([health](https://docscanner-api-vwgz.onrender.com/health), [API docs](https://docscanner-api-vwgz.onrender.com/docs)) |
+
+> **How it works, technically:** [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) explains the whole
+> system end to end (OpenCV pipeline, offline storage, JWT auth, sync protocol, deployment, glossary).
+
 A document scanner in the spirit of Adobe Scan / CamScanner: one Flutter app for
 **Android, iPhone and the web** (your Mac's webcam works in the browser), an optional
 **FastAPI** backend for backup and sync, and a showcase **website**.
@@ -24,6 +33,35 @@ only adds backup and sync.
 - **Backup without an account**: Settings › *Export all documents (ZIP)* and *Import backup*;
   Settings also shows how much space your documents use
 - Web app is **installable** ("Add to Home Screen") and works **offline** after the first visit
+- **Accounts, backup and sync** across devices through the hosted backend
+
+## Architecture in one minute
+
+```
+Browser / phone (works fully offline)          Production hosting (free tiers)
+┌───────────────────────────────────────┐      ┌─────────────────────────────────────┐
+│ Flutter app (Dart, Riverpod)          │      │ GitHub Pages: website + web app     │
+│  · OpenCV page detection              │ HTTPS│ Render: FastAPI in Docker (uvicorn) │
+│    (opencv_dart / opencv.js worker)   │◄────►│  ├─ Neon PostgreSQL: users, docs    │
+│  · OCR: ML Kit / Tesseract.js         │ JWT  │  └─ Cloudflare R2 (S3): page images │
+│  · Files / IndexedDB local store      │      └─────────────────────────────────────┘
+│  · PDF export, service worker (PWA)   │
+└───────────────────────────────────────┘
+```
+
+| Layer | Technology |
+|---|---|
+| App | Flutter 3.47 / Dart 3.13, Riverpod 3, gen-l10n (English + Hindi) |
+| Computer vision | OpenCV: Canny edges → contours → `approxPolyDP` quadrilateral → sub-pixel line fit → perspective warp |
+| OCR | Google ML Kit (phones), Tesseract.js (web); invisible text layer makes PDFs searchable |
+| Local storage | Key-value store: files on phones, IndexedDB on the web; offline-first |
+| Backend | FastAPI (Python 3.12), SQLAlchemy async + asyncpg, Alembic migrations |
+| Auth | Argon2id password hashes, JWT access (60 min) + refresh (30 days) tokens |
+| Sync | Change cursor (Postgres sequence), optimistic concurrency (`base_version`, 409), tombstones |
+| Storage | PostgreSQL (metadata, JSONB pages) + S3-compatible bucket (images) |
+| Deploy | GitHub Actions → GitHub Pages; `render.yaml` Blueprint → Render (Docker); Neon; Cloudflare R2 |
+
+Full explanation with diagrams: **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.
 
 ```
 DocScanner/
@@ -36,7 +74,7 @@ DocScanner/
 │   ├── web/              opencv.js, Tesseract.js (+eng, hin), pdf.js: self-hosted, works offline
 │   ├── tool/strings.py   all UI strings (English + Hindi) → lib/l10n
 │   └── test/, test_js/   Dart and Node tests
-├── backend/          FastAPI + Postgres + MinIO (Docker Compose)
+├── backend/          FastAPI + Postgres + S3 storage (MinIO locally via Docker Compose; Neon + R2 in production)
 ├── scanner_core/     Python reference of the detector (also used by the backend)
 ├── shared/           Test photos, expected corners, detector parameters (shared by all 3 detectors)
 ├── website/          Showcase site: Home, How it works (live pipeline), Test results, Features
@@ -158,11 +196,14 @@ checks that need a real phone). Lint/format: `dart analyze`, `dart format`,
 (`python3 -m venv ~/development/buildtools && ~/development/buildtools/bin/pip install cmake ninja`);
 without full Xcode it uses a small `xcodebuild` stand-in for that run only.
 
-## Put it online for a demo
+## Online deployment
 
-The website and web app can be hosted free on GitHub Pages (a workflow is included),
-the optional backend on Render (`render.yaml`). Nothing deploys by itself; follow
-`docs/DEPLOY.md` (about 5 minutes for the website + app).
+It is live (links at the top). The website and web app are built by GitHub Actions and
+served by GitHub Pages; the backend runs on Render (Docker, `render.yaml`) with Neon
+Postgres and Cloudflare R2. The app's server address is set at build time from the
+repository variable `API_URL`. All secrets live in Render's environment settings,
+none in this repository. The free Render instance sleeps when idle; the app shows
+"Waking up the server…" and waits. Setup steps: `docs/DEPLOY.md`.
 
 ## Source code on GitHub
 
@@ -175,10 +216,11 @@ cd DocScanner && ./start.sh
 
 ## Documentation
 
+- `docs/ARCHITECTURE.md`: **how it works end to end**: components, scan pipeline, storage, API, auth, sync protocol, deployment, glossary
 - `docs/TECH_DECISIONS.md`: architecture diagram, scan flow, choices vs alternatives, limitations, viva Q&A
 - `docs/TESTING.md`: test results, accessibility audit, manual and phone-only checks
 - `docs/PERFORMANCE.md`: what was slow, why, what changed, before/after measurements
-- `docs/DEPLOY.md`: put the website + app on GitHub Pages and the backend on Render (step by step)
+- `docs/DEPLOY.md`: how it is deployed: GitHub Pages, Render, Neon, Cloudflare R2 (step by step)
 - `docs/FEATURE_AUDIT.md`: the audit this round of work started from
 - `docs/CHANGES.md`: every file created or changed in this round
 

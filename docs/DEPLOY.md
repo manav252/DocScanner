@@ -1,5 +1,10 @@
 # Putting DocScanner online for a demo
 
+**Current deployment (live):** website https://manav252.github.io/DocScanner/, app
+https://manav252.github.io/DocScanner/app/, API https://docscanner-api-vwgz.onrender.com
+(repository variable `API_URL` is set to this). Verified end to end: `/health` ok,
+sign-up, upload, sync to a second browser, download.
+
 Everything works without the backend (scanning, editing, OCR, export, backup
 as a ZIP). So the simplest public demo is just the website + web app on
 GitHub Pages. Add the backend only if you want to show account backup/sync.
@@ -95,8 +100,6 @@ Pick one:
   for one service running all month.)
 - **Or** open the site (or the `/health` URL) **2 minutes before** the demo.
 
-Then tell me the service URL and I will check sign-up, upload, sync to a second
-browser and download.
 
 ## Alternatives
 
