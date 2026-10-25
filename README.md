@@ -244,5 +244,3 @@ cd DocScanner && ./start.sh
   (search, copy) and re-run OCR for a positioned PDF text layer.
 - The same document edited on two devices: the newer version wins (you are told which).
 - Session tokens are stored in app storage, not the OS keychain; use HTTPS outside your LAN.
-- Phone-only behaviour (camera focus, flash, ML Kit, haptics, TalkBack/VoiceOver, share
-  sheet) has not been checked on real devices in this round: see `docs/TESTING.md` §3.
