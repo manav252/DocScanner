@@ -113,10 +113,9 @@ def test_params_match_shared_json():
         p["step_offset"],
         p["step_min"],
     )
-    assert (D.LINE_COUNT, D.CONFIDENT_SCORE, D.HOUGH_THRESHOLD, D.HOUGH_MIN_LENGTH, D.HOUGH_MAX_GAP) == (
+    assert (D.LINE_COUNT, D.CONFIDENT_SCORE, D.LINE_MIN_LENGTH, D.LINE_EPSILON) == (
         p["line_count"],
         p["confident_score"],
-        p["hough_threshold"],
-        p["hough_min_length"],
-        p["hough_max_gap"],
+        p["line_min_length"],
+        p["line_epsilon"],
     )

@@ -26,6 +26,37 @@ test.before(async () => {
 
 test('params match shared/detector_params.json', () => assert.deepStrictEqual(S.PARAMS, params));
 
+// Hard cases: same page found as the Python reference, within 6 px wherever the
+// reference is right; success per case -> docs/testing/detection-after-web.json.
+const HARD = path.join(FIX, 'hard');
+const hard = JSON.parse(fs.readFileSync(path.join(HARD, 'hard_cases.json')));
+const hardRef = JSON.parse(fs.readFileSync(path.join(HARD, 'python_reference.json')));
+const hardResults = {};
+for (const [name, items] of Object.entries(hard.cases)) {
+  test(`hard case: ${name}`, () => {
+    let ok = 0;
+    for (const it of items) {
+      const img = jpeg.decode(fs.readFileSync(path.join(HARD, it.file)), { useTArray: true, formatAsRGBA: true });
+      const d = S.detectDocument(cv, img);
+      const py = hardRef[it.file];
+      assert.strictEqual(d.found, py.found, `${it.file}: found differs from the Python reference`);
+      if (!d.found) continue;
+      const truth = S.orderCorners(it.corners);
+      if (maxErr(py.corners, truth) < TOL) {
+        const diff = maxErr(d.corners, py.corners);
+        assert.ok(diff < 6, `${it.file}: differs from the Python reference by ${diff.toFixed(1)}px`);
+      }
+      if (maxErr(d.corners, truth) < TOL) ok++;
+    }
+    hardResults[name] = { success: ok, total: items.length };
+  });
+}
+test.after(() => {
+  if (Object.keys(hardResults).length) {
+    fs.writeFileSync(path.join(__dirname, '..', '..', 'docs', 'testing', 'detection-after-web.json'), JSON.stringify(hardResults, null, 1));
+  }
+});
+
 for (const [name, c] of Object.entries(spec.cases)) {
   test(`fixture ${name}`, () => {
     const d = S.detectDocument(cv, load(name));

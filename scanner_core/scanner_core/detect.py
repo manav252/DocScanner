@@ -28,13 +28,10 @@ CURVED_BOW = 0.02  # above this a side counts as curved
 MIN_SUPPORT = 0.6  # each side needs an edge across it along >= 60% of its length
 STEP_OFFSET = 3.0  # px either side of a side where inside/outside brightness is compared
 STEP_MIN = 10.0  # brightness step (0-255) that counts as a border
-MIN_LINE_SUPPORT = 0.5  # quads built from straight lines: up to half a side may be hidden (fingers)
+MIN_LINE_SUPPORT = 0.75  # quads built from straight lines: up to a quarter of a side may be hidden (fingers)
 LINE_COUNT = 8  # longest distinct straight edges combined into quads
-HOUGH_THRESHOLD, HOUGH_MIN_LENGTH, HOUGH_MAX_GAP = (
-    40,
-    0.12,
-    8,
-)  # straight edges: votes, min length (of the long side), gap
+LINE_MIN_LENGTH = 0.12  # straight edges at least this long (fraction of the image's long side)
+LINE_EPSILON = 0.005  # outline simplification for straight edges (fraction of its perimeter)
 CONFIDENT_SCORE = 0.35  # a pass result this good ends the search; weaker ones let later passes try
 
 
@@ -205,18 +202,13 @@ def _edge_support(q: np.ndarray, bows, img: np.ndarray) -> list[float]:
     return out
 
 
-def _line_quads(edges: np.ndarray, img_area: float) -> list[np.ndarray]:
-    """Quads made of 4 long straight edges (2 roughly opposite pairs), each
-    extended to the others: finds a page whose corners are hidden (fingers,
-    other papers) or whose outline merges with clutter."""
-    h, w = edges.shape
-    segs = cv2.HoughLinesP(
-        edges, 1, np.pi / 180, HOUGH_THRESHOLD, minLineLength=HOUGH_MIN_LENGTH * max(h, w), maxLineGap=HOUGH_MAX_GAP
-    )
-    if segs is None:
+def _line_quads(segs: np.ndarray, w: int, h: int) -> list[np.ndarray]:
+    """Quads made of 4 long straight edges ([segs]: x1, y1, x2, y2), two roughly
+    opposite pairs, each extended to the others: finds a page whose corners are
+    hidden (fingers, other papers) or whose outline merges with clutter."""
+    if len(segs) == 0:
         return []
-    segs = segs.reshape(-1, 4).astype(np.float32)
-    segs = segs[np.argsort(-np.hypot(segs[:, 2] - segs[:, 0], segs[:, 3] - segs[:, 1]))]
+    segs = segs[np.argsort(-np.hypot(segs[:, 2] - segs[:, 0], segs[:, 3] - segs[:, 1]), kind="stable")]
     lines: list[tuple[np.ndarray, np.ndarray, float]] = []  # (point, unit direction, angle)
     for x1, y1, x2, y2 in segs:
         d = np.float32([x2 - x1, y2 - y1])
@@ -291,7 +283,20 @@ def _best_quad(edges: np.ndarray, img: np.ndarray) -> tuple[np.ndarray, float, b
         candidates.append(_extreme_points(c))
         for q in candidates:
             consider(_validate(c, c_area, q, img_area, img))
-    for q in _line_quads(edges, img_area):  # straight edges: recovers hidden corners
+    # Straight edges: the long sides of the 12 largest outlines, simplified. Pairs of them
+    # recover corners hidden by fingers or merged with clutter. (Not
+    # HoughLinesP: it is randomised and differs between OpenCV versions.)
+    segs = []
+    min_len = LINE_MIN_LENGTH * max(h, w)
+    for c in contours:
+        if cv2.arcLength(c, True) < 2 * min_len:
+            continue
+        p = cv2.approxPolyDP(c, LINE_EPSILON * cv2.arcLength(c, True), True).reshape(-1, 2).astype(np.float32)
+        for k in range(len(p)):
+            a, b = p[k], p[(k + 1) % len(p)]
+            if np.linalg.norm(b - a) >= min_len:
+                segs.append([a[0], a[1], b[0], b[1]])
+    for q in _line_quads(np.float32(segs).reshape(-1, 4), w, h):
         consider(_validate(None, 0, q, img_area, img))
     return best
 
@@ -349,16 +354,17 @@ def refine_corners(quad: np.ndarray, gray: np.ndarray, bands=(10, 5, 3), min_gra
     g = cv2.GaussianBlur(gray, (5, 5), 0).astype(np.float32)
     gx, gy = cv2.Sobel(g, cv2.CV_32F, 1, 0, ksize=3), cv2.Sobel(g, cv2.CV_32F, 0, 1, ksize=3)
     h, w = g.shape
-    q = quad.astype(np.float32).copy()
+    # Sample positions in float64, as the Dart and JS ports compute them.
+    q = quad.astype(np.float64).copy()
     for band in bands:
         lines = []
-        offs = np.arange(-band, band + 1, dtype=np.float32)
+        offs = np.arange(-band, band + 1, dtype=np.float64)
         for i in range(4):
             a, b = q[i], q[(i + 1) % 4]
             ab = b - a
             length = float(np.linalg.norm(ab))
-            n = np.float32([-ab[1], ab[0]]) / (length + 1e-6)
-            ts = np.linspace(0.1, 0.9, max(12, int(length / 3)), dtype=np.float32)
+            n = np.array([-ab[1], ab[0]]) / (length + 1e-6)
+            ts = np.linspace(0.1, 0.9, max(12, int(length / 3)))
             base = a + ts[:, None] * ab  # (S, 2)
             cand = base[:, None, :] + offs[None, :, None] * n  # (S, K, 2)
             xi = np.clip(np.rint(cand[..., 0]).astype(int), 0, w - 1)
@@ -368,15 +374,15 @@ def refine_corners(quad: np.ndarray, gray: np.ndarray, bands=(10, 5, 3), min_gra
             ok = (resp[np.arange(len(k)), k] > min_grad) & (k > 0) & (k < len(offs) - 1)
             peaks = cand[np.arange(len(k)), k][ok]
             if len(peaks) >= 0.4 * len(ts):
-                vx, vy, x0, y0 = cv2.fitLine(peaks, cv2.DIST_HUBER, 0, 0.01, 0.01).ravel()
-                lines.append((np.float32([x0, y0]), np.float32([x0 + vx, y0 + vy])))
+                vx, vy, x0, y0 = cv2.fitLine(peaks.astype(np.float32), cv2.DIST_HUBER, 0, 0.01, 0.01).ravel()
+                lines.append((np.array([x0, y0], np.float64), np.array([x0 + vx, y0 + vy], np.float64)))
             else:
                 lines.append((a, b))
         new = []
         for i in range(4):
             x = _line_intersection(*lines[i - 1], *lines[i])
             new.append(q[i] if x is None or np.linalg.norm(x - q[i]) > 3 * band else x)
-        q = np.array(new, np.float32)
+        q = np.array(new, np.float64)
     return q
 
 

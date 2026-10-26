@@ -2,11 +2,14 @@
  * Document detection + perspective warp for the web build (opencv.js).
  *
  * A line-for-line port of scanner_core/detect.py, warp.py and filters.py:
- *   downscale -> grayscale -> blur -> Canny -> dilate -> contours
- *   -> largest convex 4-point polygon (approxPolyDP) -> order TL, TR, BR, BL
+ *   downscale -> blur -> Canny -> dilate -> contours and long straight edges
+ *   -> candidate quads (4-point approximation, long sides, extreme points,
+ *      pairs of straight edges) -> best score (size, border support,
+ *      squareness, outline fit) -> order TL, TR, BR, BL
  *   -> refine each side: strongest-gradient search + robust line fit
- * Second pass with CLAHE + low Canny thresholds for low-contrast pages,
- * full-frame fallback when nothing qualifies.
+ * Passes: grayscale; CLAHE; lighting normalised + CLAHE; colour saturation.
+ * Later passes run unless an earlier one is confident. Full-frame fallback
+ * when nothing qualifies.
  *
  * Works in a Web Worker (see scanner_worker.js) and in Node (tests).
  * Every function takes the initialised `cv` module as its first argument.
@@ -22,7 +25,7 @@
   const PARAMS = {
     max_dim: 500,
     pad: 4,
-    min_area_ratio: 0.08,
+    min_area_ratio: 0.04,
     min_fill_ratio: 0.85,
     max_edge_deviation: 0.025,
     min_angle: 35.0,
@@ -32,6 +35,16 @@
     low_canny: [12, 36],
     refine_bands: [10, 5, 3],
     refine_min_grad: 20.0,
+    max_bow: 0.12,
+    curved_bow: 0.02,
+    min_support: 0.6,
+    min_line_support: 0.75,
+    step_offset: 3.0,
+    step_min: 10.0,
+    line_count: 8,
+    confident_score: 0.35,
+    line_min_length: 0.12,
+    line_epsilon: 0.005,
   };
 
   // ---------- pure geometry (no OpenCV) ----------
@@ -146,19 +159,152 @@
     return pts;
   }
 
-  function validate(cvContourPts, cArea, q, imgArea) {
+  // ---------- candidates and scoring (see quad_scoring.dart, detect.py) ----------
+
+  /** Corners as the outline's most top-left/top-right/bottom-right/bottom-left points (curved pages too). */
+  function extremePoints(c) {
+    const pick = (f, max) => c.reduce((a, b) => ((max ? f(b) > f(a) : f(b) < f(a)) ? b : a));
+    const sum = (p) => p[0] + p[1], diff = (p) => p[0] - p[1];
+    return [pick(sum, false), pick(diff, true), pick(sum, true), pick(diff, false)];
+  }
+
+  /** Per side of q: [bow a in px along the left normal (0 = straight), 90th percentile residual]. */
+  function sideFits(contour, q) {
+    const p = [];
+    for (let i = 0; i < contour.length; i++) {
+      const a = contour[i], b = contour[(i + 1) % contour.length];
+      const k = Math.max(1, Math.floor(Math.hypot(b[0] - a[0], b[1] - a[1]) / 2));
+      for (let j = 0; j < k; j++) p.push([a[0] + ((b[0] - a[0]) * j) / k, a[1] + ((b[1] - a[1]) * j) / k]);
+    }
+    const T = [], D = [], dist = [];
+    for (let i = 0; i < 4; i++) {
+      const a = q[i], b = q[(i + 1) % 4];
+      const abx = b[0] - a[0], aby = b[1] - a[1], L = Math.hypot(abx, aby) + 1e-6;
+      const t = new Float64Array(p.length), d = new Float64Array(p.length), di = new Float64Array(p.length);
+      for (let j = 0; j < p.length; j++) {
+        const vx = p[j][0] - a[0], vy = p[j][1] - a[1];
+        t[j] = (vx * abx + vy * aby) / L / L;
+        d[j] = (vx * -aby + vy * abx) / L;
+        di[j] = t[j] >= 0 && t[j] <= 1 ? Math.abs(d[j]) : Infinity;
+      }
+      T.push(t); D.push(d); dist.push(di);
+    }
+    const out = [];
+    for (let i = 0; i < 4; i++) {
+      const basis = [], dm = [];
+      for (let j = 0; j < p.length; j++) {
+        let side = 0;
+        for (let k = 1; k < 4; k++) if (dist[k][j] < dist[side][j]) side = k;
+        if (side === i && Number.isFinite(dist[i][j])) { basis.push(T[i][j] * (1 - T[i][j])); dm.push(D[i][j]); }
+      }
+      if (dm.length < 6) { out.push([0, 0]); continue; }
+      const straight = percentile(dm.map(Math.abs), 90);
+      const ratios = [];
+      for (let j = 0; j < dm.length; j++) if (basis[j] > 0.1) ratios.push(dm[j] / basis[j]);
+      if (ratios.length < 4) { out.push([0, straight]); continue; }
+      const a = percentile(ratios, 50);
+      const bowed = percentile(dm.map((d, j) => Math.abs(d - a * basis[j])), 90);
+      out.push(straight <= 1.25 * bowed ? [0, straight] : [a, bowed]); // straight unless the curve fits clearly better
+    }
+    return out;
+  }
+
+  /** Share of each side (following its bow) with a consistent brightness step from inside to outside. */
+  function edgeSupport(q, bows, img) {
+    const { data, width: w, height: h } = img;
+    const at = (x, y) => data[Math.min(h - 1, Math.max(0, Math.round(y))) * w + Math.min(w - 1, Math.max(0, Math.round(x)))];
+    const cx = (q[0][0] + q[1][0] + q[2][0] + q[3][0]) / 4, cy = (q[0][1] + q[1][1] + q[2][1] + q[3][1]) / 4;
+    const out = [];
+    for (let i = 0; i < 4; i++) {
+      const a = q[i], b = q[(i + 1) % 4];
+      const abx = b[0] - a[0], aby = b[1] - a[1], L = Math.hypot(abx, aby) + 1e-6;
+      const lx = -aby / L, ly = abx / L;
+      const flip = lx * (cx - a[0]) + ly * (cy - a[1]) > 0 ? -1 : 1; // n points outwards
+      const nx = lx * flip, ny = ly * flip;
+      const d = [];
+      for (let s = 0; s < 24; s++) {
+        const t = 0.1 + (0.8 * s) / 23, bow = bows[i] * t * (1 - t);
+        const bx = a[0] + t * abx + bow * lx, by = a[1] + t * aby + bow * ly;
+        let best = 0;
+        for (const o of [-1, 0, 1]) {
+          const ki = o - PARAMS.step_offset, ko = o + PARAMS.step_offset;
+          const diff = at(bx + ki * nx, by + ki * ny) - at(bx + ko * nx, by + ko * ny);
+          if (Math.abs(diff) > Math.abs(best)) best = diff;
+        }
+        d.push(best);
+      }
+      const sign = percentile(d, 50) >= 0 ? 1 : -1;
+      out.push(d.filter((v) => v * sign > PARAMS.step_min).length / 24);
+    }
+    return out;
+  }
+
+  /** {quad, score, curved} if q passes every check, else null. contour is null for a quad made of straight edges. */
+  function scoreQuad(contour, cArea, q, imgArea, img) {
     q = orderCorners(q);
     if (!isConvex(q)) return null;
     const qArea = polyArea(q);
-    if (qArea < PARAMS.min_area_ratio * imgArea || cArea / qArea < PARAMS.min_fill_ratio) return null;
+    if (qArea < PARAMS.min_area_ratio * imgArea || (contour && cArea / qArea < PARAMS.min_fill_ratio)) return null;
     const ang = interiorAngles(q);
     if (Math.min(...ang) < PARAMS.min_angle || Math.max(...ang) > PARAMS.max_angle) return null;
-    const diag = Math.hypot(q[2][0] - q[0][0], q[2][1] - q[0][1]);
-    if (edgeDeviation(cvContourPts, q) > PARAMS.max_edge_deviation * diag) return null;
-    return q;
+    let bows, minSupport, fit, bowRatio = 0;
+    if (!contour) {
+      bows = [0, 0, 0, 0]; minSupport = PARAMS.min_line_support; fit = 0.5;
+    } else {
+      const diag = Math.hypot(q[2][0] - q[0][0], q[2][1] - q[0][1]);
+      const fits = sideFits(contour, q);
+      bows = fits.map((f) => f[0]);
+      for (let i = 0; i < 4; i++) {
+        const L = Math.hypot(q[(i + 1) % 4][0] - q[i][0], q[(i + 1) % 4][1] - q[i][1]);
+        bowRatio = Math.max(bowRatio, Math.abs(bows[i]) / 4 / L);
+      }
+      const resid = Math.max(...fits.map((f) => f[1]));
+      if (resid > PARAMS.max_edge_deviation * diag || bowRatio > PARAMS.max_bow) return null;
+      minSupport = PARAMS.min_support;
+      fit = resid / (PARAMS.max_edge_deviation * diag);
+    }
+    const bowed = edgeSupport(q, bows, img), straight = edgeSupport(q, [0, 0, 0, 0], img);
+    const support = bowed.map((v, i) => Math.max(v, straight[i]));
+    if (Math.min(...support) < minSupport) return null;
+    const squareness = 1 - ang.reduce((s, a) => s + Math.abs(a - 90), 0) / 4 / 90;
+    const score = Math.sqrt(qArea / imgArea) * (support.reduce((s, v) => s + v, 0) / 4) * squareness * (1 - 0.1 * fit);
+    return { quad: q, score, curved: !!contour && bowRatio > PARAMS.curved_bow };
   }
 
-  function bestQuad(cv, edges) {
+  /** Quads made of 4 long straight edges (two roughly opposite pairs), extended to meet. */
+  function lineQuads(segments, w, h) {
+    const len = (s) => Math.hypot(s[2] - s[0], s[3] - s[1]);
+    const segs = [...segments].sort((a, b) => len(b) - len(a));
+    const lines = [];
+    for (const [x1, y1, x2, y2] of segs) {
+      const L = Math.hypot(x2 - x1, y2 - y1) + 1e-6;
+      const dx = (x2 - x1) / L, dy = (y2 - y1) / L;
+      const ang = (((Math.atan2(dy, dx) * 180) / Math.PI) % 180 + 180) % 180;
+      const dup = lines.some((l) => {
+        const da = Math.abs(ang - l.ang);
+        return Math.min(da, 180 - da) < 8 && Math.abs(l.dx * (y1 - l.y) - l.dy * (x1 - l.x)) < 6;
+      });
+      if (dup) continue;
+      lines.push({ x: x1, y: y1, dx, dy, ang });
+      if (lines.length === PARAMS.line_count) break;
+    }
+    const horiz = lines.filter((l) => l.ang < 45 || l.ang >= 135), vert = lines.filter((l) => l.ang >= 45 && l.ang < 135);
+    const quads = [];
+    for (let i = 0; i < horiz.length; i++) for (let j = i + 1; j < horiz.length; j++)
+      for (let k = 0; k < vert.length; k++) for (let m = k + 1; m < vert.length; m++) {
+        const pts = [];
+        for (const [a, b] of [[horiz[i], vert[k]], [vert[k], horiz[j]], [horiz[j], vert[m]], [vert[m], horiz[i]]]) {
+          const x = lineIntersection([a.x, a.y], [a.x + a.dx, a.y + a.dy], [b.x, b.y], [b.x + b.dx, b.y + b.dy]);
+          if (!x) break;
+          pts.push(x);
+        }
+        if (pts.length === 4 && pts.every(([x, y]) => x > -0.02 * w && x < 1.02 * w && y > -0.02 * h && y < 1.02 * h)) quads.push(pts);
+      }
+    return quads;
+  }
+
+  /** Best page outline: {quad, score, curved, ratio} or null. img = the pass's blurred channel. */
+  function bestQuad(cv, edges, img, log) {
     const imgArea = edges.cols * edges.rows;
     const contours = new cv.MatVector(), hier = new cv.Mat();
     cv.findContours(edges, contours, hier, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE);
@@ -168,7 +314,11 @@
       items.push({ c, area: cv.contourArea(c) });
     }
     items.sort((a, b) => b.area - a.area);
-    let best = null, bestArea = 0;
+    let best = null;
+    const consider = (r, q, kind) => {
+      if (log) log.push({ kind, q, r });
+      if (r && (!best || r.score > best.score)) best = r;
+    };
     for (let k = 0; k < Math.min(12, items.length); k++) {
       const { c, area } = items[k];
       if (area < PARAMS.min_area_ratio * imgArea * PARAMS.min_fill_ratio) break;
@@ -181,26 +331,35 @@
       const clipped = quadFromLongSides(approx(cv, c, PARAMS.approx_epsilons[0] * peri));
       if (clipped) candidates.push(clipped);
       const pts = matToPoints(c);
-      for (const cand of candidates) {
-        const q = validate(pts, area, cand, imgArea);
-        if (q && polyArea(q) > bestArea) { best = q; bestArea = polyArea(q); }
+      candidates.push(extremePoints(pts));
+      for (const cand of candidates) consider(scoreQuad(pts, area, cand, imgArea, img), cand, 'contour');
+    }
+    // Straight edges: the long sides of the outlines, simplified. Pairs of them recover
+    // corners hidden by fingers or merged with clutter. (Not HoughLinesP: it is
+    // randomised and differs between OpenCV versions.)
+    const minLen = PARAMS.line_min_length * Math.max(edges.cols, edges.rows);
+    const segs = [];
+    for (let k = 0; k < Math.min(12, items.length); k++) {
+      const peri = cv.arcLength(items[k].c, true);
+      if (peri < 2 * minLen) continue;
+      const p = approx(cv, items[k].c, PARAMS.line_epsilon * peri);
+      for (let i = 0; i < p.length; i++) {
+        const a = p[i], b = p[(i + 1) % p.length];
+        if (Math.hypot(b[0] - a[0], b[1] - a[1]) >= minLen) segs.push([a[0], a[1], b[0], b[1]]);
       }
     }
     items.forEach((it) => it.c.delete());
     contours.delete(); hier.delete();
-    return best ? { quad: best, ratio: bestArea / imgArea } : null;
+    for (const q of lineQuads(segs, edges.cols, edges.rows)) consider(scoreQuad(null, 0, q, imgArea, img), q, 'line');
+    if (best) best.ratio = polyArea(best.quad) / imgArea;
+    return best;
   }
 
   /** Blur + Canny + dilate. Returns {blurred, edges} (caller deletes both). */
-  function edgeSteps(cv, gray, equalize) {
+  function edgeSteps(cv, channel, low) {
     const g = new cv.Mat(), e = new cv.Mat();
-    if (equalize) {
-      const clahe = new cv.CLAHE(PARAMS.clahe_clip, new cv.Size(8, 8));
-      clahe.apply(gray, g);
-      clahe.delete();
-    } else gray.copyTo(g);
-    cv.GaussianBlur(g, g, new cv.Size(5, 5), 0);
-    if (equalize) cv.Canny(g, e, PARAMS.low_canny[0], PARAMS.low_canny[1]);
+    cv.GaussianBlur(channel, g, new cv.Size(5, 5), 0);
+    if (low) cv.Canny(g, e, PARAMS.low_canny[0], PARAMS.low_canny[1]);
     else {
       const v = median(g);
       cv.Canny(g, e, Math.max(Math.trunc(Math.max(0, 0.67 * v)), 10), Math.max(Math.trunc(Math.min(255, 1.33 * v)), 30));
@@ -211,10 +370,60 @@
     return { blurred: g, edges: e };
   }
 
-  function edgeMap(cv, gray, equalize) {
-    const { blurred, edges } = edgeSteps(cv, gray, equalize);
-    blurred.delete();
-    return edges;
+  function clahe(cv, gray) {
+    const out = new cv.Mat(), c = new cv.CLAHE(PARAMS.clahe_clip, new cv.Size(8, 8));
+    c.apply(gray, out);
+    c.delete();
+    return out;
+  }
+
+  /** Even out shadows: divide by a heavily blurred copy (the lighting), then CLAHE. */
+  function normalizeLighting(cv, gray) {
+    const k = Math.max(3, Math.floor(Math.max(gray.rows, gray.cols) / 8) | 1);
+    const bg = new cv.Mat();
+    cv.GaussianBlur(gray, bg, new cv.Size(k, k), 0);
+    const flat = new cv.Mat(gray.rows, gray.cols, cv.CV_8UC1);
+    const g = gray.data, b = bg.data, f = flat.data;
+    for (let i = 0; i < g.length; i++) f[i] = Math.min(255, Math.max(0, Math.trunc((g[i] / (b[i] + 1)) * 180)));
+    bg.delete();
+    const out = clahe(cv, flat);
+    flat.delete();
+    return out;
+  }
+
+  /** The detection passes over a working image, in order: [name, make channel, low thresholds]. */
+  function passes(cv, work) {
+    return [
+      ['normal', () => work.gray.clone(), false],
+      ['low contrast (CLAHE)', () => clahe(cv, work.gray), true],
+      ['shadows (lighting normalised)', () => normalizeLighting(cv, work.gray), true],
+      ['colour (saturation)', () => {
+        const rgb = new cv.Mat(), hsv = new cv.Mat(), parts = new cv.MatVector();
+        cv.cvtColor(work.color, rgb, cv.COLOR_RGBA2RGB);
+        cv.cvtColor(rgb, hsv, cv.COLOR_RGB2HSV);
+        cv.split(hsv, parts);
+        const s = parts.get(1).clone();
+        rgb.delete(); hsv.delete(); parts.delete();
+        return s;
+      }, false],
+    ];
+  }
+
+  /** Run the passes; best result {quad, score, curved, ratio, pass} or null. keep(steps) may keep the chosen pass's images. */
+  function searchPasses(cv, work, keep) {
+    let best = null;
+    for (const [name, make, low] of passes(cv, work)) {
+      const channel = make();
+      const st = edgeSteps(cv, channel, low);
+      const res = bestQuad(cv, st.edges, { data: st.blurred.data, width: st.blurred.cols, height: st.blurred.rows });
+      channel.delete();
+      if (res && (!best || res.score > best.score)) {
+        best = { ...res, pass: name };
+        if (keep) keep(st); else { st.blurred.delete(); st.edges.delete(); }
+      } else { st.blurred.delete(); st.edges.delete(); }
+      if (best && best.score >= PARAMS.confident_score) break; // a clear page: skip the rest
+    }
+    return best;
   }
 
   function median(m) {
@@ -284,8 +493,8 @@
     return q;
   }
 
-  /** Downscaled, padded grayscale working image. Returns {gray, scale} (caller deletes gray). */
-  function workingGray(cv, image, maxDim) {
+  /** Downscaled, padded working images. Returns {gray, color (RGBA), scale} (caller deletes both). */
+  function workingImage(cv, image, maxDim) {
     const { width: w, height: h } = image;
     if (!w || !h) throw new Error('empty image');
     const src = cv.matFromImageData(image);
@@ -294,36 +503,35 @@
     if (scale < 1) cv.resize(src, small, new cv.Size(Math.round(w * scale), Math.round(h * scale)), 0, 0, cv.INTER_AREA);
     else src.copyTo(small);
     src.delete();
-    const gray = new cv.Mat();
-    cv.cvtColor(small, gray, cv.COLOR_RGBA2GRAY);
-    small.delete();
     const pad = PARAMS.pad;
-    cv.copyMakeBorder(gray, gray, pad, pad, pad, pad, cv.BORDER_REPLICATE);
-    return { gray, scale };
+    const color = new cv.Mat();
+    cv.copyMakeBorder(small, color, pad, pad, pad, pad, cv.BORDER_REPLICATE);
+    small.delete();
+    const gray = new cv.Mat();
+    cv.cvtColor(color, gray, cv.COLOR_RGBA2GRAY);
+    return { gray, color, scale };
   }
 
   /** Detect the page. Returns {corners: [[x,y] x4] TL,TR,BR,BL in source pixels, found, score}. */
   function detectDocument(cv, image, maxDim = PARAMS.max_dim) {
     const { width: w, height: h } = image;
-    const { gray, scale } = workingGray(cv, image, maxDim);
-    const pad = PARAMS.pad;
+    const work = workingImage(cv, image, maxDim);
     try {
-      for (const equalize of [false, true]) {
-        const e = edgeMap(cv, gray, equalize);
-        const res = bestQuad(cv, e);
-        e.delete();
-        if (res) {
-          const q = refineCorners(cv, res.quad, gray).map(([x, y]) => [
-            Math.min(w - 1, Math.max(0, (x - pad + 0.5) / scale - 0.5)),
-            Math.min(h - 1, Math.max(0, (y - pad + 0.5) / scale - 0.5)),
-          ]);
-          return { corners: q, found: true, score: res.ratio };
-        }
-      }
-      return { corners: fullBounds(w, h), found: false, score: 0 };
+      return finish(cv, searchPasses(cv, work), work, w, h);
     } finally {
-      gray.delete();
+      work.gray.delete(); work.color.delete();
     }
+  }
+
+  /** Map the chosen quad back to source pixels (refined unless a side bows). */
+  function finish(cv, best, work, w, h) {
+    if (!best) return { corners: fullBounds(w, h), found: false, score: 0 };
+    const pad = PARAMS.pad, scale = work.scale;
+    const q = (best.curved ? best.quad : refineCorners(cv, best.quad, work.gray)).map(([x, y]) => [
+      Math.min(w - 1, Math.max(0, (x - pad + 0.5) / scale - 0.5)),
+      Math.min(h - 1, Math.max(0, (y - pad + 0.5) / scale - 0.5)),
+    ]);
+    return { corners: q, found: true, score: best.ratio };
   }
 
   function outputSize(corners) {
@@ -514,20 +722,22 @@
    * Uses the same functions as detectDocument; `result` is identical to it.
    */
   function explainDetection(cv, image, maxDim = PARAMS.max_dim) {
-    const result = detectDocument(cv, image, maxDim);
-    const { gray, scale } = workingGray(cv, image, maxDim);
+    const { width: w, height: h } = image;
+    const work = workingImage(cv, image, maxDim);
+    const { gray, scale } = work;
     const pad = PARAMS.pad;
     const steps = { gray: grayToRGBA(cv, gray) };
-    let pass = 'normal';
-    let chosen = null;
     let blurred = null, edges = null;
-    for (const equalize of [false, true]) {
-      const st = edgeSteps(cv, gray, equalize);
-      const res = bestQuad(cv, st.edges);
+    const best = searchPasses(cv, work, (st) => {
       if (blurred) { blurred.delete(); edges.delete(); }
       blurred = st.blurred; edges = st.edges;
-      if (res) { chosen = res.quad; pass = equalize ? 'low-contrast (CLAHE)' : 'normal'; break; }
-      pass = 'none';
+    });
+    const result = finish(cv, best, work, w, h);
+    const pass = best ? best.pass : 'none';
+    const chosen = best ? best.quad : null;
+    if (!blurred) {
+      const st = edgeSteps(cv, gray, false);
+      blurred = st.blurred; edges = st.edges;
     }
     steps.blurred = grayToRGBA(cv, blurred);
     steps.edges = grayToRGBA(cv, edges);
@@ -561,9 +771,13 @@
     disp.delete();
 
     steps.flattened = warpPerspective(cv, image, result.corners, 1000);
-    gray.delete(); blurred.delete(); edges.delete();
+    gray.delete(); work.color.delete(); blurred.delete(); edges.delete();
     return { result, steps, pass, contourCount, scale };
   }
 
-  return { PARAMS, detectDocument, explainDetection, warpPerspective, applyEdits, orderCorners, fullBounds, outputSize };
+  return {
+    PARAMS, detectDocument, explainDetection, warpPerspective, applyEdits, orderCorners, fullBounds, outputSize,
+    // For tests: compare the scoring step by step with the Python reference.
+    internals: { workingImage, passes, edgeSteps, bestQuad, scoreQuad, sideFits, edgeSupport, extremePoints, lineQuads },
+  };
 });

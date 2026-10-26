@@ -87,7 +87,7 @@ List<double> interiorAngles(List<Pt> q) => [
     }(),
 ];
 
-double _percentile(List<double> values, double p) {
+double percentile(List<double> values, double p) {
   final s = [...values]..sort();
   final idx = p / 100 * (s.length - 1);
   final lo = idx.floor(), hi = idx.ceil();
@@ -106,7 +106,7 @@ double edgeDeviation(List<Pt> contour, List<Pt> q) {
     }
     d.add(best);
   }
-  return _percentile(d, 90);
+  return percentile(d, 90);
 }
 
 Pt? lineIntersection(Pt p1, Pt p2, Pt p3, Pt p4) {

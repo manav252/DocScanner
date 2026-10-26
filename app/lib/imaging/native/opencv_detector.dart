@@ -2,11 +2,13 @@
 //
 // A line-for-line port of scanner_core/detect.py (the reference) and of
 // web/opencv/scanner.js:
-//   downscale -> grayscale -> blur -> Canny -> dilate -> contours
-//   -> largest convex 4-point polygon (approxPolyDP) -> order TL, TR, BR, BL
+//   downscale -> blur -> Canny -> dilate -> contours and long straight edges
+//   -> candidate quads (4-point approximation, long sides, extreme points,
+//      pairs of straight edges) -> best score (quad_scoring.dart)
 //   -> refine each side: strongest-gradient search + robust line fit
-// Second pass with CLAHE + low Canny thresholds for low-contrast pages;
-// full-frame fallback when nothing qualifies.
+// Passes: grayscale; CLAHE; lighting normalised + CLAHE; colour saturation.
+// Later passes run unless an earlier one is confident. Full-frame fallback
+// when nothing qualifies.
 //
 // All functions are synchronous and allocation-bounded so they can run on a
 // background isolate for every preview frame.
@@ -17,6 +19,7 @@ import 'package:opencv_dart/opencv_dart.dart' as cv;
 
 import '../detector_params.dart';
 import '../geometry.dart';
+import '../quad_scoring.dart';
 
 typedef _P = DetectorParams;
 
@@ -28,16 +31,34 @@ Detection detectDocumentMat(cv.Mat image, {int maxDim = _P.maxDim}) {
   final small = scale < 1
       ? cv.resize(image, ((w * scale).round(), (h * scale).round()), interpolation: cv.INTER_AREA)
       : image.clone();
-  final gray = switch (small.channels) {
-    1 => small.clone(),
-    3 => cv.cvtColor(small, cv.COLOR_BGR2GRAY),
-    4 => cv.cvtColor(small, cv.COLOR_BGRA2GRAY),
+  const pad = _P.pad;
+  final padded = cv.copyMakeBorder(small, pad, pad, pad, pad, cv.BORDER_REPLICATE);
+  small.dispose();
+  final gray = switch (padded.channels) {
+    1 => padded.clone(),
+    3 => cv.cvtColor(padded, cv.COLOR_BGR2GRAY),
+    4 => cv.cvtColor(padded, cv.COLOR_BGRA2GRAY),
     final n => throw ArgumentError('unsupported channel count $n'),
   };
-  small.dispose();
-  final result = _detectSmallGray(gray, w, h, scale);
-  gray.dispose();
-  return result;
+  // Colour saturation: a page on a coloured background of the same brightness.
+  cv.Mat? saturation() {
+    if (padded.channels == 1) return null;
+    final bgr = padded.channels == 4 ? cv.cvtColor(padded, cv.COLOR_BGRA2BGR) : padded.clone();
+    final hsv = cv.cvtColor(bgr, cv.COLOR_BGR2HSV);
+    bgr.dispose();
+    final parts = cv.split(hsv);
+    hsv.dispose();
+    parts[0].dispose();
+    parts[2].dispose();
+    return parts[1];
+  }
+
+  try {
+    return _detectPadded(gray, saturation, w, h, scale);
+  } finally {
+    gray.dispose();
+    padded.dispose();
+  }
 }
 
 /// Fast path for camera frames: the Y (luma) plane of a YUV420/NV21 frame is
@@ -61,30 +82,63 @@ Detection detectDocumentBytes(Uint8List encoded) {
   return d;
 }
 
-Detection _detectSmallGray(cv.Mat graySmall, int w, int h, double scale) {
+Detection _detectPadded(cv.Mat gray, cv.Mat? Function() saturation, int w, int h, double scale) {
   const pad = _P.pad;
-  final gray = cv.copyMakeBorder(graySmall, pad, pad, pad, pad, cv.BORDER_REPLICATE);
-  try {
-    for (final equalize in [false, true]) {
-      final edges = _edgeMap(gray, equalize);
-      final res = _bestQuad(edges);
-      edges.dispose();
-      if (res != null) {
-        final q = _refineCorners(res.$1, gray)
-            .map(
-              (p) => Pt(
-                ((p.x - pad + 0.5) / scale - 0.5).clamp(0, w - 1).toDouble(),
-                ((p.y - pad + 0.5) / scale - 0.5).clamp(0, h - 1).toDouble(),
-              ),
-            )
-            .toList();
-        return Detection(q, found: true, score: res.$2);
-      }
+  final passes = <(cv.Mat? Function(), bool)>[
+    (() => gray.clone(), false),
+    (() => _clahe(gray), true),
+    (() => _normalizeLighting(gray), true),
+    (saturation, false),
+  ];
+  ScoredQuad? best;
+  for (final (make, low) in passes) {
+    final channel = make(); // built only when needed
+    if (channel == null) continue;
+    final edges = _edgeMap(channel, low);
+    // Border support is measured on the same channel the pass searched.
+    final blurred = cv.gaussianBlur(channel, (5, 5), 0);
+    final res = _bestQuad(edges, GrayImage(Uint8List.fromList(blurred.data), blurred.cols, blurred.rows));
+    for (final m in [channel, edges, blurred]) {
+      m.dispose();
     }
-    return Detection(fullBounds(w, h), found: false);
-  } finally {
-    gray.dispose();
+    if (res != null && (best == null || res.score > best.score)) best = res;
+    if (best != null && best.score >= _P.confidentScore) break; // a clear page: skip the rest
   }
+  if (best == null) return Detection(fullBounds(w, h), found: false);
+  // Refining fits straight lines: wrong for a bowed side.
+  final q = (best.curved ? best.quad : _refineCorners(best.quad, gray))
+      .map(
+        (p) => Pt(
+          ((p.x - pad + 0.5) / scale - 0.5).clamp(0, w - 1).toDouble(),
+          ((p.y - pad + 0.5) / scale - 0.5).clamp(0, h - 1).toDouble(),
+        ),
+      )
+      .toList();
+  return Detection(q, found: true, score: polygonArea(best.quad) / (gray.cols * gray.rows));
+}
+
+cv.Mat _clahe(cv.Mat gray) {
+  final clahe = cv.CLAHE.create(_P.claheClip, (8, 8));
+  final out = clahe.apply(gray);
+  clahe.dispose();
+  return out;
+}
+
+/// Even out shadows and uneven light: divide by a heavily blurred copy (the
+/// lighting), then boost local contrast with CLAHE.
+cv.Mat _normalizeLighting(cv.Mat gray) {
+  final k = math.max(3, (math.max(gray.rows, gray.cols) ~/ 8) | 1);
+  final bg = cv.gaussianBlur(gray, (k, k), 0);
+  final g = gray.data, b = bg.data;
+  final flat = Uint8List(g.length);
+  for (var i = 0; i < g.length; i++) {
+    flat[i] = (g[i] / (b[i] + 1) * 180).clamp(0, 255).toInt();
+  }
+  bg.dispose();
+  final m = cv.Mat.fromList(gray.rows, gray.cols, cv.MatType.CV_8UC1, flat);
+  final out = _clahe(m);
+  m.dispose();
+  return out;
 }
 
 double _median(cv.Mat m) {
@@ -107,19 +161,12 @@ double _median(cv.Mat m) {
   return (vlo + vhi) / 2;
 }
 
-cv.Mat _edgeMap(cv.Mat gray, bool equalize) {
-  cv.Mat g;
-  if (equalize) {
-    final clahe = cv.CLAHE.create(_P.claheClip, (8, 8));
-    g = clahe.apply(gray);
-    clahe.dispose();
-  } else {
-    g = gray.clone();
-  }
-  final blurred = cv.gaussianBlur(g, (5, 5), 0);
-  g.dispose();
+/// Canny (thresholds from the median, or fixed low ones for flat images), then
+/// close small gaps so a page border forms one closed outline.
+cv.Mat _edgeMap(cv.Mat channel, bool low) {
+  final blurred = cv.gaussianBlur(channel, (5, 5), 0);
   cv.Mat e;
-  if (equalize) {
+  if (low) {
     e = cv.canny(blurred, _P.lowCanny[0].toDouble(), _P.lowCanny[1].toDouble());
   } else {
     final v = _median(blurred);
@@ -144,26 +191,19 @@ List<Pt> _approx(cv.VecPoint c, double eps) {
   return pts;
 }
 
-List<Pt>? _validate(List<Pt> contour, double cArea, List<Pt> q, double imgArea) {
-  q = orderCorners(q);
-  if (!isConvex(q)) return null;
-  final qArea = polygonArea(q);
-  if (qArea < _P.minAreaRatio * imgArea || cArea / qArea < _P.minFillRatio) return null;
-  final ang = interiorAngles(q);
-  if (ang.reduce(math.min) < _P.minAngle || ang.reduce(math.max) > _P.maxAngle) return null;
-  final diag = q[2].distanceTo(q[0]);
-  if (edgeDeviation(contour, q) > _P.maxEdgeDeviation * diag) return null;
-  return q;
-}
-
-(List<Pt>, double)? _bestQuad(cv.Mat edges) {
+/// Best page outline in [edges]: candidates from the outlines (4-point
+/// approximation, long sides, extreme points) and from long straight edges.
+ScoredQuad? _bestQuad(cv.Mat edges, GrayImage img) {
   final imgArea = (edges.cols * edges.rows).toDouble();
   final (contours, hierarchy) = cv.findContours(edges, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE);
   final items = [for (final c in contours) (c, cv.contourArea(c))]..sort((a, b) => b.$2.compareTo(a.$2));
-  List<Pt>? best;
-  var bestArea = 0.0;
+  ScoredQuad? best;
+  void consider(ScoredQuad? r) {
+    if (r != null && (best == null || r.score > best!.score)) best = r;
+  }
+
   for (final (c, area) in items.take(12)) {
-    if (area < _P.minAreaRatio * imgArea * _P.minFillRatio) break;
+    if (area < _P.minAreaRatio * imgArea * _P.minFillRatio) break; // sorted: nothing further can qualify
     final peri = cv.arcLength(c, true);
     final candidates = <List<Pt>>[];
     for (final eps in _P.approxEpsilons) {
@@ -176,20 +216,52 @@ List<Pt>? _validate(List<Pt> contour, double cArea, List<Pt> q, double imgArea) 
     final clipped = quadFromLongSides(_approx(c, _P.approxEpsilons.first * peri));
     if (clipped != null) candidates.add(clipped);
     final pts = _toPts(c);
+    candidates.add(extremePoints(pts));
     for (final cand in candidates) {
-      final q = _validate(pts, area, cand, imgArea);
-      if (q != null && polygonArea(q) > bestArea) {
-        best = q;
-        bestArea = polygonArea(q);
-      }
+      consider(scoreQuad(pts, area, cand, imgArea, img));
+    }
+  }
+  // Straight edges: the long sides of the outlines, simplified. Pairs of them
+  // recover corners hidden by fingers or merged with clutter. (Not
+  // HoughLinesP: it is randomised and differs between OpenCV versions.)
+  final minLen = _P.lineMinLength * math.max(edges.cols, edges.rows);
+  final segments = <(double, double, double, double)>[];
+  for (final (c, _) in items.take(12)) {
+    final peri = cv.arcLength(c, true);
+    if (peri < 2 * minLen) continue;
+    final p = _approx(c, _P.lineEpsilon * peri);
+    for (var k = 0; k < p.length; k++) {
+      final a = p[k], b = p[(k + 1) % p.length];
+      if (a.distanceTo(b) >= minLen) segments.add((a.x, a.y, b.x, b.y));
     }
   }
   contours.dispose();
   hierarchy.dispose();
-  return best == null ? null : (best, bestArea / imgArea);
+  for (final q in lineQuads(segments, edges.cols, edges.rows)) {
+    consider(scoreQuad(null, 0, q, imgArea, img));
+  }
+  return best;
 }
 
 Float32List _floatData(cv.Mat m) => m.data.buffer.asFloat32List(m.data.offsetInBytes, m.rows * m.cols);
+
+/// Robust line fit with OpenCV's own DIST_HUBER (as the reference and the web
+/// port use), so the refined corners come out the same.
+(Pt, Pt) _fitLineHuber(List<Pt> pts) {
+  final v = cv.VecPoint2f.fromList([for (final p in pts) cv.Point2f(p.x, p.y)]);
+  final line = cv.fitLine2f(v, cv.DIST_HUBER, 0, 0.01, 0.01);
+  final d = line.data.buffer.asFloat32List(line.data.offsetInBytes, 4);
+  final out = (Pt(d[2].toDouble(), d[3].toDouble()), Pt(d[0].toDouble(), d[1].toDouble()));
+  v.dispose();
+  line.dispose();
+  return out;
+}
+
+/// numpy.rint: halves round to the even neighbour (Dart's round() goes away from zero).
+int _rint(double v) {
+  final r = v.roundToDouble();
+  return ((v - v.truncateToDouble()).abs() == 0.5 ? 2 * (v / 2).roundToDouble() : r).toInt();
+}
 
 /// Sharpen a rough quad to sub-pixel accuracy (see detect.py refine_corners).
 List<Pt> _refineCorners(List<Pt> quad, cv.Mat gray) {
@@ -213,7 +285,7 @@ List<Pt> _refineCorners(List<Pt> quad, cv.Mat gray) {
         var bestR = -1.0;
         for (var k = 0; k <= 2 * band; k++) {
           final o = (k - band).toDouble();
-          final x = (base.x + o * n.x).round().clamp(0, w - 1), y = (base.y + o * n.y).round().clamp(0, h - 1);
+          final x = _rint(base.x + o * n.x).clamp(0, w - 1), y = _rint(base.y + o * n.y).clamp(0, h - 1);
           final r = (gx[y * w + x] * n.x + gy[y * w + x] * n.y).abs();
           if (r > bestR) {
             bestR = r;
@@ -225,7 +297,7 @@ List<Pt> _refineCorners(List<Pt> quad, cv.Mat gray) {
         }
       }
       if (peaks.length >= 0.4 * samples) {
-        final (c, dir) = fitLineHuber(peaks);
+        final (c, dir) = _fitLineHuber(peaks);
         lines.add((c, c + dir));
       } else {
         lines.add((a, a + ab));

@@ -2,7 +2,7 @@
 abstract final class DetectorParams {
   static const maxDim = 500;
   static const pad = 4;
-  static const minAreaRatio = 0.08;
+  static const minAreaRatio = 0.04;
   static const minFillRatio = 0.85;
   static const maxEdgeDeviation = 0.025;
   static const minAngle = 35.0;
@@ -12,6 +12,16 @@ abstract final class DetectorParams {
   static const lowCanny = [12, 36];
   static const refineBands = [10, 5, 3];
   static const refineMinGrad = 20.0;
+  static const maxBow = 0.12;
+  static const curvedBow = 0.02;
+  static const minSupport = 0.6;
+  static const minLineSupport = 0.75;
+  static const stepOffset = 3.0;
+  static const stepMin = 10.0;
+  static const lineCount = 8;
+  static const confidentScore = 0.35;
+  static const lineMinLength = 0.12;
+  static const lineEpsilon = 0.005;
 
   static Map<String, Object> toJson() => {
     'max_dim': maxDim,
@@ -26,5 +36,15 @@ abstract final class DetectorParams {
     'low_canny': lowCanny,
     'refine_bands': refineBands,
     'refine_min_grad': refineMinGrad,
+    'max_bow': maxBow,
+    'curved_bow': curvedBow,
+    'min_support': minSupport,
+    'min_line_support': minLineSupport,
+    'step_offset': stepOffset,
+    'step_min': stepMin,
+    'line_count': lineCount,
+    'confident_score': confidentScore,
+    'line_min_length': lineMinLength,
+    'line_epsilon': lineEpsilon,
   };
 }

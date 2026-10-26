@@ -25,12 +25,11 @@
   "max_bow": 0.12,
   "curved_bow": 0.02,
   "min_support": 0.6,
-  "min_line_support": 0.5,
+  "min_line_support": 0.75,
   "step_offset": 3.0,
   "step_min": 10.0,
   "line_count": 8,
   "confident_score": 0.35,
-  "hough_threshold": 40,
-  "hough_min_length": 0.12,
-  "hough_max_gap": 8
+  "line_min_length": 0.12,
+  "line_epsilon": 0.005
 }
