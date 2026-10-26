@@ -19,6 +19,7 @@ import 'package:opencv_dart/opencv_dart.dart' as cv;
 
 import '../detector_params.dart';
 import '../geometry.dart';
+import '../page_curves.dart';
 import '../quad_scoring.dart';
 
 typedef _P = DetectorParams;
@@ -347,5 +348,75 @@ cv.Mat warpPerspectiveMat(cv.Mat image, List<Pt> corners, {int? maxSide}) {
   sv.dispose();
   dv.dispose();
   m.dispose();
+  return out;
+}
+
+/// Top and bottom edge curves of the page at [corners] in [image] (BGR, BGRA
+/// or gray), or null when both are straight (see page_curves in warp.py).
+(List<double>, List<double>)? pageCurvesMat(cv.Mat image, List<Pt> corners) {
+  final w = image.cols, h = image.rows;
+  final s = math.min(1.0, curveWorkSide / math.max(w, h));
+  final small = s < 1
+      ? cv.resize(image, ((w * s).round(), (h * s).round()), interpolation: cv.INTER_AREA)
+      : image.clone();
+  final gray = switch (small.channels) {
+    1 => small.clone(),
+    3 => cv.cvtColor(small, cv.COLOR_BGR2GRAY),
+    _ => cv.cvtColor(small, cv.COLOR_BGRA2GRAY),
+  };
+  small.dispose();
+  final blurred = cv.gaussianBlur(gray, (5, 5), 0);
+  gray.dispose();
+  final img = GrayImage(Uint8List.fromList(blurred.data), blurred.cols, blurred.rows);
+  blurred.dispose();
+  return pageCurvesOn(img, s, corners);
+}
+
+/// Flatten the page: a grid warp following bowed top/bottom edges, or the
+/// plain perspective warp when they are straight (see warp_page in warp.py).
+cv.Mat warpPageMat(cv.Mat image, List<Pt> corners, {int? maxSide}) {
+  final curves = pageCurvesMat(image, corners);
+  if (curves == null) return warpPerspectiveMat(image, corners, maxSide: maxSide);
+  final src = orderCorners(corners);
+  var (w, h) = outputSize(src);
+  if (maxSide != null && math.max(w, h) > maxSide) {
+    final s = maxSide / math.max(w, h);
+    (w, h) = (math.max(1, (w * s).round()), math.max(1, (h * s).round()));
+  }
+  final dv = cv.VecPoint2f.fromList([
+    cv.Point2f(0, 0),
+    cv.Point2f(w - 1.0, 0),
+    cv.Point2f(w - 1.0, h - 1.0),
+    cv.Point2f(0, h - 1.0),
+  ]);
+  final sv = cv.VecPoint2f.fromList([for (final p in src) cv.Point2f(p.x, p.y)]);
+  final m = cv.getPerspectiveTransform2f(dv, sv); // output -> photo
+  final k = [
+    for (var r = 0; r < 3; r++)
+      for (var c = 0; c < 3; c++) m.atF64(r, i1: c),
+  ];
+  sv.dispose();
+  dv.dispose();
+  m.dispose();
+  Pt toPhoto(double u, double v) {
+    final z = k[6] * u + k[7] * v + k[8];
+    return Pt((k[0] * u + k[1] * v + k[2]) / z, (k[3] * u + k[4] * v + k[5]) / z);
+  }
+
+  const step = 8;
+  final (mx, my, gw, gh) = gridMap(src, curves, w, h, toPhoto, step: step);
+  cv.Mat full(Float32List grid) {
+    final g = cv.Mat.fromList(gh, gw, cv.MatType.CV_32FC1, grid);
+    final big = cv.resize(g, (gw * step, gh * step), interpolation: cv.INTER_LINEAR);
+    final cropped = big.region(cv.Rect(0, 0, w, h)).clone();
+    g.dispose();
+    big.dispose();
+    return cropped;
+  }
+
+  final mapX = full(mx), mapY = full(my);
+  final out = cv.remap(image, mapX, mapY, cv.INTER_CUBIC, borderMode: cv.BORDER_REPLICATE);
+  mapX.dispose();
+  mapY.dispose();
   return out;
 }

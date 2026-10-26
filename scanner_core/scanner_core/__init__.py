@@ -4,7 +4,7 @@ from .detect import Detection, detect_document, full_bounds, order_corners
 from .filters import Filter, apply_filter, crop, rotate
 from .pipeline import ScanResult, decode_image, encode_image, scan
 from .smoothing import CornerSmoother, StabilityTracker
-from .warp import output_size, warp_perspective
+from .warp import output_size, page_curves, warp_page, warp_perspective
 
 __all__ = [
     "Detection",
@@ -23,4 +23,6 @@ __all__ = [
     "StabilityTracker",
     "output_size",
     "warp_perspective",
+    "warp_page",
+    "page_curves",
 ]

@@ -61,7 +61,7 @@ self.onmessage = async (e) => {
       const img = await decode(e.data.bytes);
       const out =
         type === 'warpEncoded'
-          ? DocScanner.warpPerspective(cv, img, e.data.corners, e.data.maxSide)
+          ? DocScanner.warpPage(cv, img, e.data.corners, e.data.maxSide)
           : DocScanner.applyEdits(cv, img, e.data.edits, e.data.maxSide);
       const canvas = new OffscreenCanvas(out.width, out.height);
       canvas.getContext('2d').putImageData(new ImageData(out.data, out.width, out.height), 0, 0);

@@ -9,7 +9,7 @@ import numpy as np
 
 from .detect import detect_document, order_corners
 from .filters import Filter, apply_filter, rotate
-from .warp import warp_perspective
+from .warp import warp_page
 
 
 @dataclass
@@ -47,6 +47,6 @@ def scan(
         corners, found = det.corners, det.found
     else:
         corners, found = order_corners(corners), True
-    page = warp_perspective(image, corners, max_side=max_side)
+    page = warp_page(image, corners, max_side=max_side)
     page = rotate(apply_filter(page, filter), quarter_turns)
     return ScanResult(corners, found, page)

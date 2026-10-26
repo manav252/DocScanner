@@ -51,6 +51,40 @@ for (const [name, items] of Object.entries(hard.cases)) {
     hardResults[name] = { success: ok, total: items.length };
   });
 }
+/** How much the red rule under the page title bends (% of page height); RGBA image. */
+function ruleBend({ data, width: w, height: h }) {
+  const ys = [];
+  for (let x = Math.trunc(0.12 * w); x < Math.trunc(0.88 * w); x += 4) {
+    const rows = [];
+    for (let y = Math.trunc(0.05 * h); y < Math.trunc(0.3 * h); y++) {
+      const i = (y * w + x) * 4;
+      if (data[i] - data[i + 2] > 50 && data[i] > 110) rows.push(y);
+    }
+    if (rows.length) ys.push(rows[rows.length >> 1]);
+  }
+  return ((Math.max(...ys) - Math.min(...ys)) / h) * 100;
+}
+
+test('curved pages: same edge curves as the reference, and they come out flat', () => {
+  for (const items of Object.values(hard.cases)) {
+    for (const it of items) {
+      const img = jpeg.decode(fs.readFileSync(path.join(HARD, it.file)), { useTArray: true, formatAsRGBA: true });
+      const curves = S.pageCurves(cv, img, it.corners);
+      const py = hardRef[it.file].curves;
+      assert.strictEqual(curves === null, py === null, `${it.file}: curved or not differs from the reference`);
+      if (!curves) continue;
+      curves.forEach((c, k) => {
+        for (const t of [0.25, 0.5, 0.75]) {
+          const diff = Math.abs(S.curveAt(c, t) - S.curveAt(py[k], t));
+          assert.ok(diff < 4, `${it.file} side ${k} at ${t}: ${diff.toFixed(1)} px from the reference`);
+        }
+      });
+      const plain = ruleBend(S.warpPerspective(cv, img, it.corners)), flat = ruleBend(S.warpPage(cv, img, it.corners));
+      assert.ok(plain > 2.5 && flat < 1, `${it.file}: bend ${plain.toFixed(2)}% -> ${flat.toFixed(2)}%`);
+    }
+  }
+});
+
 test.after(() => {
   if (Object.keys(hardResults).length) {
     fs.writeFileSync(path.join(__dirname, '..', '..', 'docs', 'testing', 'detection-after-web.json'), JSON.stringify(hardResults, null, 1));

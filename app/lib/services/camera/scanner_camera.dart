@@ -7,6 +7,7 @@
 //
 // The scanner pulls frames with [ScannerCamera.nextFrame] only when it is
 // ready for one, so slow devices drop frames instead of queueing them.
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:flutter/widgets.dart';
@@ -119,4 +120,53 @@ double estimateBrightness(FrameData f) {
     }
   }
   return n == 0 ? 0 : sum / n;
+}
+
+/// How sharp [f] is: the variance of the Laplacian (4-neighbour) of its
+/// brightness, sampled every third pixel over the central 60% of the frame
+/// (where the page is; ~12k samples on a 640x480 frame, cheap enough for the
+/// UI thread). Motion blur and missed focus lower it. Only meaningful relative
+/// to other frames of the same scene.
+double estimateSharpness(FrameData f) {
+  const step = 3;
+  final bpp = f.format == PixelFormat.luma ? 1 : 4;
+  int lum(int x, int y) {
+    final i = y * f.rowStride + x * bpp;
+    return bpp == 1 ? f.bytes[i] : (f.bytes[i] + 2 * f.bytes[i + 1] + f.bytes[i + 2]) >> 2;
+  }
+
+  var sum = 0.0, sumSq = 0.0;
+  var n = 0;
+  final x0 = math.max(1, f.width ~/ 5), x1 = math.min(f.width - 1, f.width - f.width ~/ 5);
+  final y0 = math.max(1, f.height ~/ 5), y1 = math.min(f.height - 1, f.height - f.height ~/ 5);
+  for (var y = y0; y < y1; y += step) {
+    for (var x = x0; x < x1; x += step) {
+      final l = (4 * lum(x, y) - lum(x - 1, y) - lum(x + 1, y) - lum(x, y - 1) - lum(x, y + 1)).toDouble();
+      sum += l;
+      sumSq += l * l;
+      n++;
+    }
+  }
+  if (n == 0) return 0;
+  final mean = sum / n;
+  return sumSq / n - mean * mean;
+}
+
+/// Lets auto-capture through only on a sharp frame: at least [ratio] of the
+/// sharpest of the last [window] frames (absolute sharpness depends on the
+/// scene, so it is compared with the camera's own recent best).
+class SharpnessGate {
+  SharpnessGate({this.window = 30, this.ratio = 0.6});
+  final int window;
+  final double ratio;
+  final _recent = <double>[];
+
+  /// Add the latest frame's sharpness; true if that frame is sharp enough.
+  bool update(double sharpness) {
+    _recent.add(sharpness);
+    if (_recent.length > window) _recent.removeAt(0);
+    return sharpness >= ratio * _recent.reduce((a, b) => a > b ? a : b);
+  }
+
+  void reset() => _recent.clear();
 }

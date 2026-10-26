@@ -541,6 +541,172 @@
   }
 
   /** Flatten the quad to a rectangle. Returns RGBA {data, width, height}. */
+  // ---------- curved pages (see page_curves.dart, warp.py) ----------
+
+  const CURVE = { minBow: 0.015, maxBow: 0.15, samples: 48, workSide: 1000, minStep: 12.0 };
+
+  /** d(t) = t(1-t)(c0 + c1 t): zero at both corners. */
+  const curveAt = (c, t) => t * (1 - t) * (c[0] + c[1] * t);
+
+  /** numpy.rint: halves round to the even neighbour. */
+  function rint(v) {
+    const f = Math.floor(v), d = v - f;
+    return d === 0.5 ? (f % 2 === 0 ? f : f + 1) : Math.round(v);
+  }
+
+  /** numpy.arange(start, stop) for floats. */
+  const arange = (a, b) => Array.from({ length: Math.max(0, Math.ceil(b - a)) }, (_, i) => a + i);
+
+  const medianOf = (v) => {
+    const s = [...v].sort((x, y) => x - y), n = s.length;
+    return n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2;
+  };
+
+  /** Trace the page edge between corners a and b and fit d(t); [0, 0] if straight or not traceable. */
+  function sideCurve(g, a, b, out) {
+    const step = (p) => {
+      const at = (x, y) => g.data[Math.min(g.height - 1, Math.max(0, rint(y))) * g.width + Math.min(g.width - 1, Math.max(0, rint(x)))];
+      return at(p[0] - 2 * out[0], p[1] - 2 * out[1]) - at(p[0] + 2 * out[0], p[1] + 2 * out[1]);
+    };
+    const L = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    if (L < 20) return [0, 0];
+    const maxOff = CURVE.maxBow * L, window = Math.max(3, 0.02 * L);
+    const ts = Array.from({ length: CURVE.samples }, (_, i) => 0.04 + ((0.96 - 0.04) * i) / (CURVE.samples - 1));
+    const chord = ts.map((t) => [a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1])]);
+    const straight = chord.map(step);
+    const near = arange(-window, window + 1);
+    const ends = [...chord.slice(0, 4), ...chord.slice(-4)].map((base) => {
+      let best = 0, first = true;
+      for (const o of near) {
+        const v = step([base[0] + o * out[0], base[1] + o * out[1]]);
+        if (first || Math.abs(v) > Math.abs(best)) best = v;
+        first = false;
+      }
+      return best;
+    });
+    const sign = medianOf(ends) >= 0 ? 1 : -1;
+    let prev = 0;
+    const T = [], D = [];
+    for (let i = 0; i < ts.length; i++) {
+      const offs = arange(Math.max(-maxOff, prev - window), Math.min(maxOff, prev + window) + 1);
+      let k = -1, best = -Infinity;
+      for (let j = 0; j < offs.length; j++) {
+        const v = sign * step([chord[i][0] + offs[j] * out[0], chord[i][1] + offs[j] * out[1]]);
+        if (v > best) { best = v; k = j; }
+      }
+      if (k >= 0 && best >= CURVE.minStep) { prev = offs[k]; T.push(ts[i]); D.push(prev); }
+    }
+    if (T.length < 0.7 * ts.length) return [0, 0];
+    let keep = T.map(() => true), c = [0, 0];
+    for (let it = 0; it < 3; it++) {
+      let s11 = 0, s12 = 0, s22 = 0, r1 = 0, r2 = 0;
+      for (let j = 0; j < T.length; j++) {
+        if (!keep[j]) continue;
+        const t = T[j], b1 = t * (1 - t), b2 = t * t * (1 - t);
+        s11 += b1 * b1; s12 += b1 * b2; s22 += b2 * b2; r1 += b1 * D[j]; r2 += b2 * D[j];
+      }
+      const det = s11 * s22 - s12 * s12;
+      if (Math.abs(det) < 1e-12) return [0, 0];
+      c = [(r1 * s22 - r2 * s12) / det, (s11 * r2 - s12 * r1) / det];
+      const res = T.map((t, j) => Math.abs(D[j] - curveAt(c, t)));
+      const limit = Math.max(2, 2.5 * medianOf(res.filter((_, j) => keep[j])));
+      keep = res.map((r) => r <= limit);
+    }
+    let onCurve = 0, onChord = 0;
+    for (let i = 0; i < ts.length; i++) {
+      const d = curveAt(c, ts[i]);
+      if (sign * step([chord[i][0] + d * out[0], chord[i][1] + d * out[1]]) >= CURVE.minStep) onCurve++;
+      if (sign * straight[i] >= CURVE.minStep) onChord++;
+    }
+    const fc = onCurve / ts.length, fs = onChord / ts.length;
+    return fc < 0.8 || fc < fs + 0.15 ? [0, 0] : c;
+  }
+
+  function outwardNormal(a, b, centre) {
+    const L = Math.hypot(b[0] - a[0], b[1] - a[1]) + 1e-9;
+    let n = [-(b[1] - a[1]) / L, (b[0] - a[0]) / L];
+    if (n[0] * (centre[0] - a[0]) + n[1] * (centre[1] - a[1]) > 0) n = [-n[0], -n[1]];
+    return n;
+  }
+
+  /** Top and bottom edge curves (photo px) of the page at corners, or null when both are straight. */
+  function pageCurves(cv, image, corners) {
+    const { width: w, height: h } = image;
+    const q = orderCorners(corners);
+    const s = Math.min(1, CURVE.workSide / Math.max(w, h));
+    const src = cv.matFromImageData(image), small = new cv.Mat(), gray = new cv.Mat();
+    if (s < 1) cv.resize(src, small, new cv.Size(Math.round(w * s), Math.round(h * s)), 0, 0, cv.INTER_AREA);
+    else src.copyTo(small);
+    cv.cvtColor(small, gray, cv.COLOR_RGBA2GRAY);
+    cv.GaussianBlur(gray, gray, new cv.Size(5, 5), 0);
+    const g = { data: gray.data, width: gray.cols, height: gray.rows };
+    const qs = q.map(([x, y]) => [x * s, y * s]);
+    const centre = [(qs[0][0] + qs[1][0] + qs[2][0] + qs[3][0]) / 4, (qs[0][1] + qs[1][1] + qs[2][1] + qs[3][1]) / 4];
+    const curves = [[0, 1], [3, 2]].map(([i, j]) => sideCurve(g, qs[i], qs[j], outwardNormal(qs[i], qs[j], centre)).map((v) => v / s));
+    [src, small, gray].forEach((m) => m.delete());
+    let bow = 0;
+    [[0, 1], [3, 2]].forEach(([i, j], k) => {
+      const L = Math.hypot(q[j][0] - q[i][0], q[j][1] - q[i][1]);
+      for (let t = 0; t <= 100; t++) bow = Math.max(bow, Math.abs(curveAt(curves[k], t / 100)) / L);
+    });
+    return bow < CURVE.minBow ? null : curves;
+  }
+
+  /** Flatten the page: grid warp following bowed top/bottom edges, else the perspective warp. */
+  function warpPage(cv, image, corners, maxSide) {
+    const curves = pageCurves(cv, image, corners);
+    if (!curves) return warpPerspective(cv, image, corners, maxSide);
+    const src = orderCorners(corners);
+    let [w, h] = outputSize(src);
+    if (maxSide && Math.max(w, h) > maxSide) {
+      const s = maxSide / Math.max(w, h);
+      w = Math.max(1, Math.round(w * s)); h = Math.max(1, Math.round(h * s));
+    }
+    const dp = cv.matFromArray(4, 1, cv.CV_32FC2, [0, 0, w - 1, 0, w - 1, h - 1, 0, h - 1]);
+    const sp = cv.matFromArray(4, 1, cv.CV_32FC2, src.flat());
+    const M = cv.getPerspectiveTransform(dp, sp); // output -> photo
+    const k = Array.from(M.data64F);
+    [dp, sp, M].forEach((m) => m.delete());
+    const toPhoto = (u, v) => {
+      const z = k[6] * u + k[7] * v + k[8];
+      return [(k[0] * u + k[1] * v + k[2]) / z, (k[3] * u + k[4] * v + k[5]) / z];
+    };
+    // The map on a coarse grid: point j stands for output pixel 8j + 3.5 (resizing aligns pixel centres).
+    const step = 8, gw = Math.floor(w / step) + 2, gh = Math.floor(h / step) + 2;
+    const U = Array.from({ length: gw }, (_, j) => j * step + (step - 1) / 2);
+    const V = Array.from({ length: gh }, (_, i) => i * step + (step - 1) / 2);
+    const centre = [(src[0][0] + src[1][0] + src[2][0] + src[3][0]) / 4, (src[0][1] + src[1][1] + src[2][1] + src[3][1]) / 4];
+    const sides = [[curves[0], src[0], src[1], 0], [curves[1], src[3], src[2], h - 1]].map(([c, a, b, row]) => {
+      const abx = b[0] - a[0], aby = b[1] - a[1], L2 = abx * abx + aby * aby;
+      const d = U.map((u) => {
+        const e = toPhoto(u, row);
+        return curveAt(c, Math.min(1, Math.max(0, ((e[0] - a[0]) * abx + (e[1] - a[1]) * aby) / L2)));
+      });
+      return { n: outwardNormal(a, b, centre), d };
+    });
+    const mx = new Float32Array(gw * gh), my = new Float32Array(gw * gh);
+    for (let i = 0; i < gh; i++) {
+      const wt = 1 - V[i] / (h - 1), wb = V[i] / (h - 1);
+      for (let j = 0; j < gw; j++) {
+        const p = toPhoto(U[j], V[i]);
+        mx[i * gw + j] = p[0] + sides[0].n[0] * wt * sides[0].d[j] + sides[1].n[0] * wb * sides[1].d[j];
+        my[i * gw + j] = p[1] + sides[0].n[1] * wt * sides[0].d[j] + sides[1].n[1] * wb * sides[1].d[j];
+      }
+    }
+    const full = (grid) => {
+      const g = cv.matFromArray(gh, gw, cv.CV_32FC1, Array.from(grid)), big = new cv.Mat();
+      cv.resize(g, big, new cv.Size(gw * step, gh * step), 0, 0, cv.INTER_LINEAR);
+      const out = big.roi(new cv.Rect(0, 0, w, h)).clone();
+      g.delete(); big.delete();
+      return out;
+    };
+    const mapX = full(mx), mapY = full(my), m = cv.matFromImageData(image), out = new cv.Mat();
+    cv.remap(m, out, mapX, mapY, cv.INTER_CUBIC, cv.BORDER_REPLICATE);
+    const result = { data: new Uint8ClampedArray(out.data), width: w, height: h };
+    [mapX, mapY, m, out].forEach((x) => x.delete());
+    return result;
+  }
+
   function warpPerspective(cv, image, corners, maxSide) {
     const src = orderCorners(corners);
     let [w, h] = outputSize(src);
@@ -770,13 +936,14 @@
     steps.corners = rgbaFromMat(disp);
     disp.delete();
 
-    steps.flattened = warpPerspective(cv, image, result.corners, 1000);
+    steps.flattened = warpPage(cv, image, result.corners, 1000);
     gray.delete(); work.color.delete(); blurred.delete(); edges.delete();
     return { result, steps, pass, contourCount, scale };
   }
 
   return {
-    PARAMS, detectDocument, explainDetection, warpPerspective, applyEdits, orderCorners, fullBounds, outputSize,
+    PARAMS, detectDocument, explainDetection, warpPerspective, warpPage, pageCurves, curveAt, applyEdits, orderCorners,
+    fullBounds, outputSize,
     // For tests: compare the scoring step by step with the Python reference.
     internals: { workingImage, passes, edgeSteps, bestQuad, scoreQuad, sideFits, edgeSupport, extremePoints, lineQuads },
   };

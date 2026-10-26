@@ -165,6 +165,7 @@ class CaptureController extends Notifier<CaptureState> {
   late CaptureTuning _tuning;
   final _smoother = CornerSmoother();
   late StabilityTracker _stability;
+  final _sharpness = SharpnessGate();
   final _brightness = <double>[];
   final _frameTimes = <int>[];
   final _clock = Stopwatch()..start();
@@ -225,6 +226,7 @@ class CaptureController extends Notifier<CaptureState> {
   void _resetTracking() {
     _smoother.reset();
     _stability.reset();
+    _sharpness.reset();
     _brightness.clear();
     _frameTimes.clear();
     _autoCaptureAllowedAt = _clock.elapsed + _tuning.autoCaptureCooldown;
@@ -253,6 +255,8 @@ class CaptureController extends Notifier<CaptureState> {
       final upright = good ? frame.toUpright(detection.normalized(f.width, f.height)) : null;
       final smoothed = _smoother.update(upright);
       final steady = _stability.update(upright);
+      // Shake blurs the photo even while the outline looks steady: wait for a sharp frame.
+      final sharp = _sharpness.update(estimateSharpness(f));
 
       _brightness.add(estimateBrightness(f));
       if (_brightness.length > 15) _brightness.removeAt(0);
@@ -276,7 +280,7 @@ class CaptureController extends Notifier<CaptureState> {
       if (state.awaitingNextPage != (_lastCaptured != null)) {
         state = state.copyWith(awaitingNextPage: _lastCaptured != null);
       }
-      if (steady && state.autoCapture && _lastCaptured == null && _clock.elapsed >= _autoCaptureAllowedAt) {
+      if (steady && sharp && state.autoCapture && _lastCaptured == null && _clock.elapsed >= _autoCaptureAllowedAt) {
         await capture();
       }
     }

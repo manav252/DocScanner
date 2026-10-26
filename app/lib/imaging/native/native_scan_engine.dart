@@ -221,9 +221,7 @@ void _worker(SendPort out) {
           final cv.Mat result;
           if (req.kind == _Kind.warp) {
             final c = req.corners!;
-            result = warpPerspectiveMat(m, [
-              for (var i = 0; i < 4; i++) Pt(c[2 * i], c[2 * i + 1]),
-            ], maxSide: req.maxSide);
+            result = warpPageMat(m, [for (var i = 0; i < 4; i++) Pt(c[2 * i], c[2 * i + 1])], maxSide: req.maxSide);
           } else {
             result = applyEdits(m, PageEdits.fromJson(req.edits!), maxSide: req.maxSide == 0 ? null : req.maxSide);
           }
