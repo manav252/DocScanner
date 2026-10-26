@@ -1574,6 +1574,132 @@ abstract class AppLocalizations {
   /// **'This document could not be opened.'**
   String get documentNotFound;
 
+  /// No description provided for @idAadhaar.
+  ///
+  /// In en, this message translates to:
+  /// **'Aadhaar Card – India'**
+  String get idAadhaar;
+
+  /// No description provided for @idPan.
+  ///
+  /// In en, this message translates to:
+  /// **'PAN Card – India'**
+  String get idPan;
+
+  /// No description provided for @idOther.
+  ///
+  /// In en, this message translates to:
+  /// **'ID card'**
+  String get idOther;
+
+  /// No description provided for @idOtherHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Looks like an ID card. Which one is it?'**
+  String get idOtherHint;
+
+  /// No description provided for @idPickTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What kind of card is this?'**
+  String get idPickTitle;
+
+  /// No description provided for @idOtherChoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Another ID card'**
+  String get idOtherChoice;
+
+  /// No description provided for @idNotCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Not an ID card'**
+  String get idNotCard;
+
+  /// No description provided for @idChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get idChange;
+
+  /// No description provided for @idDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Card details'**
+  String get idDetails;
+
+  /// No description provided for @idName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get idName;
+
+  /// No description provided for @idDob.
+  ///
+  /// In en, this message translates to:
+  /// **'Date of birth'**
+  String get idDob;
+
+  /// No description provided for @idNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Card number'**
+  String get idNumber;
+
+  /// No description provided for @idDetailsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Read from the card. Check them and correct any mistakes. Kept on this device only.'**
+  String get idDetailsHint;
+
+  /// No description provided for @idLocalOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'ID cards are not backed up unless you choose to.'**
+  String get idLocalOnly;
+
+  /// No description provided for @idBackUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Back up this card'**
+  String get idBackUp;
+
+  /// No description provided for @idBackupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Back up this ID card?'**
+  String get idBackupTitle;
+
+  /// No description provided for @idBackupBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A copy of the card, with its photo and number, will be stored in your account on the server.'**
+  String get idBackupBody;
+
+  /// No description provided for @idBackedUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Backed up to your account'**
+  String get idBackedUp;
+
+  /// No description provided for @maskAadhaar.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide the first 8 digits of the Aadhaar number'**
+  String get maskAadhaar;
+
+  /// No description provided for @maskAadhaarHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Exported as XXXX XXXX 1234.'**
+  String get maskAadhaarHint;
+
+  /// No description provided for @maskNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'The Aadhaar number was not found in this card\'s text, so it could not be hidden. Nothing was exported.'**
+  String get maskNotFound;
+
   /// No description provided for @filterOriginal.
   ///
   /// In en, this message translates to:

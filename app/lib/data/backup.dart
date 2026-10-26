@@ -127,6 +127,8 @@ class BackupService {
             pages: incoming.pages,
             revision: incoming.revision,
             backup: false,
+            idCard: incoming.idCard,
+            idFields: incoming.idFields,
           ),
         );
         added++;
@@ -145,6 +147,9 @@ class BackupService {
             syncedRevision: local.syncedRevision,
             serverVersion: local.serverVersion,
             backup: local.backup,
+            idCard: incoming.idCard ?? local.idCard,
+            idFields: incoming.idFields.isEmpty ? local.idFields : incoming.idFields,
+            idBackupApproved: local.idBackupApproved,
           ),
         );
         for (final old in local.pages) {

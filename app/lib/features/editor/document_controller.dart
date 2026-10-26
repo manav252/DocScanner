@@ -9,6 +9,7 @@ import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/providers.dart';
+import '../../data/id_card.dart';
 import '../../data/models.dart';
 import '../../imaging/geometry.dart';
 import '../../imaging/markup.dart';
@@ -190,6 +191,46 @@ class DocumentController extends AsyncNotifier<ScanDocument> {
     final p = _page(d, pageId);
     return p.needsOcr ? d : d.edit(pages: _replace(d, p.copyWith(ocrRevision: -1)));
   });
+
+  /// ID card mode: once the pages' text is known, label a card-shaped
+  /// document as an Aadhaar or PAN card (or an ID card of unknown type), fill in
+  /// its details and give it a matching name. Leaves documents the user has
+  /// labelled (or said are not cards) alone.
+  Future<void> recognizeIdCard() => _mutate((d) async {
+    if (d.idCard != null || d.pages.isEmpty || d.pages.length > 2) return d;
+    final shaped = d.pages.every((p) {
+      final (w, h) = flatSize(p.corners);
+      return hasCardShape(w, h);
+    });
+    final info = classifyIdCard(text: d.pages.map((p) => p.ocrText ?? '').join('\n'), cardShaped: shaped);
+    if (info == null) return d;
+    final named = d.title == ScanDocument.defaultTitle(d.createdAt);
+    return d.edit(
+      idCard: info.type,
+      idFields: info.fields,
+      title: named ? idCardTitle(idCardTypeName(info.type), d.createdAt) : null,
+    );
+  });
+
+  /// The user picked the card type ([IdCardType.none]: not an ID card).
+  Future<void> setIdCard(IdCardType type) => _mutate((d) async {
+    final named =
+        d.title == ScanDocument.defaultTitle(d.createdAt) ||
+        IdCardType.values.any((t) => d.title == idCardTitle(idCardTypeName(t), d.createdAt));
+    return d.edit(
+      idCard: type,
+      title: named
+          ? (type == IdCardType.none
+                ? ScanDocument.defaultTitle(d.createdAt)
+                : idCardTitle(idCardTypeName(type), d.createdAt))
+          : null,
+    );
+  });
+
+  Future<void> setIdFields(Map<String, String> fields) => _mutate((d) async => d.edit(idFields: fields));
+
+  /// The user agreed to back this ID card up (sync then uploads it).
+  Future<void> approveIdBackup() => _mutate((d) async => d.edit(idBackupApproved: true, backup: true));
 
   /// Wait for queued operations (tests, export).
   Future<void> settle() => _queue;

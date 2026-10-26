@@ -122,7 +122,6 @@ cv.Mat cropNormalized(cv.Mat image, CropRect r) {
   return image.region(cv.Rect(x0, y0, x1 - x0, y1 - y0)).clone();
 }
 
-/// filter -> rotate -> crop, optionally downscaled so the longest side is <= [maxSide].
 /// Text recognition input: enlarged so the long side is at least
 /// [ocrMinSide] (at most [ocrMaxUpscale]x: ~30 px text on an ID card far from
 /// the camera), capped at [ocrMaxSide]; [contrast]: grayscale + CLAHE.
@@ -149,6 +148,7 @@ cv.Mat prepareOcr(cv.Mat image, {bool contrast = false}) {
   return out;
 }
 
+/// filter -> rotate -> crop, optionally downscaled so the longest side is <= [maxSide].
 cv.Mat applyEdits(cv.Mat flat, PageEdits e, {int? maxSide}) {
   var src = flat;
   cv.Mat? scaled;

@@ -16,6 +16,7 @@ import '../common/dialogs.dart';
 import '../common/page_image.dart';
 import '../corners/corner_adjust_page.dart';
 import '../markup/markup_editor_page.dart';
+import '../idcard/id_card_banner.dart';
 import '../library/import_flow.dart';
 import '../library/delete_controller.dart';
 import 'crop_page.dart';
@@ -296,6 +297,7 @@ class _DocumentEditorPageState extends ConsumerState<DocumentEditorPage> {
           ? _EmptyDocument(onScan: _scanMore, onImport: () => _import(files: true))
           : Column(
               children: [
+                if (doc.isIdCard) IdCardBanner(doc: doc),
                 Expanded(
                   child: PageView.builder(
                     controller: _pager,

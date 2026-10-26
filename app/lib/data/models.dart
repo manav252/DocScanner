@@ -2,6 +2,7 @@
 // every step (corners, filter, rotation, crop) stays editable; the rendered
 // image is derived from them.
 import '../imaging/geometry.dart';
+import 'id_card.dart';
 import '../imaging/markup.dart';
 import '../imaging/page_edits.dart';
 
@@ -143,6 +144,9 @@ class ScanDocument {
     this.serverVersion,
     this.deleted = false,
     bool? backup,
+    this.idCard,
+    this.idFields = const {},
+    this.idBackupApproved = false,
   }) : backup = backup ?? remoteId != null;
 
   final String id;
@@ -168,10 +172,43 @@ class ScanDocument {
   /// server stay backed up).
   final bool backup;
 
+  /// What kind of ID card this is (recognised or picked by the user); null =
+  /// not decided yet, [IdCardType.none] = the user said it is not one.
+  final IdCardType? idCard;
+
+  /// Card details (name, dob, number), editable; kept on this device only.
+  final Map<String, String> idFields;
+
+  /// The user agreed to back this ID card up to their account.
+  final bool idBackupApproved;
+
+  /// Treated as an ID card: recognised or picked as one, or (not decided yet)
+  /// every page has an ID card's shape. ID cards are never backed up without asking.
+  bool get isIdCard => switch (idCard) {
+    IdCardType.none => false,
+    null =>
+      pages.isNotEmpty &&
+          pages.length <= 2 &&
+          pages.every((p) {
+            final (w, h) = flatSize(p.corners);
+            return hasCardShape(w, h);
+          }),
+    _ => true,
+  };
+
   bool get needsSync => revision != syncedRevision;
 
   /// Copy with a change: bumps [revision] and [updatedAt].
-  ScanDocument edit({String? title, List<ScanPage>? pages, bool? deleted, DateTime? now, bool? backup}) => ScanDocument(
+  ScanDocument edit({
+    String? title,
+    List<ScanPage>? pages,
+    bool? deleted,
+    DateTime? now,
+    bool? backup,
+    IdCardType? idCard,
+    Map<String, String>? idFields,
+    bool? idBackupApproved,
+  }) => ScanDocument(
     id: id,
     title: title ?? this.title,
     createdAt: createdAt,
@@ -183,6 +220,9 @@ class ScanDocument {
     serverVersion: serverVersion,
     deleted: deleted ?? this.deleted,
     backup: backup ?? this.backup,
+    idCard: idCard ?? this.idCard,
+    idFields: idFields ?? this.idFields,
+    idBackupApproved: idBackupApproved ?? this.idBackupApproved,
   );
 
   /// Record that local [revision] is on the server at [serverVersion].
@@ -198,6 +238,9 @@ class ScanDocument {
     serverVersion: serverVersion ?? this.serverVersion,
     deleted: deleted,
     backup: true,
+    idCard: idCard,
+    idFields: idFields,
+    idBackupApproved: idBackupApproved,
   );
 
   /// Forget everything about the server (e.g. a different account signed in);
@@ -212,6 +255,8 @@ class ScanDocument {
     syncedRevision: -1,
     deleted: deleted,
     backup: false,
+    idCard: idCard,
+    idFields: idFields,
   );
 
   Map<String, Object?> toJson() => {
@@ -226,6 +271,9 @@ class ScanDocument {
     if (serverVersion != null) 'serverVer': serverVersion,
     'deleted': deleted,
     'backup': backup,
+    if (idCard != null) 'idCard': idCard!.wireName,
+    if (idFields.isNotEmpty) 'idFields': idFields,
+    if (idBackupApproved) 'idBackupOk': true,
   };
 
   static ScanDocument fromJson(Map<String, dynamic> j) => ScanDocument(
@@ -240,6 +288,9 @@ class ScanDocument {
     serverVersion: j['serverVer'] as int?,
     deleted: j['deleted'] as bool? ?? false,
     backup: j['backup'] as bool?,
+    idCard: IdCardType.fromWire(j['idCard'] as String?),
+    idFields: {for (final e in ((j['idFields'] as Map?) ?? const {}).entries) '${e.key}': '${e.value}'},
+    idBackupApproved: j['idBackupOk'] as bool? ?? false,
   );
 
   /// Default title, e.g. "Scan 2026-10-22 18:30".

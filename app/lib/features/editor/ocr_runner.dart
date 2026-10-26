@@ -75,6 +75,8 @@ class OcrRunner {
         done++;
       }
       onProgress?.call(OcrProgress(done, todo.length));
+      // With the text known: is this an ID card?
+      if (done > 0) await _ref.read(documentProvider(docId).notifier).recognizeIdCard();
       return done;
     } finally {
       keepAlive.close();

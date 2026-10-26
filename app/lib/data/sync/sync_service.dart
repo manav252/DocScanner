@@ -122,6 +122,8 @@ class SyncService {
       if (!doc.needsSync) continue;
       // Documents the user has not chosen to back up stay on this device.
       if (!doc.backup && !(doc.deleted && doc.remoteId != null)) continue;
+      // ID cards are only uploaded once the user agrees (asked on the card's page).
+      if (doc.isIdCard && !doc.idBackupApproved && doc.remoteId == null && !doc.deleted) continue;
       if (doc.deleted) {
         // Deletion wins over concurrent remote edits.
         if (doc.remoteId != null) await api.deleteDocument(doc.id);
@@ -274,6 +276,10 @@ class SyncService {
         syncedRevision: rev,
         serverVersion: version,
         backup: true,
+        // Card type and details are kept on this device only.
+        idCard: local?.idCard,
+        idFields: local?.idFields ?? const {},
+        idBackupApproved: local?.idBackupApproved ?? false,
       ),
     );
     await _saveState(state);

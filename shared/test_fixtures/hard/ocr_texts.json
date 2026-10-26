@@ -1,0 +1,302 @@
+{
+ "aadhaar_00.jpg": {
+  "text": "| Government of India\ni Meera lyer\nO 13/05/1981\n(J 4\n2539 4539 5964",
+  "width": 456,
+  "height": 293,
+  "fields": {
+   "type": "aadhaar",
+   "name": "Meera Iyer",
+   "dob": "13/05/1981",
+   "number": "2539 4539 5964"
+  }
+ },
+ "aadhaar_01.jpg": {
+  "text": "overnment of India\nRohan Mehta\nO DOB: 23/11/1987\n7352 5352 8492",
+  "width": 425,
+  "height": 254,
+  "fields": {
+   "type": "aadhaar",
+   "name": "Rohan Mehta",
+   "dob": "23/11/1987",
+   "number": "7352 5352 8492"
+  }
+ },
+ "aadhaar_02.jpg": {
+  "text": "Government of India\n3 Asha Verma\nO | DOB: 18/06/1981\n| Female\n3026 9266 9721",
+  "width": 601,
+  "height": 386,
+  "fields": {
+   "type": "aadhaar",
+   "name": "Asha Verma",
+   "dob": "18/06/1981",
+   "number": "3026 9266 9721"
+  }
+ },
+ "aadhaar_03.jpg": {
+  "text": "Government of India\nPriya Nair\n| O 20/06/1991\n7773 3047 6035\n- HTH ry",
+  "width": 506,
+  "height": 319,
+  "fields": {
+   "type": "aadhaar",
+   "name": "Priya Nair",
+   "dob": "20/06/1991",
+   "number": "7773 3047 6035"
+  }
+ },
+ "aadhaar_04.jpg": {
+  "text": "il\n| Rohan Mehta\nO | DOB: 22/07/1974\n8006 7696 9465",
+  "width": 439,
+  "height": 283,
+  "fields": {
+   "type": "aadhaar",
+   "name": "Rohan Mehta",
+   "dob": "22/07/1974",
+   "number": "8006 7696 9465"
+  }
+ },
+ "aadhaar_05.jpg": {
+  "text": "Government of India\n[ Rohan Mehta\nO 14/01/1997\n7428 1286 8400\n- HTH NTH & 3",
+  "width": 515,
+  "height": 341,
+  "fields": {
+   "type": "aadhaar",
+   "name": "Rohan Mehta",
+   "dob": "14/01/1997",
+   "number": "7428 1286 8400"
+  }
+ },
+ "aadhaar_06.jpg": {
+  "text": "Government of India 4\nMehta\nO | DOB: 26/05/1998\n| Female\n8542 4091 9993",
+  "width": 541,
+  "height": 342,
+  "fields": {
+   "type": "aadhaar",
+   "name": "Rohan Mehta",
+   "dob": "26/05/1998",
+   "number": "8542 4091 9993"
+  }
+ },
+ "aadhaar_07.jpg": {
+  "text": "Priya Nair\nO DOB: 27/11/1987\n() lly\nh i\n2372 9386 5498\nj= - HTH",
+  "width": 524,
+  "height": 333,
+  "fields": {
+   "type": "aadhaar",
+   "name": "Priya Nair",
+   "dob": "27/11/1987",
+   "number": "2372 9386 5498"
+  }
+ },
+ "aadhaar_08.jpg": {
+  "text": "of Inc \\\n| Arjun Rao\nO 02/02/1992\n| Male\n5210 6758 5065\n230 ps am",
+  "width": 467,
+  "height": 302,
+  "fields": {
+   "type": "aadhaar",
+   "name": "Arjun Rao",
+   "dob": "02/02/1992",
+   "number": "5210 6758 5065"
+  }
+ },
+ "aadhaar_09.jpg": {
+  "text": "rnment of Indi. .\nKabir Singh\n| O DOB: 26/02/1980\n7053 4836 9019\n- ATH",
+  "width": 565,
+  "height": 370,
+  "fields": {
+   "type": "aadhaar",
+   "name": "Kabir Singh",
+   "dob": "26/02/1980",
+   "number": "7053 4836 9019"
+  }
+ },
+ "aadhaar_10.jpg": {
+  "text": "HRA\nx oF X\n| Asha Verma\n15/07/2001\n8890 3176 2606",
+  "width": 554,
+  "height": 355,
+  "fields": {
+   "type": "aadhaar",
+   "name": "Asha Verma",
+   "dob": "15/07/2001",
+   "number": "8890 3176 2606"
+  }
+ },
+ "aadhaar_11.jpg": {
+  "text": "Kabirsingh\n| O 23/02/1971\n2954 6040 2851",
+  "width": 526,
+  "height": 321,
+  "fields": {
+   "type": "aadhaar",
+   "name": "Kabir Singh",
+   "dob": "23/02/1971",
+   "number": "2954 6040 2851"
+  }
+ },
+ "pan_00.jpg": {
+  "text": "INCOME TAX INDIA\nPermanent Account Number Card\n| O VBNPN9430E\n| PRIYA NAIR\n() SURESH KUMAR\nk. 24/02/1968\nVAVAVAN\nSignature",
+  "width": 562,
+  "height": 350,
+  "fields": {
+   "type": "pan",
+   "name": "Priya Nair",
+   "dob": "24/02/1968",
+   "number": "VBNPN9430E"
+  }
+ },
+ "pan_01.jpg": {
+  "text": "NWA\nINCOME TAX INDIA\nAccount Number Card\nO THFPR5327H\nARJUN RAO\n() ANIL SHARMA\n03/05/1972",
+  "width": 441,
+  "height": 286,
+  "fields": {
+   "type": "pan",
+   "name": "Arjun Rao",
+   "dob": "03/05/1972",
+   "number": "THFPR5327H"
+  }
+ },
+ "pan_02.jpg": {
+  "text": "INCOME TAX INDIA\nPermanent Account Number Card\nO HHYPM3873U\nROHAN MEHTA\n() SURESH KUMAR\n22/01/1998",
+  "width": 483,
+  "height": 299,
+  "fields": {
+   "type": "pan",
+   "name": "Rohan Mehta",
+   "dob": "22/01/1998",
+   "number": "HHYPM3873U"
+  }
+ },
+ "pan_03.jpg": {
+  "text": "INCOME TAX DEPARGOSNIOF INDIA\nPermanent Account Number Card\nO JESPR5803G\nARJUN RAO\nANIL SHARMA",
+  "width": 431,
+  "height": 270,
+  "fields": {
+   "type": "pan",
+   "name": "Arjun Rao",
+   "dob": "07/04/1975",
+   "number": "JESPR5803G"
+  }
+ },
+ "pan_04.jpg": {
+  "text": "INCOME TAX\n, Permanent Account Number Card\nO CXDPS9377L |\nKABIR SINGH |\nSURESH KUMAR\n15/05/2003",
+  "width": 574,
+  "height": 376,
+  "fields": {
+   "type": "pan",
+   "name": "Kabir Singh",
+   "dob": "15/05/2003",
+   "number": "CXDPS9377L"
+  }
+ },
+ "pan_05.jpg": {
+  "text": "INCOME TAX INDIA\nPermanent Account Number Card\nO EVCPI7662R\nMEERA IYER\n15/04/2003",
+  "width": 479,
+  "height": 306,
+  "fields": {
+   "type": "pan",
+   "name": "Meera Iyer",
+   "dob": "15/04/2003",
+   "number": "EVCPI7662R"
+  }
+ },
+ "pan_06.jpg": {
+  "text": "INCOME TAX DEPARGOSNIOF INDIA\n= Permanent Account Number Card\nO HVUPR4567K\nARJUN RAO\nANIL SHARMA\n07/02/1983",
+  "width": 493,
+  "height": 306,
+  "fields": {
+   "type": "pan",
+   "name": "Arjun Rao",
+   "dob": "07/02/1983",
+   "number": "HVUPR4567K"
+  }
+ },
+ "pan_07.jpg": {
+  "text": "INCOME TAX INDIA\nPermanent Account Number Card\nO AVKPS1298T\nKABIR SINGH\n© ANIL SHARMA\n23/05/1966\nSignature",
+  "width": 582,
+  "height": 366,
+  "fields": {
+   "type": "pan",
+   "name": "Kabir Singh",
+   "dob": "23/05/1966",
+   "number": "AVKPS1298T"
+  }
+ },
+ "pan_08.jpg": {
+  "text": "TER\nINCOME TAX INDIA\nPermanent Account Number Card\nO UXMPS8483L\nKABIR SINGH\n() ANIL SHARMA\n17/10/1980\nSignature",
+  "width": 583,
+  "height": 366,
+  "fields": {
+   "type": "pan",
+   "name": "Kabir Singh",
+   "dob": "17/10/1980",
+   "number": "UXMPS8483L"
+  }
+ },
+ "pan_09.jpg": {
+  "text": "THR\nINCOME TAX INDIA\nPermanent Account Number Card\nO XKCPN9029E\nPRIYA NAIR\n() ANIL SHARMA\n18/01/1998\nSignature",
+  "width": 613,
+  "height": 381,
+  "fields": {
+   "type": "pan",
+   "name": "Priya Nair",
+   "dob": "18/01/1998",
+   "number": "XKCPN9029E"
+  }
+ },
+ "pan_10.jpg": {
+  "text": "WIA\nINCOME TAX INDIA\nPermanent Account Number Card\nO NUZPS1601M\nKABIR SINGH\n21/09/1981\nSignature",
+  "width": 495,
+  "height": 321,
+  "fields": {
+   "type": "pan",
+   "name": "Kabir Singh",
+   "dob": "21/09/1981",
+   "number": "NUZPS1601M"
+  }
+ },
+ "pan_11.jpg": {
+  "text": "ITA\nINCOME TAX INDIA\nPermanent Account Number Card\nO TNPPN3170F\nPRIYA NAIR\n() ANIL SHARMA\n19/08/1998\nVAVAVAS",
+  "width": 444,
+  "height": 291,
+  "fields": {
+   "type": "pan",
+   "name": "Priya Nair",
+   "dob": "19/08/1998",
+   "number": "TNPPN3170F"
+  }
+ },
+ "handwritten_00.jpg": {
+  "text": "APN\nAANA",
+  "width": 603,
+  "height": 996,
+  "fields": null
+ },
+ "handwritten_01.jpg": {
+  "text": "Ny",
+  "width": 842,
+  "height": 976,
+  "fields": null
+ },
+ "handwritten_02.jpg": {
+  "text": "NN",
+  "width": 612,
+  "height": 823,
+  "fields": null
+ },
+ "plain_white_01.jpg": {
+  "text": "QUARTERLY REPORT\namount document order amount total summary document\ndocument invoice customer total summary date number\ndate number customer scanner order invoice reference\npayment amount invoice amount total summary tax date\nnumber payment order number tax amount total tax\naccount invoice amount customer document customer\nsummary tax account amount tax amount shipping\naccount shipping order scanner invoice reference\ndocument receipt order amount invoice account date\namount scanner shipping document payment total receipt\nreference document order number receipt order page\ncustomer scanner date payment invoice summary\npage summary total number reference receipt document\nsummary tax tax reference page invoice scanner\ncustomer total summary number scanner order page",
+  "width": 660,
+  "height": 1000,
+  "fields": null
+ },
+ "plain_white_02.jpg": {
+  "text": "",
+  "width": 703,
+  "height": 1039,
+  "fields": null
+ },
+ "plain_white_03.jpg": {
+  "text": "QUARTERLY REPORT\ncustomer amount customer tax payment order shipping\ntax order scanner receipt order scanner order amount\ntotal page shipping account total customer amount\ncustomer invoice order receipt shipping total scanner\ncustomer shipping customer amount payment customer\nreference amount reference amount number reference\nreceipt shipping page amount date amount account\ndocument number date total receipt total reference\nshipping tax payment order shipping customer date\naccount customer scanner payment reference amount\namount amount date receipt summary receipt date\nshipping order page total date document shipping\ntax date tax summary account invoice reference tax\nsummary scanner shipping reference invoice account\nsummary receipt document shipping receipt customer",
+  "width": 816,
+  "height": 1172,
+  "fields": null
+ }
+}

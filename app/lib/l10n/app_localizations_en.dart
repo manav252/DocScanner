@@ -845,6 +845,71 @@ class AppLocalizationsEn extends AppLocalizations {
   String get documentNotFound => 'This document could not be opened.';
 
   @override
+  String get idAadhaar => 'Aadhaar Card – India';
+
+  @override
+  String get idPan => 'PAN Card – India';
+
+  @override
+  String get idOther => 'ID card';
+
+  @override
+  String get idOtherHint => 'Looks like an ID card. Which one is it?';
+
+  @override
+  String get idPickTitle => 'What kind of card is this?';
+
+  @override
+  String get idOtherChoice => 'Another ID card';
+
+  @override
+  String get idNotCard => 'Not an ID card';
+
+  @override
+  String get idChange => 'Change';
+
+  @override
+  String get idDetails => 'Card details';
+
+  @override
+  String get idName => 'Name';
+
+  @override
+  String get idDob => 'Date of birth';
+
+  @override
+  String get idNumber => 'Card number';
+
+  @override
+  String get idDetailsHint => 'Read from the card. Check them and correct any mistakes. Kept on this device only.';
+
+  @override
+  String get idLocalOnly => 'ID cards are not backed up unless you choose to.';
+
+  @override
+  String get idBackUp => 'Back up this card';
+
+  @override
+  String get idBackupTitle => 'Back up this ID card?';
+
+  @override
+  String get idBackupBody =>
+      'A copy of the card, with its photo and number, will be stored in your account on the server.';
+
+  @override
+  String get idBackedUp => 'Backed up to your account';
+
+  @override
+  String get maskAadhaar => 'Hide the first 8 digits of the Aadhaar number';
+
+  @override
+  String get maskAadhaarHint => 'Exported as XXXX XXXX 1234.';
+
+  @override
+  String get maskNotFound =>
+      'The Aadhaar number was not found in this card\'s text, so it could not be hidden. Nothing was exported.';
+
+  @override
   String get filterOriginal => 'Original';
 
   @override

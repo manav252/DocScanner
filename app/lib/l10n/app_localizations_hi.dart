@@ -841,6 +841,70 @@ class AppLocalizationsHi extends AppLocalizations {
   String get documentNotFound => 'यह दस्तावेज़ खुल नहीं सका।';
 
   @override
+  String get idAadhaar => 'आधार कार्ड – भारत';
+
+  @override
+  String get idPan => 'पैन कार्ड – भारत';
+
+  @override
+  String get idOther => 'पहचान पत्र';
+
+  @override
+  String get idOtherHint => 'यह पहचान पत्र लगता है। कौन-सा है?';
+
+  @override
+  String get idPickTitle => 'यह कौन-सा कार्ड है?';
+
+  @override
+  String get idOtherChoice => 'कोई और पहचान पत्र';
+
+  @override
+  String get idNotCard => 'पहचान पत्र नहीं है';
+
+  @override
+  String get idChange => 'बदलें';
+
+  @override
+  String get idDetails => 'कार्ड का विवरण';
+
+  @override
+  String get idName => 'नाम';
+
+  @override
+  String get idDob => 'जन्म तिथि';
+
+  @override
+  String get idNumber => 'कार्ड नंबर';
+
+  @override
+  String get idDetailsHint => 'कार्ड से पढ़ा गया। जाँच लें और गलती हो तो ठीक करें। सिर्फ़ इसी डिवाइस पर रहता है।';
+
+  @override
+  String get idLocalOnly => 'पहचान पत्र तभी बैकअप होते हैं जब आप चुनें।';
+
+  @override
+  String get idBackUp => 'यह कार्ड बैकअप करें';
+
+  @override
+  String get idBackupTitle => 'यह पहचान पत्र बैकअप करें?';
+
+  @override
+  String get idBackupBody => 'कार्ड की कॉपी, उसकी फ़ोटो और नंबर के साथ, सर्वर पर आपके खाते में रखी जाएगी।';
+
+  @override
+  String get idBackedUp => 'आपके खाते में बैकअप हो गया';
+
+  @override
+  String get maskAadhaar => 'आधार नंबर के पहले 8 अंक छिपाएँ';
+
+  @override
+  String get maskAadhaarHint => 'XXXX XXXX 1234 के रूप में निर्यात होगा।';
+
+  @override
+  String get maskNotFound =>
+      'इस कार्ड के टेक्स्ट में आधार नंबर नहीं मिला, इसलिए छिपाया नहीं जा सका। कुछ भी निर्यात नहीं हुआ।';
+
+  @override
   String get filterOriginal => 'मूल';
 
   @override

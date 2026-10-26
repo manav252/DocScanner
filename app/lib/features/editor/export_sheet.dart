@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/cancel.dart';
 import '../../core/l10n.dart';
 import '../../core/providers.dart';
+import '../../data/id_card.dart';
 import '../../data/models.dart';
 import '../../services/export/pdf_builder.dart';
 import 'export.dart';
@@ -31,6 +32,9 @@ class _ExportSheetState extends ConsumerState<ExportSheet> {
   var _size = PdfPageSize.fit;
   bool _busy = false;
   bool _searchable = true;
+
+  /// ID card mode: hide the first 8 digits of the Aadhaar number.
+  bool _mask = false;
   String? _step;
   double? _progress;
   CancelToken? _cancel;
@@ -46,7 +50,8 @@ class _ExportSheetState extends ConsumerState<ExportSheet> {
     try {
       var doc = widget.doc;
       final ocr = ref.read(ocrRunnerProvider);
-      if (_format == ExportFormat.pdf && _searchable && ocr.available) {
+      // Text is needed for a searchable PDF, and to find the number to hide.
+      if (((_format == ExportFormat.pdf && _searchable) || _mask) && ocr.available) {
         await ocr.run(
           doc.id,
           cancel: cancel,
@@ -70,6 +75,7 @@ class _ExportSheetState extends ConsumerState<ExportSheet> {
             doc,
             format: _format,
             pageSize: _size,
+            maskAadhaar: _mask,
             cancel: cancel,
             onPage: (done, total) {
               if (mounted) setState(() => _progress = ocrShare + (1 - ocrShare) * done / total);
@@ -87,6 +93,14 @@ class _ExportSheetState extends ConsumerState<ExportSheet> {
         messenger.showSnackBar(
           SnackBar(content: Text(files.length == 1 ? l.savedFile(files.first.name) : l.savedImages(files.length))),
         );
+      }
+    } on AadhaarNumberNotFound {
+      messenger.showSnackBar(SnackBar(content: Text(l.maskNotFound)));
+      if (mounted) {
+        setState(() {
+          _busy = false;
+          _step = null;
+        });
       }
     } on Cancelled {
       messenger.showSnackBar(SnackBar(content: Text(l.exportCancelled)));
@@ -170,6 +184,15 @@ class _ExportSheetState extends ConsumerState<ExportSheet> {
                   subtitle: Text(l.searchablePdfHint),
                 ),
             ],
+            if (widget.doc.idCard == IdCardType.aadhaar && ref.read(ocrRunnerProvider).available)
+              SwitchListTile(
+                key: const ValueKey('mask-aadhaar'),
+                contentPadding: EdgeInsets.zero,
+                value: _mask,
+                onChanged: _busy ? null : (v) => setState(() => _mask = v),
+                title: Text(l.maskAadhaar),
+                subtitle: Text(l.maskAadhaarHint),
+              ),
             const SizedBox(height: 12),
             if (hasMarkup) Text(l.markupBurnedIn),
             Text(help, key: const ValueKey('export-help'), style: Theme.of(context).textTheme.bodySmall),

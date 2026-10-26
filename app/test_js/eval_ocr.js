@@ -1,7 +1,10 @@
 // OCR accuracy on the fake ID cards (shared/test_fixtures/hard: aadhaar_*, pan_*)
 // with the web app's OCR engine (Tesseract.js, same build and language data).
 //
-//   node eval_ocr.js [--pipeline before|after] [--json out.json]
+//   node eval_ocr.js [--pipeline before|after] [--json out.json] [--dump texts.json]
+//
+// --dump saves the recognised text of every card (and of 6 ordinary pages,
+// as negatives) for the Dart ID-card classifier tests.
 //
 // Each card is flattened at its true corners and made into the page image the
 // app keeps (Magic Color, JPEG), then read as the app's OCR runner reads it.
@@ -37,6 +40,13 @@ const encode = (img, q = 85) => Buffer.from(jpeg.encode({ data: img.data, width:
     return toResult(data, img.width, img.height);
   };
   const out = {};
+  const dump = {};
+  const readPage = async (it) => {
+    const photo = jpeg.decode(fs.readFileSync(path.join(HARD, it.file)), { useTArray: true, formatAsRGBA: true });
+    const flat = S.warpPage(cv, photo, it.corners, 2480);
+    const render = jpeg.decode(encode(S.applyEdits(cv, flat, { filter: 'magic_color' }, 2480)), { useTArray: true, formatAsRGBA: true });
+    return { render, flat };
+  };
   for (const kind of ['aadhaar', 'pan']) {
     const score = { name: 0, dob: 0, number: 0, cards: 0 };
     for (const it of hard.cases[kind]) {
@@ -56,6 +66,7 @@ const encode = (img, q = 85) => Buffer.from(jpeg.encode({ data: img.data, width:
         result = await read(first);
         if (littleText(result)) result = mergeOcr(result, await read(second()));
       }
+      dump[it.file] = { text: result.text, width: render.width, height: render.height, fields: it.fields };
       const text = result.text, flatText = text.replace(/\s+/g, '');
       const f = it.fields;
       score.cards++;
@@ -65,6 +76,14 @@ const encode = (img, q = 85) => Buffer.from(jpeg.encode({ data: img.data, width:
     }
     out[kind] = score;
     console.log(`${kind}: name ${score.name}/${score.cards}, DOB ${score.dob}/${score.cards}, number ${score.number}/${score.cards}`);
+  }
+  if (opt('dump')) {
+    for (const it of hard.cases.handwritten.slice(0, 3).concat(hard.cases.plain_white.slice(1, 4))) {
+      const { render } = await readPage(it);
+      const [first] = prep().prepareOcrVariants(cv, S, render);
+      dump[it.file] = { text: (await read(first)).text, width: render.width, height: render.height, fields: null };
+    }
+    fs.writeFileSync(opt('dump'), JSON.stringify(dump, null, 1));
   }
   await worker.terminate();
   if (opt('json')) fs.writeFileSync(opt('json'), JSON.stringify({ pipeline, engine: 'Tesseract.js (web)', ...out }, null, 1));
