@@ -204,6 +204,8 @@
       }
     }
   },
+  "importWhyPassword": "password-protected PDF",
+  "importWhyUnreadable": "damaged or unsupported file",
   "importNothing": "Nothing to import. Choose JPG, PNG or PDF files.",
   "appearance": "Appearance",
   "theme": "Theme",

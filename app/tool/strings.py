@@ -154,6 +154,8 @@ S = {
         "ये फ़ाइलें खुल नहीं सकीं और छोड़ दी गईं: {names}",
         {"names": "String"},
     ),
+    "importWhyPassword": ("password-protected PDF", "पासवर्ड से सुरक्षित PDF"),
+    "importWhyUnreadable": ("damaged or unsupported file", "ख़राब या असमर्थित फ़ाइल"),
     "importNothing": (
         "Nothing to import. Choose JPG, PNG or PDF files.",
         "जोड़ने के लिए कुछ नहीं। JPG, PNG या PDF फ़ाइलें चुनें।",

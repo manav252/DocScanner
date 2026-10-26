@@ -70,7 +70,7 @@ Future<void> importIntoNewDocument(BuildContext context, WidgetRef ref, ImportKi
     if (!context.mounted) return;
     Navigator.of(context).pop(); // progress dialog
     if (r.cancelled) _snack(context, l.importCancelled);
-    if (r.failed.isNotEmpty) _snack(context, l.importSkipped(r.failed.join(', ')));
+    if (r.failed.isNotEmpty) _snack(context, importFailures(l, r));
     if (r.added == 0) {
       await actions.delete(doc);
       if (context.mounted && r.failed.isEmpty) _snack(context, l.importNothing);

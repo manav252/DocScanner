@@ -280,6 +280,12 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String get importWhyPassword => 'पासवर्ड से सुरक्षित PDF';
+
+  @override
+  String get importWhyUnreadable => 'ख़राब या असमर्थित फ़ाइल';
+
+  @override
   String get importNothing => 'जोड़ने के लिए कुछ नहीं। JPG, PNG या PDF फ़ाइलें चुनें।';
 
   @override

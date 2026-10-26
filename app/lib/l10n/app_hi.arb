@@ -74,6 +74,8 @@
   "serverWaking": "सर्वर चालू हो रहा है, इसमें एक मिनट तक लग सकता है…",
   "deleteFailed": "“{title}” हटाया नहीं जा सका। उसे वापस रख दिया गया है।",
   "importSkipped": "ये फ़ाइलें खुल नहीं सकीं और छोड़ दी गईं: {names}",
+  "importWhyPassword": "पासवर्ड से सुरक्षित PDF",
+  "importWhyUnreadable": "ख़राब या असमर्थित फ़ाइल",
   "importNothing": "जोड़ने के लिए कुछ नहीं। JPG, PNG या PDF फ़ाइलें चुनें।",
   "appearance": "रूप",
   "theme": "थीम",

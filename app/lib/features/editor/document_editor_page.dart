@@ -118,7 +118,7 @@ class _DocumentEditorPageState extends ConsumerState<DocumentEditorPage> {
     final messenger = ScaffoldMessenger.of(context);
     await _run(() async {
       final r = await ref.read(importFlowProvider).importFiles(widget.documentId, picked);
-      if (r.failed.isNotEmpty) messenger.showSnackBar(SnackBar(content: Text(l.importSkipped(r.failed.join(', ')))));
+      if (r.failed.isNotEmpty) messenger.showSnackBar(SnackBar(content: Text(importFailures(l, r))));
     });
   }
 

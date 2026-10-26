@@ -536,6 +536,18 @@ abstract class AppLocalizations {
   /// **'These files could not be opened and were skipped: {names}'**
   String importSkipped(String names);
 
+  /// No description provided for @importWhyPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'password-protected PDF'**
+  String get importWhyPassword;
+
+  /// No description provided for @importWhyUnreadable.
+  ///
+  /// In en, this message translates to:
+  /// **'damaged or unsupported file'**
+  String get importWhyUnreadable;
+
   /// No description provided for @importNothing.
   ///
   /// In en, this message translates to:

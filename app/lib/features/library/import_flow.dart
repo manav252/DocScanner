@@ -2,6 +2,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/cancel.dart';
+import '../../core/l10n.dart';
 import '../../core/providers.dart';
 import '../../imaging/geometry.dart';
 import '../../imaging/page_edits.dart';
@@ -18,9 +19,12 @@ class ImportProgress {
 /// What an import did: pages added, and files that could not be opened
 /// (corrupt, not an image/PDF, password-protected PDF…). Those are skipped.
 class ImportResult {
-  const ImportResult(this.added, this.failed, {this.cancelled = false});
+  const ImportResult(this.added, this.failed, {this.cancelled = false, this.reasons = const {}});
   final int added;
   final List<String> failed;
+
+  /// Why each file in [failed] could not be opened (the error message).
+  final Map<String, String> reasons;
 
   /// Stopped by the user; pages added until then are kept.
   final bool cancelled;
@@ -62,18 +66,20 @@ class ImportFlow {
     await ref.read(documentProvider(docId).future);
     var added = 0;
     final failed = <String>[];
+    final reasons = <String, String>{};
     for (final f in files) {
       if (cancel?.isCancelled ?? false) break;
       try {
         added += await _importOne(f, added, engine, importer, doc, onProgress, cancel);
       } on Cancelled {
         break;
-      } catch (_) {
+      } catch (e) {
         failed.add(f.name);
+        reasons[f.name] = '$e';
       }
     }
     await doc.settle();
-    return ImportResult(added, failed, cancelled: cancel?.isCancelled ?? false);
+    return ImportResult(added, failed, cancelled: cancel?.isCancelled ?? false, reasons: reasons);
   }
 
   /// Pages added from one file.
@@ -120,5 +126,16 @@ class ImportFlow {
     return added;
   }
 }
+
+/// "These files could not be opened…: a.pdf (password-protected PDF), b.jpg (…)".
+String importFailures(AppLocalizations l, ImportResult r) => l.importSkipped(
+  [
+    for (final name in r.failed)
+      switch (r.reasons[name] ?? '') {
+        final e when e.contains('assword') => '$name (${l.importWhyPassword})',
+        _ => '$name (${l.importWhyUnreadable})',
+      },
+  ].join(', '),
+);
 
 final importFlowProvider = Provider<ImportFlow>(ImportFlow.new);

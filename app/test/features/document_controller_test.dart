@@ -14,6 +14,8 @@ import 'package:docscanner/imaging/geometry.dart';
 import 'package:docscanner/imaging/page_edits.dart';
 import 'package:docscanner/services/export/pdf_builder.dart';
 import 'package:docscanner/services/import/import_service.dart';
+import 'package:docscanner/l10n/app_localizations.dart';
+import 'package:flutter/widgets.dart' show Locale;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -23,7 +25,7 @@ import '../support/fakes.dart';
 class FakeImporter extends ImportService {
   const FakeImporter();
   @override
-  Stream<Uint8List> rasterizePdf(Uint8List pdf, {double dpi = 200}) async* {
+  Stream<Uint8List> rasterizePdf(Uint8List pdf, {double dpi = 200, int maxSide = 2480}) async* {
     yield Uint8List.fromList([10]);
     yield Uint8List.fromList([11]);
   }
@@ -161,7 +163,31 @@ void main() {
     ]);
     expect(r.added, 1);
     expect(r.failed, ['broken.jpg']);
+    expect(r.reasons['broken.jpg'], isNotEmpty, reason: 'the reason reaches the message, not just the name');
     expect((await saved()).pages, hasLength(1));
+  });
+
+  test('import failures name the file and say why', () async {
+    final l = lookupAppLocalizations(const Locale('en'));
+    final r = ImportResult(
+      0,
+      ['locked.pdf', 'x.jpg'],
+      reasons: {'locked.pdf': 'PasswordException: No password given', 'x.jpg': 'decode failed'},
+    );
+    expect(
+      importFailures(l, r),
+      'These files could not be opened and were skipped: '
+      'locked.pdf (password-protected PDF), x.jpg (damaged or unsupported file)',
+    );
+  });
+
+  test('PDF pages are rendered no larger than 2480 px, whatever their page size', () {
+    // Probe pass is 9 dpi: A4 (595×842 pt) → 74×105 px; a phone "photo to PDF"
+    // page (3024×4032 pt) → 378×504 px.
+    expect(ImportService.pageDpi(74, 105), 200, reason: 'A4 at 200 dpi is 1654×2339: under the cap');
+    final d = ImportService.pageDpi(378, 504);
+    expect(4032 * d / 72, closeTo(2480, 1), reason: 'was 11200 px (a 94 MP canvas)');
+    expect(ImportService.pageDpi(378, 504, maxSide: 2480) * 3024 / 72 * 4032 * d / 72, lessThan(16.7e6));
   });
 
   test('export PDF and JPGs', () async {

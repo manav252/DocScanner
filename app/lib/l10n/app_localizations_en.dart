@@ -279,6 +279,12 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get importWhyPassword => 'password-protected PDF';
+
+  @override
+  String get importWhyUnreadable => 'damaged or unsupported file';
+
+  @override
   String get importNothing => 'Nothing to import. Choose JPG, PNG or PDF files.';
 
   @override

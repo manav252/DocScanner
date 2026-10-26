@@ -133,7 +133,10 @@ void main() {
     await tester.tap(find.text('Import Photos'));
     await settle(tester, 10);
     await tester.pumpAndSettle();
-    expect(find.text('These files could not be opened and were skipped: holiday.txt'), findsOneWidget);
+    expect(
+      find.text('These files could not be opened and were skipped: holiday.txt (damaged or unsupported file)'),
+      findsOneWidget,
+    );
     expect(find.byType(DocumentEditorPage), findsNothing);
     expect(await tester.runAsync(() => DocumentRepository(store).list()), isEmpty);
   });
