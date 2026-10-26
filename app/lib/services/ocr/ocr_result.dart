@@ -1,4 +1,5 @@
 // Recognised text of a page, with line boxes for the searchable-PDF text layer.
+import 'dart:math' as math;
 
 class OcrLine {
   const OcrLine(this.text, this.left, this.top, this.width, this.height, {this.confidence = 1.0});
@@ -62,5 +63,27 @@ OcrResult cleanOcr(OcrResult r) {
         if (l.text.replaceAll(_edgeJunk, '') case final t when meaningfulText(t))
           OcrLine(t, l.left, l.top, l.width, l.height, confidence: l.confidence),
   ];
+  return OcrResult(lines.map((l) => l.text).join('\n'), lines);
+}
+
+/// Fewer letters/digits than this: "little text", worth a second try.
+const littleTextChars = 40;
+
+bool littleText(OcrResult r) => _wordChar.allMatches(r.text).length < littleTextChars;
+
+/// [a]'s lines plus [b]'s lines that do not overlap any of them (more than
+/// half of the smaller box), in reading order.
+OcrResult mergeOcr(OcrResult a, OcrResult b) {
+  double overlap(OcrLine p, OcrLine q) {
+    final x = math.max(0.0, math.min(p.left + p.width, q.left + q.width) - math.max(p.left, q.left));
+    final y = math.max(0.0, math.min(p.top + p.height, q.top + q.height) - math.max(p.top, q.top));
+    return x * y / math.max(1e-9, math.min(p.width * p.height, q.width * q.height));
+  }
+
+  final lines = [
+    ...a.lines,
+    for (final l in b.lines)
+      if (!a.lines.any((m) => overlap(l, m) > 0.5)) l,
+  ]..sort((p, q) => p.top != q.top ? p.top.compareTo(q.top) : p.left.compareTo(q.left));
   return OcrResult(lines.map((l) => l.text).join('\n'), lines);
 }

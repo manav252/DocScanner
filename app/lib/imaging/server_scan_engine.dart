@@ -74,5 +74,9 @@ class ServerScanEngine implements ScanEngine {
   );
 
   @override
+  Future<Uint8List> prepareOcrEncoded(Uint8List bytes, {bool contrast = false, int quality = 92}) =>
+      local.prepareOcrEncoded(bytes, contrast: contrast, quality: quality);
+
+  @override
   void dispose() {} // the local engine is owned elsewhere
 }

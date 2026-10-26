@@ -67,4 +67,15 @@ void main() {
     const e = PageEdits(filter: PageFilter.bw, quarterTurns: 3, crop: CropRect(0.1, 0.2, 0.5, 0.6));
     expect(PageEdits.fromJson(e.toJson()), e);
   });
+
+  test('OCR input: a small card is enlarged (at most 3x), a big page capped; contrast = grayscale', () {
+    final card = cv.Mat.zeros(290, 456, cv.MatType.CV_8UC3);
+    final big = prepareOcr(card);
+    expect((big.cols, big.rows), (1368, 870), reason: '3x: text ~15 px -> ~45 px');
+    final page = cv.Mat.zeros(3500, 2480, cv.MatType.CV_8UC3);
+    expect(prepareOcr(page).rows, 2400);
+    final mid = cv.Mat.zeros(2200, 1600, cv.MatType.CV_8UC3);
+    expect((prepareOcr(mid).cols, prepareOcr(mid).rows), (1600, 2200), reason: 'already a good size');
+    expect(prepareOcr(card, contrast: true).channels, 1);
+  });
 }

@@ -124,6 +124,20 @@ class _TextSheetState extends ConsumerState<TextSheet> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Semantics(header: true, child: Text(l.textOnPage, style: theme.textTheme.titleLarge)),
+              const SizedBox(height: 4),
+              Row(
+                key: const ValueKey('handwriting-note'),
+                children: [
+                  Icon(Icons.info_outline, size: 16, color: theme.colorScheme.onSurfaceVariant),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      l.handwritingNote,
+                      style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 12),
               body,
               const SizedBox(height: 16),

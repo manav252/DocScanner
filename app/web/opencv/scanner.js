@@ -541,6 +541,37 @@
   }
 
   /** Flatten the quad to a rectangle. Returns RGBA {data, width, height}. */
+  // ---------- OCR input (see ocr_prep in opencv_filters.dart) ----------
+
+  const OCR = { minSide: 2000, maxSide: 2400, maxUpscale: 3, claheClip: 2.0 };
+
+  /**
+   * The page image prepared for text recognition: small pages (an ID card far
+   * from the camera) are enlarged so their text is ~30 px tall or more, large
+   * ones capped. variant 'contrast': grayscale + CLAHE (a second try when the
+   * first finds little text).
+   */
+  function prepareOcr(cv, image, variant = 'main') {
+    const { width: w, height: h } = image;
+    const long = Math.max(w, h);
+    const s = long < OCR.minSide ? Math.min(OCR.maxUpscale, OCR.minSide / long) : long > OCR.maxSide ? OCR.maxSide / long : 1;
+    const src = cv.matFromImageData(image), out = new cv.Mat();
+    if (s !== 1) {
+      cv.resize(src, out, new cv.Size(Math.round(w * s), Math.round(h * s)), 0, 0, s > 1 ? cv.INTER_CUBIC : cv.INTER_AREA);
+    } else src.copyTo(out);
+    src.delete();
+    if (variant === 'contrast') {
+      const g = new cv.Mat(), c = new cv.CLAHE(OCR.claheClip, new cv.Size(8, 8));
+      cv.cvtColor(out, g, cv.COLOR_RGBA2GRAY);
+      c.apply(g, g);
+      cv.cvtColor(g, out, cv.COLOR_GRAY2RGBA);
+      g.delete(); c.delete();
+    }
+    const result = { data: new Uint8ClampedArray(out.data), width: out.cols, height: out.rows };
+    out.delete();
+    return result;
+  }
+
   // ---------- curved pages (see page_curves.dart, warp.py) ----------
 
   const CURVE = { minBow: 0.015, maxBow: 0.15, samples: 48, workSide: 1000, minStep: 12.0 };
@@ -942,7 +973,7 @@
   }
 
   return {
-    PARAMS, detectDocument, explainDetection, warpPerspective, warpPage, pageCurves, curveAt, applyEdits, orderCorners,
+    PARAMS, detectDocument, explainDetection, warpPerspective, warpPage, pageCurves, curveAt, applyEdits, prepareOcr, OCR, orderCorners,
     fullBounds, outputSize,
     // For tests: compare the scoring step by step with the Python reference.
     internals: { workingImage, passes, edgeSteps, bestQuad, scoreQuad, sideFits, edgeSupport, extremePoints, lineQuads },

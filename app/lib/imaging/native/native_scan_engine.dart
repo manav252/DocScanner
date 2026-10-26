@@ -112,6 +112,14 @@ class NativeScanEngine implements ScanEngine {
   }
 
   @override
+  Future<Uint8List> prepareOcrEncoded(Uint8List bytes, {bool contrast = false, int quality = 92}) async {
+    final r = await _call(
+      _Request(_Kind.ocr, TransferableTypedData.fromList([bytes]), contrast: contrast, quality: quality),
+    );
+    return (r! as TransferableTypedData).materialize().asUint8List();
+  }
+
+  @override
   void dispose() {
     _isolate?.kill(priority: Isolate.immediate);
     _receive.close();
@@ -122,7 +130,7 @@ class NativeScanEngine implements ScanEngine {
   }
 }
 
-enum _Kind { frame, encoded, warp, process, normalize }
+enum _Kind { frame, encoded, warp, process, normalize, ocr }
 
 class _Request {
   _Request(
@@ -136,10 +144,14 @@ class _Request {
     this.edits,
     this.maxSide = 0,
     this.quality = 0,
+    this.contrast = false,
   });
   final _Kind kind;
   final TransferableTypedData bytes;
   final int width, height, stride, format, maxSide, quality;
+
+  /// OCR input: the grayscale + CLAHE variant.
+  final bool contrast;
   final Float64List? corners;
   final Map<String, Object>? edits;
 }
@@ -219,7 +231,9 @@ void _worker(SendPort out) {
           ));
         } else {
           final cv.Mat result;
-          if (req.kind == _Kind.warp) {
+          if (req.kind == _Kind.ocr) {
+            result = prepareOcr(m, contrast: req.contrast);
+          } else if (req.kind == _Kind.warp) {
             final c = req.corners!;
             result = warpPageMat(m, [for (var i = 0; i < 4; i++) Pt(c[2 * i], c[2 * i + 1])], maxSide: req.maxSide);
           } else {

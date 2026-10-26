@@ -223,6 +223,10 @@ S = {
         "टेक्स्ट पहचाना जा रहा है: पेज {current} / {total}",
         {"current": "int", "total": "int"},
     ),
+    "handwritingNote": (
+        "Printed text is read best. Handwriting may not be recognized accurately.",
+        "छपा हुआ टेक्स्ट सबसे अच्छा पढ़ा जाता है। हाथ की लिखावट ठीक से न पढ़ी जाए, ऐसा हो सकता है।",
+    ),
     "noTextFound": ("No text found on this page", "इस पेज पर कोई टेक्स्ट नहीं मिला"),
     "noTextFoundHint": (
         "Try a clearer photo, or choose the right language below.",

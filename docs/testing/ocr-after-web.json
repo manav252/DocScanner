@@ -1,0 +1,16 @@
+{
+ "pipeline": "after",
+ "engine": "Tesseract.js (web)",
+ "aadhaar": {
+  "name": 9,
+  "dob": 12,
+  "number": 12,
+  "cards": 12
+ },
+ "pan": {
+  "name": 12,
+  "dob": 11,
+  "number": 12,
+  "cards": 12
+ }
+}

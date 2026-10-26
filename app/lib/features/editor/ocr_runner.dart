@@ -20,9 +20,6 @@ class OcrRunner {
   final Ref _ref;
   final _running = <String, Future<int>>{};
 
-  /// Longest side fed to OCR: plenty for text, keeps Tesseract fast.
-  static const maxSide = 2400;
-
   bool get available => _ref.read(textRecognizerProvider).isAvailable;
 
   /// OCR every stale page of [docId] (or just [pageIds]). Returns how many pages
@@ -61,10 +58,19 @@ class OcrRunner {
         onProgress?.call(OcrProgress(done, todo.length));
         final render = await repo.pageImage(p.id, PageImage.render);
         if (render == null) continue;
-        final input = p.renderWidth > maxSide || p.renderHeight > maxSide
-            ? await engine.processEncoded(render, PageEdits.none, maxSide: maxSide, quality: 92)
-            : render;
-        final result = cleanOcr(await recognizer.recognize(input, language: language));
+        // Read the shadow-corrected page (Magic Color) whatever look the page
+        // has, at its own rotation and crop so the line boxes match it.
+        final flat = p.edits.filter == PageFilter.magicColor ? null : await repo.pageImage(p.id, PageImage.flat);
+        final source = flat == null
+            ? render
+            : await engine.processEncoded(flat, p.edits.copyWith(filter: PageFilter.magicColor), quality: 92);
+        Future<OcrResult> read({bool contrast = false}) async => cleanOcr(
+          await recognizer.recognize(await engine.prepareOcrEncoded(source, contrast: contrast), language: language),
+        );
+        var result = await read();
+        // Little text (faint print, an unusual background): try grayscale +
+        // CLAHE too, and keep what either pass found.
+        if (littleText(result)) result = mergeOcr(result, await read(contrast: true));
         await _ref.read(documentProvider(docId).notifier).setOcr(p.id, p.revision, result, language: language);
         done++;
       }

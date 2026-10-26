@@ -97,6 +97,7 @@ void main() {
     });
     await open(tester, store, ScriptedRecognizer(const OcrResult('Invoice 42', [OcrLine('Invoice 42', 0, 0, 1, 1)])));
     expect(find.text('Invoice 42'), findsOneWidget);
+    expect(find.byKey(const ValueKey('handwriting-note')), findsOneWidget);
     await tester.tap(find.text('Copy text'));
     await tester.pump();
     expect(clip, 'Invoice 42');

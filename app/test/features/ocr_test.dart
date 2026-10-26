@@ -10,6 +10,7 @@ import 'package:docscanner/features/editor/document_controller.dart';
 import 'package:docscanner/features/editor/ocr_runner.dart';
 import 'package:docscanner/features/library/library_controller.dart';
 import 'package:docscanner/imaging/geometry.dart';
+import 'package:docscanner/imaging/page_edits.dart';
 import 'package:docscanner/services/export/pdf_builder.dart';
 import 'package:docscanner/services/ocr/ocr_result.dart';
 import 'package:docscanner/services/ocr/text_recognizer.dart';
@@ -20,20 +21,26 @@ import 'package:pdf/widgets.dart' as pw;
 import '../imaging/fixtures.dart';
 import '../support/fakes.dart';
 
+const invoice = OcrResult('INVOICE 42\nTotal 99.50\nPayment due within thirty days', [
+  OcrLine('INVOICE 42', 0.1, 0.1, 0.5, 0.05),
+  OcrLine('Total 99.50', 0.1, 0.8, 0.3, 0.04),
+  OcrLine('Payment due within thirty days', 0.1, 0.9, 0.6, 0.04),
+]);
+
 class FakeRecognizer implements TextRecognizer {
   int calls = 0;
   @override
   bool get isAvailable => true;
   final languages = <String>[];
 
+  /// Results to return, in order (then [invoice]).
+  final queue = <OcrResult>[];
+
   @override
   Future<OcrResult> recognize(Uint8List image, {String language = 'eng'}) async {
     calls++;
     languages.add(language);
-    return const OcrResult('INVOICE 42\nTotal 99.50', [
-      OcrLine('INVOICE 42', 0.1, 0.1, 0.5, 0.05),
-      OcrLine('Total 99.50', 0.1, 0.8, 0.3, 0.04),
-    ]);
+    return queue.isNotEmpty ? queue.removeAt(0) : invoice;
   }
 
   @override
@@ -75,7 +82,7 @@ void main() {
     expect((await pages()).every((p) => p.needsOcr), isTrue);
     expect(await c.read(ocrRunnerProvider).run(id), 2);
     final ps = await pages();
-    expect(ps.every((p) => !p.needsOcr && p.ocrText == 'INVOICE 42\nTotal 99.50'), isTrue);
+    expect(ps.every((p) => !p.needsOcr && p.ocrText == invoice.text), isTrue);
     final boxes = OcrResult.fromJson(
       jsonDecode(utf8.decode((await c.read(documentRepositoryProvider).pageOcr(ps.first.id))!)) as Map<String, dynamic>,
     );
@@ -158,6 +165,36 @@ void main() {
     expect(meaningfulText('i'), isFalse);
     expect(meaningfulText('—— ——'), isFalse);
     expect(meaningfulText('दिनांक'), isTrue);
+  });
+
+  test('little text: read again from the contrast variant, keeping what either pass found', () async {
+    final engine = c.read(scanEngineProvider) as FakeEngine;
+    recognizer.queue.addAll([
+      const OcrResult('DOB 01/02/1990', [OcrLine('DOB 01/02/1990', 0.3, 0.4, 0.3, 0.05)]),
+      const OcrResult('Asha Verma\nDOB 01/02/1990', [
+        OcrLine('Asha Verma', 0.3, 0.25, 0.3, 0.06),
+        OcrLine('DOB 01/02/1990', 0.3, 0.4, 0.3, 0.05), // same place: not added twice
+      ]),
+    ]);
+    expect(await c.read(ocrRunnerProvider).run(id, pageIds: {(await pages()).first.id}), 1);
+    expect(engine.ocrPrepared, [false, true], reason: 'first pass, then grayscale + CLAHE');
+    expect((await pages()).first.ocrText, 'Asha Verma\nDOB 01/02/1990');
+  });
+
+  test('enough text: one pass only', () async {
+    final engine = c.read(scanEngineProvider) as FakeEngine;
+    await c.read(ocrRunnerProvider).run(id);
+    expect(engine.ocrPrepared, [false, false]);
+    expect(recognizer.calls, 2);
+  });
+
+  test('a page shown as Original is read from its shadow-corrected (Magic Color) version', () async {
+    final engine = c.read(scanEngineProvider) as FakeEngine;
+    final p = (await pages()).first;
+    await c.read(documentProvider(id).notifier).setFilter(p.id, PageFilter.original);
+    engine.processed.clear();
+    await c.read(ocrRunnerProvider).run(id, pageIds: {p.id});
+    expect(engine.processed.map((e) => e.filter), [PageFilter.magicColor]);
   });
 
   test('OCR uses the chosen language and re-reads pages after a language change', () async {

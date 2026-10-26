@@ -275,6 +275,7 @@
       }
     }
   },
+  "handwritingNote": "Printed text is read best. Handwriting may not be recognized accurately.",
   "noTextFound": "No text found on this page",
   "noTextFoundHint": "Try a clearer photo, or choose the right language below.",
   "ocrFailed": "Text recognition failed: {message}. Try again, or use a clearer photo.",

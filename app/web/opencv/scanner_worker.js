@@ -6,6 +6,7 @@
  *           {id, type: 'warpEncoded', bytes, corners: [[x,y] x4], maxSide, quality (0..1)} -> JPEG ArrayBuffer
  *           {id, type: 'processEncoded', bytes, edits: {filter, turns, crop}, maxSide?, quality} -> JPEG ArrayBuffer
  *           {id, type: 'normalizeEncoded', bytes, maxSide, quality} -> {data: JPEG ArrayBuffer, width, height}
+ *           {id, type: 'prepareOcr', bytes, contrast, quality} -> JPEG ArrayBuffer
  * Replies   {id, ok: true, result} | {id, ok: false, error}
  * Posts {type: 'ready'} once opencv.js (WASM) has initialised.
  */
@@ -57,12 +58,14 @@ self.onmessage = async (e) => {
       const data = await blob.arrayBuffer();
       self.postMessage({ id, ok: true, result: { data, width: w, height: h } }, [data]);
       return;
-    } else if (type === 'warpEncoded' || type === 'processEncoded') {
+    } else if (type === 'warpEncoded' || type === 'processEncoded' || type === 'prepareOcr') {
       const img = await decode(e.data.bytes);
       const out =
         type === 'warpEncoded'
           ? DocScanner.warpPage(cv, img, e.data.corners, e.data.maxSide)
-          : DocScanner.applyEdits(cv, img, e.data.edits, e.data.maxSide);
+          : type === 'prepareOcr'
+            ? DocScanner.prepareOcr(cv, img, e.data.contrast ? 'contrast' : 'main')
+            : DocScanner.applyEdits(cv, img, e.data.edits, e.data.maxSide);
       const canvas = new OffscreenCanvas(out.width, out.height);
       canvas.getContext('2d').putImageData(new ImageData(out.data, out.width, out.height), 0, 0);
       const blob = await canvas.convertToBlob({ type: 'image/jpeg', quality: e.data.quality });

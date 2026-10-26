@@ -123,6 +123,32 @@ cv.Mat cropNormalized(cv.Mat image, CropRect r) {
 }
 
 /// filter -> rotate -> crop, optionally downscaled so the longest side is <= [maxSide].
+/// Text recognition input: enlarged so the long side is at least
+/// [ocrMinSide] (at most [ocrMaxUpscale]x: ~30 px text on an ID card far from
+/// the camera), capped at [ocrMaxSide]; [contrast]: grayscale + CLAHE.
+/// Mirrors prepareOcr in web/opencv/scanner.js.
+const ocrMinSide = 2000, ocrMaxSide = 2400, ocrMaxUpscale = 3.0, ocrClaheClip = 2.0;
+
+cv.Mat prepareOcr(cv.Mat image, {bool contrast = false}) {
+  final w = image.cols, h = image.rows, long = math.max(w, h);
+  final s = long < ocrMinSide
+      ? math.min(ocrMaxUpscale, ocrMinSide / long)
+      : long > ocrMaxSide
+      ? ocrMaxSide / long
+      : 1.0;
+  final sized = s == 1
+      ? image.clone()
+      : cv.resize(image, ((w * s).round(), (h * s).round()), interpolation: s > 1 ? cv.INTER_CUBIC : cv.INTER_AREA);
+  if (!contrast) return sized;
+  final gray = sized.channels == 1 ? sized.clone() : cv.cvtColor(sized, cv.COLOR_BGR2GRAY);
+  sized.dispose();
+  final clahe = cv.CLAHE.create(ocrClaheClip, (8, 8));
+  final out = clahe.apply(gray);
+  clahe.dispose();
+  gray.dispose();
+  return out;
+}
+
 cv.Mat applyEdits(cv.Mat flat, PageEdits e, {int? maxSide}) {
   var src = flat;
   cv.Mat? scaled;

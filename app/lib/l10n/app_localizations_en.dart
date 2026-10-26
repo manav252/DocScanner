@@ -418,6 +418,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get handwritingNote => 'Printed text is read best. Handwriting may not be recognized accurately.';
+
+  @override
   String get noTextFound => 'No text found on this page';
 
   @override

@@ -75,5 +75,11 @@ abstract interface class ScanEngine {
   /// Optionally downscale to [maxSide] (thumbnails). Returns a JPEG.
   Future<Uint8List> processEncoded(Uint8List bytes, PageEdits edits, {int? maxSide, int quality = 90});
 
+  /// The page image [bytes] prepared for text recognition: a small page (an ID
+  /// card far from the camera) enlarged so its text is ~30 px tall or more, a
+  /// large one capped; [contrast]: grayscale + CLAHE (the second try when the
+  /// first finds little text). Returns a JPEG.
+  Future<Uint8List> prepareOcrEncoded(Uint8List bytes, {bool contrast = false, int quality = 92});
+
   void dispose();
 }

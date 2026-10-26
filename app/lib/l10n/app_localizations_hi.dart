@@ -418,6 +418,10 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String get handwritingNote =>
+      'छपा हुआ टेक्स्ट सबसे अच्छा पढ़ा जाता है। हाथ की लिखावट ठीक से न पढ़ी जाए, ऐसा हो सकता है।';
+
+  @override
   String get noTextFound => 'इस पेज पर कोई टेक्स्ट नहीं मिला';
 
   @override

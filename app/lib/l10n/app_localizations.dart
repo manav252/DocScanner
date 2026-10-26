@@ -800,6 +800,12 @@ abstract class AppLocalizations {
   /// **'Recognising text: page {current} of {total}'**
   String recognisingProgress(int current, int total);
 
+  /// No description provided for @handwritingNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Printed text is read best. Handwriting may not be recognized accurately.'**
+  String get handwritingNote;
+
   /// No description provided for @noTextFound.
   ///
   /// In en, this message translates to:

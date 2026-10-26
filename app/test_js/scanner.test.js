@@ -65,6 +65,16 @@ function ruleBend({ data, width: w, height: h }) {
   return ((Math.max(...ys) - Math.min(...ys)) / h) * 100;
 }
 
+test('OCR input: a small card is enlarged (at most 3x), a big page capped; contrast = grayscale', () => {
+  const blank = (w, h) => ({ data: new Uint8ClampedArray(w * h * 4).fill(200), width: w, height: h });
+  const big = S.prepareOcr(cv, blank(456, 290));
+  assert.deepStrictEqual([big.width, big.height], [1368, 870]);
+  assert.strictEqual(S.prepareOcr(cv, blank(2480, 3500)).height, 2400);
+  assert.deepStrictEqual([S.prepareOcr(cv, blank(1600, 2200)).width, S.prepareOcr(cv, blank(1600, 2200)).height], [1600, 2200]);
+  const c = S.prepareOcr(cv, { data: new Uint8ClampedArray([255, 0, 0, 255, 0, 0, 255, 255]), width: 2, height: 1 }, 'contrast');
+  assert.ok(c.data[0] === c.data[1] && c.data[1] === c.data[2], 'gray');
+});
+
 test('curved pages: same edge curves as the reference, and they come out flat', () => {
   for (const items of Object.values(hard.cases)) {
     for (const it of items) {

@@ -140,6 +140,17 @@ class WebScanEngine implements ScanEngine {
   }
 
   @override
+  Future<Uint8List> prepareOcrEncoded(Uint8List bytes, {bool contrast = false, int quality = 92}) async {
+    final buf = Uint8List.fromList(bytes).buffer.toJS;
+    final r = await _call(
+      'prepareOcr',
+      {'bytes': buf, 'contrast': contrast.toJS, 'quality': (quality / 100).toJS},
+      [buf],
+    );
+    return (r as JSArrayBuffer).toDart.asUint8List();
+  }
+
+  @override
   void dispose() {
     _worker.terminate();
     for (final c in _pending.values) {

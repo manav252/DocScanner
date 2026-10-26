@@ -107,6 +107,15 @@ class FakeEngine implements ScanEngine {
 
   final processed = <PageEdits>[];
 
+  /// prepareOcrEncoded calls: false = first pass, true = contrast variant.
+  final ocrPrepared = <bool>[];
+
+  @override
+  Future<Uint8List> prepareOcrEncoded(Uint8List bytes, {bool contrast = false, int quality = 92}) async {
+    ocrPrepared.add(contrast);
+    return bytes;
+  }
+
   @override
   Future<Uint8List> processEncoded(Uint8List bytes, PageEdits edits, {int? maxSide, int quality = 90}) async {
     processed.add(edits);
