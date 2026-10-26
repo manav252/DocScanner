@@ -181,6 +181,37 @@ Screenshots: `docs/testing/thumb-before.png`, `docs/testing/thumb-after.png`.
 errors, 0 uncaught exceptions**; with the server shut down, the app reloaded from
 its offline copy (48 cached files) and the demo camera scanned a page.
 
+## 6. Crop screen (corner dragging)
+
+**What was slow.** Every finger move rebuilt the whole screen (buttons, banner, hint
+text) and repainted the full-size photo with the outline, because they shared one
+layer. The photo was decoded at full resolution (a 12 MP photo is ~48 MB) to be shown
+~360 px wide.
+
+**What changed.** While dragging, the corners live in a `ValueNotifier` inside the
+editor: only the outline/handles (`CustomPainter` with `repaint:`) and the loupe
+update; the page hears the new corners once, on release. Photo, outline and loupe each
+have a `RepaintBoundary`. The photo is decoded at screen size, the loupe's copy at
+most 2048 px. The warp still runs only after *Confirm*.
+
+**Bug found while measuring.** On iPhone/iPad/Mac the screen's edge "swipe back"
+gesture took drags that started on the left corner handles (they sit in that strip)
+and swiped the screen away. The swipe is now off on this screen; Back still works.
+
+`node tools/audit/cropdrag.mjs`: a 3000×4000 photo, phone viewport (390×844 @2x),
+~2 s drag of a corner, CPU throttled, 3 fresh runs each:
+
+| | Before | After |
+|---|---|---|
+| CPU 6× slower: p95 frame | 33.4 ms (30 fps) | **16.7–16.8 ms (60 fps)** |
+| CPU 6× slower: frames over 33 ms per drag | 5, 9, 14 | **1, 1, 1** |
+| CPU 6× slower: long tasks | 1–6 (up to 122 ms) | **none** |
+| CPU 4× slower: p95 frame | 16.7–16.8 ms | 16.8 ms |
+| CPU 4× slower: frames over 33 ms | 1–2 | 0–1 |
+
+The first run at 4× had one stall at the start of the drag both before (394 ms) and
+after (491 ms): first-use warm-up of the browser, not the drag itself.
+
 ## How to re-run
 
 ```bash
@@ -190,6 +221,7 @@ node perf.mjs --label mine                           # load, delete, scroll, mem
 node perf.mjs --label mem --cycles 20                # memory over 20 open/close cycles
 node flow.mjs                                        # full flow: console errors, offline
 node thumbcheck.mjs http://localhost:8080/app/ now   # missing thumbnail → rebuilt?
+node cropdrag.mjs http://localhost:8080/app/ --label mine --cpu 6   # crop screen drag
 cd ../../app && tool/host_test.sh tool/pdf_size_test.dart   # 10-page PDF size
 ```
 

@@ -1,0 +1,39 @@
+{
+ "label": "before-cpu6",
+ "date": "2026-10-26T16:38:47.449Z",
+ "cpuSlowdown": 6,
+ "photo": "3000x4000",
+ "viewport": "390x844 @2x",
+ "runs": [
+  {
+   "run": 0,
+   "frames": 192,
+   "p50": 16.7,
+   "p95": 33.4,
+   "max": 100,
+   "over33ms": 9,
+   "longTasks": 2,
+   "longestTask": 68
+  },
+  {
+   "run": 1,
+   "frames": 172,
+   "p50": 16.7,
+   "p95": 33.4,
+   "max": 66.6,
+   "over33ms": 5,
+   "longTasks": 1,
+   "longestTask": 55
+  },
+  {
+   "run": 2,
+   "frames": 192,
+   "p50": 16.7,
+   "p95": 33.4,
+   "max": 150,
+   "over33ms": 14,
+   "longTasks": 6,
+   "longestTask": 122
+  }
+ ]
+}

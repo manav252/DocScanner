@@ -4,6 +4,7 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/gestures.dart' show DragStartBehavior;
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
@@ -81,8 +82,15 @@ class CornerEditorState extends State<CornerEditor> {
 
   late final FocusNode _focus = widget.focusNode ?? FocusNode(debugLabel: 'corner editor');
 
-  /// The decoded photo, drawn directly in the loupe (sharper than magnifying the
-  /// screen, and works the same on web, where backdrop magnifiers do not).
+  /// The corners as they are on screen. While a handle is dragged only this
+  /// changes (repainting just the outline, handles and loupe); the parent hears
+  /// about the new corners once, when the finger lifts.
+  late final _live = ValueNotifier<List<Pt>>(widget.corners);
+
+  /// The photo for the loupe, decoded at most [loupeMaxSide] px (sharper than
+  /// magnifying the screen, and works the same on web, where backdrop magnifiers
+  /// do not). A full 12 MP decode would cost ~48 MB.
+  static const loupeMaxSide = 2048;
   ui.Image? _decoded;
   ImageStream? _stream;
   late final _listener = ImageStreamListener((info, _) {
@@ -91,8 +99,12 @@ class CornerEditorState extends State<CornerEditor> {
 
   void _resolve() {
     _stream?.removeListener(_listener);
-    _stream = widget.image.resolve(ImageConfiguration.empty)..addListener(_listener);
+    _stream = _fit(widget.image, loupeMaxSide).resolve(ImageConfiguration.empty)..addListener(_listener);
   }
+
+  /// [image] decoded with its long side at most [maxSide] px.
+  ImageProvider _fit(ImageProvider image, int maxSide) =>
+      ResizeImage(image, width: maxSide, height: maxSide, policy: ResizeImagePolicy.fit);
 
   @override
   void initState() {
@@ -107,11 +119,13 @@ class CornerEditorState extends State<CornerEditor> {
       _decoded = null;
       _resolve();
     }
+    if (activeHandle == null && !listEquals(oldWidget.corners, widget.corners)) _live.value = widget.corners;
   }
 
   @override
   void dispose() {
     _stream?.removeListener(_listener);
+    _live.dispose();
     if (widget.focusNode == null) _focus.dispose();
     super.dispose();
   }
@@ -119,7 +133,7 @@ class CornerEditorState extends State<CornerEditor> {
   Offset _toScreen(Pt p) => imageToScreen(p, _imageRect, widget.imageSize);
 
   List<Offset> _handles() {
-    final c = [for (final p in widget.corners) _toScreen(p)];
+    final c = [for (final p in _live.value) _toScreen(p)];
     return [...c, for (var i = 0; i < 4; i++) (c[i] + c[(i + 1) % 4]) / 2];
   }
 
@@ -130,7 +144,7 @@ class CornerEditorState extends State<CornerEditor> {
 
   /// Image-pixel position of handle [h].
   Pt _handleImagePoint(int h) {
-    final c = widget.corners;
+    final c = _live.value;
     if (h < 4) return c[h];
     final a = c[h - 4], b = c[(h - 3) % 4];
     return Pt((a.x + b.x) / 2, (a.y + b.y) / 2);
@@ -172,7 +186,7 @@ class CornerEditorState extends State<CornerEditor> {
 
   void _moveByImageDelta(int h, Offset delta) {
     final w = widget.imageSize.width - 1, ht = widget.imageSize.height - 1;
-    final next = [...widget.corners];
+    final next = [..._live.value];
     var d = delta;
     if (h >= 4) {
       // Moving an edge: limit the shift so neither end leaves the image.
@@ -190,7 +204,8 @@ class CornerEditorState extends State<CornerEditor> {
       next[i] = move(next[i]);
       next[(i + 1) % 4] = move(next[(i + 1) % 4]);
     }
-    widget.onChanged(next);
+    _live.value = next;
+    if (activeHandle == null) widget.onChanged(next); // keyboard / screen reader step
   }
 
   void _onPanUpdate(DragUpdateDetails d) {
@@ -199,7 +214,11 @@ class CornerEditorState extends State<CornerEditor> {
     _moveHandle(h, d.localPosition + _grab);
   }
 
-  void _onPanEnd([Object? _]) => setState(() => activeHandle = null);
+  void _onPanEnd([Object? _]) {
+    if (activeHandle == null) return;
+    setState(() => activeHandle = null);
+    if (!listEquals(_live.value, widget.corners)) widget.onChanged(_live.value);
+  }
 
   /// Keyboard / screen-reader step: 1% of the image (0.2% with Shift).
   void nudge(Offset direction, {bool fine = false}) {
@@ -236,9 +255,9 @@ class CornerEditorState extends State<CornerEditor> {
 
   @override
   Widget build(BuildContext context) {
-    final valid = isValidQuad(widget.corners, widget.imageSize);
     final scheme = Theme.of(context).colorScheme;
-    final color = valid ? scheme.primary : scheme.error;
+    Color colorFor(List<Pt> corners) => isValidQuad(corners, widget.imageSize) ? scheme.primary : scheme.error;
+    final dpr = MediaQuery.devicePixelRatioOf(context);
     final l = context.l10n;
     final name = [l.cornerTopLeft, l.cornerTopRight, l.cornerBottomRight, l.cornerBottomLeft][selectedCorner];
     return Focus(
@@ -258,16 +277,9 @@ class CornerEditorState extends State<CornerEditor> {
           builder: (context, constraints) {
             final box = constraints.biggest;
             _imageRect = fittedImageRect(widget.imageSize, box);
-            final focus = _focusPoint;
-            Offset? loupeCenter;
-            if (focus != null) {
-              // Above the finger; flip below when too close to the top edge.
-              final above = focus.dy - loupeGap - loupeSize / 2 >= 0;
-              loupeCenter = Offset(
-                focus.dx.clamp(loupeSize / 2, math.max(loupeSize / 2, box.width - loupeSize / 2)),
-                above ? focus.dy - loupeGap : focus.dy + loupeGap,
-              );
-            }
+            // The photo at screen resolution (rounded up, so small layout changes
+            // reuse the same decode), not the full 12 MP.
+            final screenSide = ((_imageRect.longestSide * dpr / 256).ceil() * 256).clamp(256, 4096);
             return GestureDetector(
               behavior: HitTestBehavior.opaque,
               // Pick the handle under the finger-down point, not where the drag slop ended.
@@ -290,46 +302,67 @@ class CornerEditorState extends State<CornerEditor> {
                 size: box,
                 child: Stack(
                   children: [
+                    // Separate layers: dragging repaints the outline and the loupe,
+                    // never the photo.
                     Positioned.fromRect(
                       rect: _imageRect,
-                      child: Image(
-                        key: const ValueKey('corner-editor-image'),
-                        image: widget.image,
-                        fit: BoxFit.fill,
-                        gaplessPlayback: true,
+                      child: RepaintBoundary(
+                        child: Image(
+                          key: const ValueKey('corner-editor-image'),
+                          image: _fit(widget.image, screenSide),
+                          fit: BoxFit.fill,
+                          gaplessPlayback: true,
+                        ),
                       ),
                     ),
                     Positioned.fill(
-                      child: CustomPaint(
-                        painter: _EditorPainter(
-                          _handles(),
-                          imageRect: _imageRect,
-                          color: color,
-                          active: activeHandle,
-                          selected: _focused && _keyboard ? selectedCorner : null,
-                          focusRing: _focused ? scheme.tertiary : null,
+                      child: RepaintBoundary(
+                        child: CustomPaint(
+                          painter: _EditorPainter(
+                            _live,
+                            toScreen: _toScreen,
+                            imageRect: _imageRect,
+                            colorFor: colorFor,
+                            active: activeHandle,
+                            selected: _focused && _keyboard ? selectedCorner : null,
+                            focusRing: _focused ? scheme.tertiary : null,
+                          ),
                         ),
                       ),
                     ),
-                    if (loupeCenter != null)
-                      Positioned(
-                        key: const ValueKey('loupe'),
-                        left: loupeCenter.dx - loupeSize / 2,
-                        top: loupeCenter.dy - loupeSize / 2,
-                        child: IgnorePointer(
-                          child: CustomPaint(
-                            size: const Size.square(loupeSize),
-                            painter: _LoupePainter(
-                              image: _decoded,
-                              imageSize: widget.imageSize,
-                              center: _handleImagePoint(_loupeHandle!),
-                              // 2.5x the on-screen size of the photo.
-                              imagePxPerLoupePx: widget.imageSize.width / _imageRect.width / 2.5,
-                              corners: widget.corners,
-                              color: color,
+                    if (_loupeHandle != null)
+                      ValueListenableBuilder(
+                        valueListenable: _live,
+                        builder: (context, corners, _) {
+                          // Above the finger; flip below when too close to the top edge.
+                          final focus = _focusPoint!;
+                          final above = focus.dy - loupeGap - loupeSize / 2 >= 0;
+                          final center = Offset(
+                            focus.dx.clamp(loupeSize / 2, math.max(loupeSize / 2, box.width - loupeSize / 2)),
+                            above ? focus.dy - loupeGap : focus.dy + loupeGap,
+                          );
+                          return Positioned(
+                            key: const ValueKey('loupe'),
+                            left: center.dx - loupeSize / 2,
+                            top: center.dy - loupeSize / 2,
+                            child: IgnorePointer(
+                              child: RepaintBoundary(
+                                child: CustomPaint(
+                                  size: const Size.square(loupeSize),
+                                  painter: _LoupePainter(
+                                    image: _decoded,
+                                    imageSize: widget.imageSize,
+                                    center: _handleImagePoint(_loupeHandle!),
+                                    // 2.5x the on-screen size of the photo.
+                                    imagePxPerLoupePx: widget.imageSize.width / _imageRect.width / 2.5,
+                                    corners: corners,
+                                    color: colorFor(corners),
+                                  ),
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
+                          );
+                        },
                       ),
                   ],
                 ),
@@ -342,24 +375,29 @@ class CornerEditorState extends State<CornerEditor> {
   }
 }
 
+/// Outline and handles. Repaints on its own (no rebuild) whenever [live] changes.
 class _EditorPainter extends CustomPainter {
   _EditorPainter(
-    this.handles, {
+    this.live, {
+    required this.toScreen,
     required this.imageRect,
-    required this.color,
+    required this.colorFor,
     this.active,
     this.selected,
     this.focusRing,
-  });
-  final List<Offset> handles;
+  }) : super(repaint: live);
+  final ValueNotifier<List<Pt>> live;
+  final Offset Function(Pt) toScreen;
   final Rect imageRect;
-  final Color color;
+  final Color Function(List<Pt>) colorFor;
   final int? active, selected;
   final Color? focusRing;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final corners = handles.sublist(0, 4);
+    final color = colorFor(live.value);
+    final corners = [for (final p in live.value) toScreen(p)];
+    final handles = [...corners, for (var i = 0; i < 4; i++) (corners[i] + corners[(i + 1) % 4]) / 2];
     // Dim the photo outside the page (only over the image, not the letterbox).
     canvas.save();
     canvas.clipRect(imageRect);
@@ -411,7 +449,13 @@ class _EditorPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_EditorPainter old) => true;
+  bool shouldRepaint(_EditorPainter old) =>
+      old.live != live ||
+      old.imageRect != imageRect ||
+      old.active != active ||
+      old.selected != selected ||
+      old.focusRing != focusRing ||
+      old.colorFor(live.value) != colorFor(live.value);
 }
 
 /// Circular magnifier drawn from the photo's own pixels around [center].

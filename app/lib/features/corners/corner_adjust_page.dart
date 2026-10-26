@@ -112,91 +112,100 @@ class _CornerAdjustPageState extends ConsumerState<CornerAdjustPage> {
     final l = context.l10n;
     final valid = isValidQuad(_corners, _size);
     final scheme = Theme.of(context).colorScheme;
-    return Scaffold(
-      appBar: AppBar(title: Text(l.adjustCorners)),
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (!widget.detected)
-              Semantics(
-                liveRegion: true,
-                child: MaterialBanner(
-                  key: const ValueKey('no-edges-banner'),
-                  content: Text(l.noEdgesFound),
-                  leading: const Icon(Icons.info_outline),
-                  actions: const [SizedBox.shrink()],
-                ),
-              ),
-            Expanded(
-              child: ColoredBox(
-                color: const Color(0xFF202124),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: CornerEditor(
-                    key: ValueKey('editor-$_w-$_h'),
-                    image: _image,
-                    imageSize: _size,
-                    corners: _corners,
-                    focusNode: _editorFocus,
-                    onChanged: (c) => setState(() => _corners = c),
+    // No edge "swipe back" here (iPhone, iPad, Mac): the left corner handles sit
+    // in that strip, so dragging them swiped the screen away. Back button and
+    // Android back still leave.
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && !_busy) Navigator.of(context).pop();
+      },
+      child: Scaffold(
+        appBar: AppBar(title: Text(l.adjustCorners)),
+        body: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (!widget.detected)
+                Semantics(
+                  liveRegion: true,
+                  child: MaterialBanner(
+                    key: const ValueKey('no-edges-banner'),
+                    content: Text(l.noEdgesFound),
+                    leading: const Icon(Icons.info_outline),
+                    actions: const [SizedBox.shrink()],
                   ),
                 ),
+              Expanded(
+                child: ColoredBox(
+                  color: const Color(0xFF202124),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: CornerEditor(
+                      key: ValueKey('editor-$_w-$_h'),
+                      image: _image,
+                      imageSize: _size,
+                      corners: _corners,
+                      focusNode: _editorFocus,
+                      onChanged: (c) => setState(() => _corners = c),
+                    ),
+                  ),
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-              child: Text(
-                valid ? l.cornersHint : l.cornersCrossed,
-                style: TextStyle(color: valid ? null : scheme.error),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: Text(
+                  valid ? l.cornersHint : l.cornersCrossed,
+                  style: TextStyle(color: valid ? null : scheme.error),
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                alignment: WrapAlignment.end,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  OutlinedButton.icon(
-                    key: const ValueKey('cancel-corners'),
-                    onPressed: _busy ? null : () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close),
-                    label: Text(widget.cancelLabel),
-                  ),
-                  OutlinedButton.icon(
-                    key: const ValueKey('reset-corners'),
-                    onPressed: _busy || listEquals(_corners, _detected)
-                        ? null
-                        : () => setState(() => _corners = _detected),
-                    icon: const Icon(Icons.restart_alt),
-                    label: Text(l.resetCorners),
-                  ),
-                  OutlinedButton.icon(
-                    key: const ValueKey('full-photo'),
-                    onPressed: _busy || listEquals(_corners, _full) ? null : () => setState(() => _corners = _full),
-                    icon: const Icon(Icons.fullscreen),
-                    label: Text(l.useFullPhoto),
-                  ),
-                  OutlinedButton.icon(
-                    key: const ValueKey('rotate-photo'),
-                    onPressed: _busy ? null : _rotate,
-                    icon: _busy
-                        ? const SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                        : const Icon(Icons.rotate_right),
-                    label: Text(l.rotate),
-                  ),
-                  FilledButton.icon(
-                    key: const ValueKey('confirm-corners'),
-                    onPressed: valid && !_busy ? _confirm : null,
-                    icon: const Icon(Icons.check),
-                    label: Text(widget.confirmLabel),
-                  ),
-                ],
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  alignment: WrapAlignment.end,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    OutlinedButton.icon(
+                      key: const ValueKey('cancel-corners'),
+                      onPressed: _busy ? null : () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.close),
+                      label: Text(widget.cancelLabel),
+                    ),
+                    OutlinedButton.icon(
+                      key: const ValueKey('reset-corners'),
+                      onPressed: _busy || listEquals(_corners, _detected)
+                          ? null
+                          : () => setState(() => _corners = _detected),
+                      icon: const Icon(Icons.restart_alt),
+                      label: Text(l.resetCorners),
+                    ),
+                    OutlinedButton.icon(
+                      key: const ValueKey('full-photo'),
+                      onPressed: _busy || listEquals(_corners, _full) ? null : () => setState(() => _corners = _full),
+                      icon: const Icon(Icons.fullscreen),
+                      label: Text(l.useFullPhoto),
+                    ),
+                    OutlinedButton.icon(
+                      key: const ValueKey('rotate-photo'),
+                      onPressed: _busy ? null : _rotate,
+                      icon: _busy
+                          ? const SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                          : const Icon(Icons.rotate_right),
+                      label: Text(l.rotate),
+                    ),
+                    FilledButton.icon(
+                      key: const ValueKey('confirm-corners'),
+                      onPressed: valid && !_busy ? _confirm : null,
+                      icon: const Icon(Icons.check),
+                      label: Text(widget.confirmLabel),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

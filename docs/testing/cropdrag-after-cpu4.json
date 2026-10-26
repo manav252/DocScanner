@@ -1,0 +1,39 @@
+{
+ "label": "after-cpu4",
+ "date": "2026-10-26T16:42:06.654Z",
+ "cpuSlowdown": 4,
+ "photo": "3000x4000",
+ "viewport": "390x844 @2x",
+ "runs": [
+  {
+   "run": 0,
+   "frames": 145,
+   "p50": 16.7,
+   "p95": 16.8,
+   "max": 500,
+   "over33ms": 1,
+   "longTasks": 1,
+   "longestTask": 491
+  },
+  {
+   "run": 1,
+   "frames": 145,
+   "p50": 16.7,
+   "p95": 16.8,
+   "max": 33.3,
+   "over33ms": 0,
+   "longTasks": 0,
+   "longestTask": 0
+  },
+  {
+   "run": 2,
+   "frames": 145,
+   "p50": 16.7,
+   "p95": 16.8,
+   "max": 33.3,
+   "over33ms": 0,
+   "longTasks": 0,
+   "longestTask": 0
+  }
+ ]
+}

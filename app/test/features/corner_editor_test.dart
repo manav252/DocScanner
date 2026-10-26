@@ -62,6 +62,31 @@ void main() {
     expect(corners.value.sublist(1), start.sublist(1));
   });
 
+  testWidgets('while dragging, only the outline repaints; the new corners are reported once, on release', (
+    tester,
+  ) async {
+    final corners = ValueNotifier<List<Pt>>(start);
+    var reports = 0;
+    corners.addListener(() => reports++);
+    await tester.pumpWidget(editor(corners));
+    final g = await tester.startGesture(const Offset(52, 52));
+    for (var i = 0; i < 10; i++) {
+      await g.moveBy(const Offset(4, 3));
+      await tester.pump();
+    }
+    expect(reports, 0, reason: 'no page rebuild per finger move');
+    await g.up();
+    await tester.pump();
+    expect(reports, 1);
+    expect(corners.value[0].x, closeTo(180, 1));
+    expect(corners.value[0].y, closeTo(160, 1));
+    // The photo sits in its own layer, so the outline repainting never redraws it.
+    expect(
+      find.ancestor(of: find.byKey(const ValueKey('corner-editor-image')), matching: find.byType(RepaintBoundary)),
+      findsWidgets,
+    );
+  });
+
   testWidgets('dragging an edge midpoint moves both corners of that side', (tester) async {
     final corners = ValueNotifier<List<Pt>>(start);
     await tester.pumpWidget(editor(corners));
@@ -238,6 +263,42 @@ void main() {
       await tester.pumpAndSettle();
       expect(closed, isTrue);
       expect(result, isNull);
+    });
+
+    testWidgets('no edge swipe-back on this screen (it took corner drags); the back button still leaves', (
+      tester,
+    ) async {
+      var closed = false;
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [scanEngineProvider.overrideWithValue(FakeEngine(frameDetector: (_) => noPage))],
+          child: MaterialApp(
+            theme: ThemeData(platform: TargetPlatform.iOS),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Builder(
+              builder: (context) => TextButton(
+                onPressed: () async {
+                  await Navigator.of(context).push<CornerAdjustResult>(
+                    MaterialPageRoute(
+                      builder: (_) => CornerAdjustPage(bytes: _png, width: 1000, height: 1000, corners: start),
+                    ),
+                  );
+                  closed = true;
+                },
+                child: const Text('open'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      final route = ModalRoute.of(tester.element(find.byType(CornerEditor)))! as MaterialPageRoute;
+      expect(route.popGestureEnabled, isFalse);
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+      expect(closed, isTrue);
     });
 
     testWidgets('confirm returns the edited corners for the same photo', (tester) async {

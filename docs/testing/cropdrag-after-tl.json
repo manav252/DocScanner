@@ -1,0 +1,19 @@
+{
+ "label": "after-tl",
+ "date": "2026-10-26T16:43:21.619Z",
+ "cpuSlowdown": 6,
+ "photo": "3000x4000",
+ "viewport": "390x844 @2x",
+ "runs": [
+  {
+   "run": 0,
+   "frames": 154,
+   "p50": 16.7,
+   "p95": 16.8,
+   "max": 66.6,
+   "over33ms": 1,
+   "longTasks": 0,
+   "longestTask": 0
+  }
+ ]
+}
