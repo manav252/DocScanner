@@ -1,14 +1,36 @@
 {
   "max_dim": 500,
   "pad": 4,
-  "min_area_ratio": 0.08,
+  "min_area_ratio": 0.04,
   "min_fill_ratio": 0.85,
   "max_edge_deviation": 0.025,
   "min_angle": 35.0,
   "max_angle": 145.0,
-  "approx_epsilons": [0.02, 0.03, 0.04],
+  "approx_epsilons": [
+    0.02,
+    0.03,
+    0.04
+  ],
   "clahe_clip": 3.0,
-  "low_canny": [12, 36],
-  "refine_bands": [10, 5, 3],
-  "refine_min_grad": 20.0
+  "low_canny": [
+    12,
+    36
+  ],
+  "refine_bands": [
+    10,
+    5,
+    3
+  ],
+  "refine_min_grad": 20.0,
+  "max_bow": 0.12,
+  "curved_bow": 0.02,
+  "min_support": 0.6,
+  "min_line_support": 0.5,
+  "step_offset": 3.0,
+  "step_min": 10.0,
+  "line_count": 8,
+  "confident_score": 0.35,
+  "hough_threshold": 40,
+  "hough_min_length": 0.12,
+  "hough_max_gap": 8
 }

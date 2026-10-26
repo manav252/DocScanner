@@ -1,0 +1,42 @@
+{
+ "hand_held": {
+  "success": 9,
+  "total": 12,
+  "median_error_px": 2.3
+ },
+ "plain_white": {
+  "success": 12,
+  "total": 12,
+  "median_error_px": 4.3
+ },
+ "cluttered": {
+  "success": 9,
+  "total": 12,
+  "median_error_px": 3.0
+ },
+ "half_shadow": {
+  "success": 12,
+  "total": 12,
+  "median_error_px": 2.3
+ },
+ "handwritten": {
+  "success": 12,
+  "total": 12,
+  "median_error_px": 2.3
+ },
+ "curved": {
+  "success": 11,
+  "total": 12,
+  "median_error_px": 4.9
+ },
+ "aadhaar": {
+  "success": 1,
+  "total": 12,
+  "median_error_px": 40.0
+ },
+ "pan": {
+  "success": 10,
+  "total": 12,
+  "median_error_px": 2.2
+ }
+}

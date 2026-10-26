@@ -105,3 +105,18 @@ def test_params_match_shared_json():
         p["max_angle"],
     )
     assert list(D.APPROX_EPSILONS) == p["approx_epsilons"]
+    assert (D.MAX_BOW, D.CURVED_BOW, D.MIN_SUPPORT, D.MIN_LINE_SUPPORT, D.STEP_OFFSET, D.STEP_MIN) == (
+        p["max_bow"],
+        p["curved_bow"],
+        p["min_support"],
+        p["min_line_support"],
+        p["step_offset"],
+        p["step_min"],
+    )
+    assert (D.LINE_COUNT, D.CONFIDENT_SCORE, D.HOUGH_THRESHOLD, D.HOUGH_MIN_LENGTH, D.HOUGH_MAX_GAP) == (
+        p["line_count"],
+        p["confident_score"],
+        p["hough_threshold"],
+        p["hough_min_length"],
+        p["hough_max_gap"],
+    )
