@@ -111,6 +111,19 @@ final pageRendererProvider = Provider<PageRenderer>(
 final importServiceProvider = Provider<ImportService>((_) => const ImportService());
 final shareServiceProvider = Provider<ShareService>((_) => const ShareService());
 
+/// The scanner screen (camera) is open. Text recognition waits meanwhile, so
+/// the camera, detection and OCR never all use memory at once (iPhone Safari
+/// kills a tab that uses too much).
+class CameraActive extends Notifier<bool> {
+  @override
+  bool build() => false;
+  set active(bool v) {
+    if (ref.mounted) state = v; // the scanner may close after the app's providers (tests)
+  }
+}
+
+final cameraActiveProvider = NotifierProvider<CameraActive, bool>(CameraActive.new);
+
 final textRecognizerProvider = Provider<TextRecognizer>((ref) {
   final r = TextRecognizer();
   ref.onDispose(r.dispose);

@@ -83,6 +83,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get browserTooOld =>
+      'This browser is too old to scan or import (it needs iOS 16.4 or later). Update your iPhone in Settings › General › Software Update, or use another browser.';
+
+  @override
   String get documents => 'Documents';
 
   @override

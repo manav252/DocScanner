@@ -218,6 +218,12 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{1 change waiting to upload} other{{count} changes waiting to upload}}'**
   String pendingChanges(int count);
 
+  /// No description provided for @browserTooOld.
+  ///
+  /// In en, this message translates to:
+  /// **'This browser is too old to scan or import (it needs iOS 16.4 or later). Update your iPhone in Settings › General › Software Update, or use another browser.'**
+  String get browserTooOld;
+
   /// No description provided for @documents.
   ///
   /// In en, this message translates to:

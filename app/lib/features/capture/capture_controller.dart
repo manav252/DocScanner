@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers.dart';
 import '../../imaging/corner_smoother.dart';
 import '../../imaging/geometry.dart';
+import '../../imaging/scan_engine.dart' show photoMaxSide;
 import '../../services/camera/scanner_camera.dart';
 
 enum CaptureStatus {
@@ -319,7 +320,7 @@ class CaptureController extends Notifier<CaptureState> {
       await camera.pause();
       final engine = ref.read(scanEngineProvider);
       // Upright, size-capped pixels for everything downstream (editor, warp, PDF).
-      final upright = await engine.normalizeEncoded(photo.bytes);
+      final upright = await engine.normalizeEncoded(photo.bytes, maxSide: photoMaxSide);
       final r = await engine.detectEncoded(upright.bytes);
       if (gen != _generation) return;
       final List<Pt> corners;
@@ -366,7 +367,7 @@ class CaptureController extends Notifier<CaptureState> {
       if (wasRunning) await _camera?.pause();
       final engine = ref.read(scanEngineProvider);
       await engine.ready;
-      final upright = await engine.normalizeEncoded(bytes);
+      final upright = await engine.normalizeEncoded(bytes, maxSide: photoMaxSide);
       final r = await engine.detectEncoded(upright.bytes);
       state = state.copyWith(
         status: CaptureStatus.reviewing,

@@ -55,11 +55,15 @@ class _CapturePageState extends ConsumerState<CapturePage> with WidgetsBindingOb
     _docSub = ref.listenManual(documentProvider(id), (_, _) {});
   }
 
+  late final CameraActive _camera;
+
   @override
   void initState() {
     super.initState();
     _repo; // capture before dispose, where ref may no longer be used
     if (_docId != null) _keepDocumentAlive(_docId!);
+    _camera = ref.read(cameraActiveProvider.notifier);
+    Future.microtask(() => _camera.active = true);
     WidgetsBinding.instance.addObserver(this);
     if (!kIsWeb) SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   }
@@ -72,6 +76,7 @@ class _CapturePageState extends ConsumerState<CapturePage> with WidgetsBindingOb
       repo.get(created).then((d) => d != null && d.pages.isEmpty ? repo.delete(d) : null);
     }
     _docSub?.close();
+    Future.microtask(() => _camera.active = false);
     WidgetsBinding.instance.removeObserver(this);
     if (!kIsWeb) SystemChrome.setPreferredOrientations(DeviceOrientation.values);
     super.dispose();

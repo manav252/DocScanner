@@ -5,6 +5,8 @@ import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:printing/printing.dart';
 
+import 'picker_options.dart';
+
 class ImportedFile {
   const ImportedFile(this.name, this.bytes);
   final String name;
@@ -41,7 +43,7 @@ class ImportService {
       _pick(FileType.custom, const ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'heic', 'heif']);
 
   Future<List<ImportedFile>> _pick(FileType type, [List<String>? extensions]) async {
-    final files = await FilePicker.pickFiles(type: type, allowedExtensions: extensions);
+    final files = await FilePicker.pickFiles(type: type, allowedExtensions: extensions, webOptions: pickerWebOptions);
     return [for (final f in files) ImportedFile(f.name, await f.xFile.readAsBytes())];
   }
 

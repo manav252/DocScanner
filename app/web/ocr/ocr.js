@@ -109,5 +109,18 @@
     return toResult(data, width, height);
   }
 
-  return { recognize, toResult, meaningful, langs, MIN_CONFIDENCE };
+  /** Shut the OCR workers down (frees their memory, ~200 MB on a phone); the next recognize starts them again. */
+  async function release() {
+    const all = Object.values(workers);
+    for (const k of Object.keys(workers)) delete workers[k];
+    for (const w of all) {
+      try {
+        await (await w).terminate();
+      } catch (_) {
+        // a worker that failed to start has nothing to free
+      }
+    }
+  }
+
+  return { recognize, release, toResult, meaningful, langs, MIN_CONFIDENCE };
 });

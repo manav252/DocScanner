@@ -197,6 +197,16 @@ void main() {
     expect(engine.processed.map((e) => e.filter), [PageFilter.magicColor]);
   });
 
+  test('text recognition waits while the camera is open, and continues when it closes', () async {
+    c.read(cameraActiveProvider.notifier).active = true;
+    final run = c.read(ocrRunnerProvider).run(id);
+    await Future<void>.delayed(const Duration(milliseconds: 700));
+    expect(recognizer.calls, 0, reason: 'camera, detection and OCR never use memory at once');
+    c.read(cameraActiveProvider.notifier).active = false;
+    expect(await run, 2);
+    expect(recognizer.calls, 2);
+  });
+
   test('OCR uses the chosen language and re-reads pages after a language change', () async {
     expect(await c.read(ocrRunnerProvider).run(id), 2);
     expect(recognizer.languages, ['eng', 'eng']);

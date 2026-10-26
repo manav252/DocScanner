@@ -8,6 +8,8 @@
 // the same fixtures. UI code depends only on this file.
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 import 'geometry.dart';
 import 'page_edits.dart';
 import 'unsupported_engine.dart'
@@ -48,6 +50,12 @@ typedef EncodedDetection = ({Detection detection, int width, int height});
 
 /// A photo re-encoded upright (EXIF orientation applied, tag removed) and capped in size.
 typedef NormalizedImage = ({Uint8List bytes, int width, int height});
+
+/// Longest side a photo is kept at when it enters the app. Pages are flattened
+/// to at most 2480 px, so more only costs memory: on the web (iPhone Safari
+/// kills a tab that uses too much) 3000 px, a 12 MP photo's copies then take
+/// 27 MB each instead of 48 MB.
+const photoMaxSide = kIsWeb ? 3000 : 4000;
 
 abstract interface class ScanEngine {
   /// Creates the implementation for the current platform.

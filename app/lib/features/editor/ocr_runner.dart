@@ -1,5 +1,7 @@
 // Recognises text for pages whose OCR is missing or outdated, one page at a
 // time, and stores it through the DocumentController.
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/app_settings.dart';
@@ -7,6 +9,7 @@ import '../../core/cancel.dart';
 import '../../core/providers.dart';
 import '../../data/models.dart';
 import '../../imaging/page_edits.dart';
+import '../../services/ocr/ocr_release.dart';
 import '../../services/ocr/ocr_result.dart';
 import 'document_controller.dart';
 
@@ -20,6 +23,11 @@ class OcrRunner {
   final Ref _ref;
   final _running = <String, Future<int>>{};
 
+  /// How long the OCR engine stays loaded after the last page (web: frees
+  /// Tesseract's ~200 MB; starting it again takes ~1 s).
+  static const releaseAfter = Duration(seconds: 8);
+  Timer? _release;
+
   bool get available => _ref.read(textRecognizerProvider).isAvailable;
 
   /// OCR every stale page of [docId] (or just [pageIds]). Returns how many pages
@@ -29,8 +37,15 @@ class OcrRunner {
     final language = _ref.read(appSettingsProvider).ocrLanguage.code;
     final key = '$docId:$language:${pageIds?.join(',') ?? '*'}';
     // Block body: whenComplete would otherwise await the removed future (itself) forever.
+    _release?.cancel();
     return _running[key] ??= _run(docId, pageIds, language, onProgress, cancel).whenComplete(() {
       _running.remove(key);
+      if (_running.isEmpty) {
+        _release?.cancel();
+        _release = Timer(releaseAfter, () {
+          if (_running.isEmpty) releaseOcrEngine();
+        });
+      }
     });
   }
 
@@ -55,6 +70,11 @@ class OcrRunner {
       var done = 0;
       for (final ScanPage p in todo) {
         cancel?.check();
+        // Not while the camera is open (memory); carry on when it closes.
+        while (_ref.read(cameraActiveProvider)) {
+          await Future<void>.delayed(const Duration(milliseconds: 300));
+          cancel?.check();
+        }
         onProgress?.call(OcrProgress(done, todo.length));
         final render = await repo.pageImage(p.id, PageImage.render);
         if (render == null) continue;
@@ -84,4 +104,8 @@ class OcrRunner {
   }
 }
 
-final ocrRunnerProvider = Provider<OcrRunner>(OcrRunner.new);
+final ocrRunnerProvider = Provider<OcrRunner>((ref) {
+  final runner = OcrRunner(ref);
+  ref.onDispose(() => runner._release?.cancel());
+  return runner;
+});

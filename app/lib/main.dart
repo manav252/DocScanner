@@ -17,6 +17,10 @@ import 'features/onboarding/onboarding_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Keep fewer decoded images around on the web (default 100 MB): there they are
+  // graphics textures, and iPhone Safari kills a tab that uses too much memory.
+  // Pages are re-decoded quickly at the size they are shown.
+  if (kIsWeb) PaintingBinding.instance.imageCache.maximumSizeBytes = 32 << 20;
   installErrorHandling();
   // Web: build the accessibility tree from the start, so screen readers and
   // keyboard users don't first have to find Flutter's hidden "Enable accessibility" button.

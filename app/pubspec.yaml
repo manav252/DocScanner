@@ -10,6 +10,8 @@ dependencies:
   archive: ^4.0.0
   camera: ^0.12.1
   file_picker: ^13.1.0
+  # Web picker options (iPhone Safari: do not treat the window regaining focus as a cancel).
+  file_picker_web: ^4.2.0
   flutter:
     sdk: flutter
   flutter_localizations:

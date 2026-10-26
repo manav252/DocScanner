@@ -282,7 +282,7 @@ packages:
     source: hosted
     version: "4.2.0"
   file_picker_web:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: file_picker_web
       sha256: a2288008280aabe371aff029466b3405e60838e0a1d714767488c59b926c8b8c

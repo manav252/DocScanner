@@ -53,6 +53,10 @@ S = {
         "{count, plural, =1{1 बदलाव अपलोड होने की प्रतीक्षा में} other{{count} बदलाव अपलोड होने की प्रतीक्षा में}}",
         {"count": "int"},
     ),
+    "browserTooOld": (
+        "This browser is too old to scan or import (it needs iOS 16.4 or later). Update your iPhone in Settings › General › Software Update, or use another browser.",
+        "यह ब्राउज़र स्कैन या इम्पोर्ट के लिए बहुत पुराना है (iOS 16.4 या नया चाहिए)। iPhone को सेटिंग्स › सामान्य › सॉफ़्टवेयर अपडेट में अपडेट करें, या कोई और ब्राउज़र इस्तेमाल करें।",
+    ),
     # ---------- documents ----------
     "documents": ("Documents", "दस्तावेज़"),
     "searchDocuments": ("Search documents and text inside pages", "दस्तावेज़ और पेजों के अंदर का टेक्स्ट खोजें"),

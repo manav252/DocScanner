@@ -1,0 +1,51 @@
+{
+ "label": "before-1",
+ "engine": "WebKit (Playwright), iPhone 13 emulation",
+ "date": "2026-10-26T21:32:19.515Z",
+ "steps": [
+  {
+   "name": "open the app (WebKit, iPhone 13), skip the guide",
+   "ok": true,
+   "ms": 1791,
+   "peakTabMB": 425,
+   "peakGpuMB": 136
+  },
+  {
+   "name": "import a photo-sized PDF (4032 x 3024 pt page)",
+   "ok": false,
+   "ms": 60790,
+   "peakTabMB": 612,
+   "peakGpuMB": 117,
+   "error": "timed out waiting for \"Page 1 of 1\""
+  },
+  {
+   "name": "scan 3 pages with the demo camera, OCR runs after",
+   "ok": true,
+   "ms": 17252,
+   "peakTabMB": 557,
+   "peakGpuMB": 199
+  },
+  {
+   "name": "open Corners and confirm",
+   "ok": true,
+   "ms": 2885,
+   "peakTabMB": 488,
+   "peakGpuMB": 103
+  },
+  {
+   "name": "import a 12 MP iPhone photo",
+   "ok": true,
+   "ms": 9565,
+   "peakTabMB": 468,
+   "peakGpuMB": 256
+  },
+  {
+   "name": "the app is still running (no reload, no error screen)",
+   "ok": true,
+   "ms": 60,
+   "peakTabMB": 275,
+   "peakGpuMB": 26
+  }
+ ],
+ "errors": []
+}

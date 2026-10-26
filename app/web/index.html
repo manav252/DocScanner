@@ -34,6 +34,8 @@
   <link rel="manifest" href="manifest.json">
   <script>
     // Serve pdf.js (used to import PDFs) from this app instead of a CDN, so it works offline.
+    // It is pdf.js's "legacy" build: the modern one needs Safari 18.2+ (e.g. Uint8Array.toHex)
+    // and failed on every PDF on older iPhones.
     window.dartPdfJsBaseUrl = new URL('pdfjs/', document.baseURI).href;
   </script>
   <!-- OCR helper (loads Tesseract.js lazily on first use). -->

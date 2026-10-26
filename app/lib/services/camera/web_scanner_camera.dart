@@ -26,6 +26,10 @@ class WebScannerCamera implements ScannerCamera {
   /// Analysis frames are downscaled to this longest side (the detector works at 500 px).
   static const analysisMaxSide = 640;
 
+  /// createImageBitmap resizes for us (false once it turned out it does not).
+  /// (`?oldgrab=1` in the URL: the previous way, for measurements.)
+  bool _bitmapResize = !web.window.location.search.contains('oldgrab=1');
+
   /// Upper bound on analysis rate, to leave CPU for the page.
   static const minFrameInterval = Duration(milliseconds: 33);
 
@@ -130,7 +134,31 @@ class WebScannerCamera implements ScannerCamera {
         ? _analysisCanvas!
         : (_analysisCanvas = web.OffscreenCanvas(w, h));
     final ctx = canvas.getContext('2d', {'willReadFrequently': true}.jsify())! as web.OffscreenCanvasRenderingContext2D;
-    ctx.drawImage(_video, 0, 0, w.toDouble(), h.toDouble());
+    // Let the browser shrink the frame (off the main thread) and draw the small
+    // result: drawing the full camera frame onto a canvas that is read back
+    // took ~27% of the main thread while scanning.
+    web.ImageBitmap? small;
+    if (_bitmapResize) {
+      try {
+        final bitmap = await web.window
+            .createImageBitmap(_video, web.ImageBitmapOptions(resizeWidth: w, resizeHeight: h, resizeQuality: 'low'))
+            .toDart;
+        if (bitmap.width == w && bitmap.height == h) {
+          small = bitmap;
+        } else {
+          bitmap.close();
+          _bitmapResize = false; // resizing not supported: draw the full frame
+        }
+      } catch (_) {
+        _bitmapResize = false;
+      }
+    }
+    if (small != null) {
+      ctx.drawImage(small, 0, 0);
+      small.close();
+    } else {
+      ctx.drawImage(_video, 0, 0, w.toDouble(), h.toDouble());
+    }
     final data = ctx.getImageData(0, 0, w, h).data.toDart;
     final bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
     return AnalysisFrame(FrameData(bytes: bytes, width: w, height: h, format: PixelFormat.rgba));

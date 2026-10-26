@@ -1,0 +1,43 @@
+{
+ "label": "before",
+ "cpuSlowdown": 6,
+ "camera": "Chrome fake camera",
+ "runs": [
+  {
+   "run": 0,
+   "busyPercent": 71.5,
+   "drawImagePercent": 28.3,
+   "top": [
+    "drawImage 28.3%",
+    "getImageData 1.7%",
+    "(anonymous) 1.2%",
+    "j 0.7%",
+    "co 0.6%"
+   ]
+  },
+  {
+   "run": 1,
+   "busyPercent": 71.8,
+   "drawImagePercent": 27.8,
+   "top": [
+    "drawImage 27.8%",
+    "getImageData 1.7%",
+    "(anonymous) 1.3%",
+    "(garbage collector) 0.9%",
+    "j 0.8%"
+   ]
+  },
+  {
+   "run": 2,
+   "busyPercent": 72.6,
+   "drawImagePercent": 27.6,
+   "top": [
+    "drawImage 27.6%",
+    "getImageData 1.7%",
+    "(anonymous) 1.5%",
+    "(garbage collector) 1.0%",
+    "j 0.9%"
+   ]
+  }
+ ]
+}

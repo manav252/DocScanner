@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/app_settings.dart';
+import '../../core/browser_support.dart';
 import '../../core/l10n.dart';
 import '../../data/sync/sync_controller.dart';
 import '../capture/capture_page.dart';
@@ -62,6 +63,15 @@ class HomePage extends ConsumerWidget {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
               children: [
+                if (!canProcessImages)
+                  Card(
+                    key: const ValueKey('browser-too-old'),
+                    color: theme.colorScheme.errorContainer,
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Semantics(liveRegion: true, child: Text(l.browserTooOld)),
+                    ),
+                  ),
                 Text(l.appPurpose, style: theme.textTheme.bodyLarge),
                 const SizedBox(height: 8),
                 const _StatusLine(),

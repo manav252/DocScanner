@@ -98,7 +98,7 @@ class ImportFlow {
         await for (final png in importer.rasterizePdf(f.bytes)) {
           cancel?.check();
           onProgress?.call(ImportProgress(before + added, '${f.name}: page ${added + 1}'));
-          final page = await engine.normalizeEncoded(png);
+          final page = await engine.normalizeEncoded(png, maxSide: photoMaxSide);
           await doc.addImage(
             page.bytes,
             page.width,
@@ -111,7 +111,7 @@ class ImportFlow {
       } else {
         onProgress?.call(ImportProgress(before + added, f.name));
         // Upright, size-capped pixels for everything downstream (editor, warp, PDF).
-        final photo = await engine.normalizeEncoded(f.bytes);
+        final photo = await engine.normalizeEncoded(f.bytes, maxSide: photoMaxSide);
         final r = await engine.detectEncoded(photo.bytes);
         await doc.addImage(
           photo.bytes,

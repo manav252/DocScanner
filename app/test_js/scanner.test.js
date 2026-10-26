@@ -232,7 +232,12 @@ test('rotate and crop', () => {
 
 // ---------- OCR (web): the same Tesseract.js build + language data the app serves ----------
 const Tesseract = require('tesseract.js');
-const { toResult, meaningful } = require('../web/ocr/ocr.js');
+const { toResult, meaningful, release } = require('../web/ocr/ocr.js');
+
+test('OCR workers can be released when idle (frees their memory on phones)', async () => {
+  assert.strictEqual(typeof release, 'function');
+  await release(); // nothing started: nothing to do, no error
+});
 
 test('OCR reads a flattened page and returns normalised line boxes', async () => {
   const worker = await Tesseract.createWorker('eng', 1, {
