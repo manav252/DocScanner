@@ -129,8 +129,24 @@ keyword fragment or a date ("overnment of India" still counts); a 16-digit bank
 card number is not an Aadhaar number; a page of paragraphs is never a card.
 Front and back scanned into one document export as one PDF.
 
+## 6. iPhone web app (27 Oct)
+
+Checked in WebKit 18.0 (Safari's engine, Playwright, iPhone 13 emulation:
+`tools/audit/iphone_flow.mjs`) and Chrome; not on a physical iPhone.
+
+| Problem | Cause found | Fix | Result |
+|---|---|---|---|
+| Choosing a PDF did nothing | The file picker counted the window regaining focus as "cancelled" if no file arrived within 0.5 s; iPhone Safari regains focus as the Files sheet closes, before the PDF is copied in | Picker waits for the file (cancel still works) | Needs your check on an iPhone (focus timing is iOS-only) |
+| PDF failed to open on Safari before 18.2 | pdf.js 6.2 "modern" build uses `Uint8Array.toHex` on every PDF, and other new APIs | pdf.js "legacy" build of the same release | WebKit 18.0: failed 3/3 → works 3/3, also on the live site |
+| Crashes while scanning | Not reproduced (desktop WebKit has no iPhone memory limit); no leak found; memory use reduced | OCR shut down 8 s after use (~200 MB); no OCR while the camera is open; photos ≤ 3000 px; image cache 32 MB | Tab peak (median of 3): 12 MP photo 634 → 539 MB, corners 488 → 422 MB, scanning ≈ same |
+| Scanner busy on a slow phone | Each camera frame drawn full-size onto a read-back canvas (28 % of the main thread) | Browser shrinks the frame (`createImageBitmap` resize) | Main thread busy at CPU 6×: 72 % → 58 % |
+| Old iPhones (before iOS 16.4) | No OffscreenCanvas: scanning/importing cannot work | Clear notice on Home | — |
+
 ## Not solved / not verified
 
+- **iPhone crashes**: not reproduced here; memory and main-thread work reduced.
+  Which iPhone, iOS version and screen (camera, after Keep scan, export...) would
+  narrow it down.
 - **Real phones**: PDF import on Android Chrome and iPhone Safari, crop-screen
   frame times on a low-end phone, ML Kit OCR on cards: not checked on devices.
 - **APK size**: not measured (no Android SDK here).
