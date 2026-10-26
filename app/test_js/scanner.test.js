@@ -75,6 +75,21 @@ test('OCR input: a small card is enlarged (at most 3x), a big page capped; contr
   assert.ok(c.data[0] === c.data[1] && c.data[1] === c.data[2], 'gray');
 });
 
+test('ID card B&W keeps the photo and signature strip grey (PAN cards)', () => {
+  for (const it of hard.cases.pan) {
+    const img = jpeg.decode(fs.readFileSync(path.join(HARD, it.file)), { useTArray: true, formatAsRGBA: true });
+    const flat = S.warpPage(cv, img, it.corners);
+    const levels = (out) => {
+      const seen = new Set(), w = out.width, h = out.height;
+      for (let y = Math.trunc((160 * h) / 638); y < Math.trunc((420 * h) / 638); y++)
+        for (let x = Math.trunc((50 * w) / 1012); x < Math.trunc((250 * w) / 1012); x++) seen.add(out.data[(y * w + x) * 4]);
+      return seen.size;
+    };
+    assert.ok(levels(S.applyEdits(cv, flat, { filter: 'bw' })) <= 2, it.file);
+    assert.ok(levels(S.applyEdits(cv, flat, { filter: 'bw', card: true })) > 20, it.file);
+  }
+});
+
 test('curved pages: same edge curves as the reference, and they come out flat', () => {
   for (const items of Object.values(hard.cases)) {
     for (const it of items) {

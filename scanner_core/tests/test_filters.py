@@ -77,3 +77,27 @@ def test_crop():
 def test_unknown_filter():
     with pytest.raises(ValueError):
         apply_filter(np.zeros((10, 10, 3), np.uint8), "sepia")
+
+
+def test_id_card_bw_keeps_photo_and_signature_grey():
+    """B&W on an ID card: the photo/signature strip keeps its tones (a PAN
+    card's thin signature and the photo survive); ordinary B&W is unchanged."""
+    import json
+    from pathlib import Path
+
+    from scanner_core.filters import black_and_white, grayscale, photo_strip
+    from scanner_core.warp import warp_page
+
+    d = Path(__file__).resolve().parents[2] / "shared" / "test_fixtures" / "hard"
+    cases = json.loads((d / "hard_cases.json").read_text())["cases"]
+    for it in cases["pan"]:
+        flat = warp_page(cv2.imread(str(d / it["file"])), np.float32(it["corners"]))
+        raw = grayscale(flat)
+        h, w = raw.shape
+        photo = (slice(int(160 * h / 638), int(420 * h / 638)), slice(int(50 * w / 1012), int(250 * w / 1012)))
+        assert photo_strip(raw) is not None, it["file"]
+        assert len(np.unique(black_and_white(flat)[photo])) <= 2
+        assert len(np.unique(black_and_white(flat, keep_photo=True)[photo])) > 20
+    for it in cases["plain_white"] + cases["handwritten"]:
+        g = grayscale(warp_page(cv2.imread(str(d / it["file"])), np.float32(it["corners"])))
+        assert photo_strip(g) is None, it["file"]

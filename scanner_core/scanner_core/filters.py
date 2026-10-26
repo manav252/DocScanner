@@ -42,10 +42,41 @@ def grayscale(image: np.ndarray) -> np.ndarray:
     return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) if image.ndim == 3 else image.copy()
 
 
-def black_and_white(image: np.ndarray) -> np.ndarray:
-    gray = remove_shadows(grayscale(image))
+PHOTO_STRIP = 0.3  # depth of the strip along each short side searched for an ID card's photo
+PHOTO_MIN_TONE = 0.2  # share of photo-like pixels a strip needs (and 1.5x the other side's)
+
+
+def photo_strip(gray: np.ndarray) -> tuple[slice, slice] | None:
+    """On an ID card, the strip along one short side (left/right of a
+    landscape card, top/bottom of a portrait one) that holds the photo and, on
+    a PAN card, the signature under it: the side with clearly more pixels
+    darker than the card but lighter than ink. None if neither stands out."""
+    h, w = gray.shape
+    bg = float(np.percentile(gray, 90))
+    tone = (gray < bg - 25) & (gray > 60)
+    if w >= h:
+        k = int(PHOTO_STRIP * w)
+        strips = [(slice(0, h), slice(0, k)), (slice(0, h), slice(w - k, w))]
+    else:
+        k = int(PHOTO_STRIP * h)
+        strips = [(slice(0, k), slice(0, w)), (slice(h - k, h), slice(0, w))]
+    a, b = (float(tone[r].mean()) for r in strips)
+    best, other = (strips[0], b) if a >= b else (strips[1], a)
+    share = max(a, b)
+    return best if share >= PHOTO_MIN_TONE and share >= 1.5 * other else None
+
+
+def black_and_white(image: np.ndarray, keep_photo: bool = False) -> np.ndarray:
+    """Local (adaptive) threshold, never one global one. ``keep_photo`` (ID
+    cards): the photo/signature strip keeps its grey tones (brightened so the
+    card is white), so the face and thin pen strokes survive."""
+    raw = grayscale(image)
+    gray = remove_shadows(raw)
     block = max(15, (min(gray.shape) // 30) | 1)
     out = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, block, 15)
+    if keep_photo and (r := photo_strip(raw)) is not None:
+        bg = max(1.0, float(np.percentile(raw, 90)))
+        out[r] = np.clip(raw[r].astype(np.float32) * (255.0 / bg), 0, 255).astype(np.uint8)
     # The outermost pixels often hold a sliver of desk/page edge: clear them.
     m = max(2, round(0.004 * min(out.shape)))
     out[:m, :] = out[-m:, :] = 255
@@ -69,14 +100,14 @@ def magic_color(image: np.ndarray) -> np.ndarray:
     return cv2.cvtColor(hsv.astype(np.uint8), cv2.COLOR_HSV2BGR)
 
 
-def apply_filter(image: np.ndarray, f: Filter | str) -> np.ndarray:
+def apply_filter(image: np.ndarray, f: Filter | str, id_card: bool = False) -> np.ndarray:
     f = Filter(f)
     if f is Filter.ORIGINAL:
         return image.copy()
     if f is Filter.GRAYSCALE:
         return grayscale(image)
     if f is Filter.BW:
-        return black_and_white(image)
+        return black_and_white(image, keep_photo=id_card)
     return magic_color(image)
 
 

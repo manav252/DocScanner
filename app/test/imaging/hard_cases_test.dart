@@ -10,6 +10,7 @@ import 'dart:math' as math;
 import 'package:docscanner/imaging/geometry.dart';
 import 'package:docscanner/imaging/page_curves.dart';
 import 'package:docscanner/imaging/native/opencv_detector.dart';
+import 'package:docscanner/imaging/native/opencv_filters.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencv_dart/opencv_dart.dart' as cv;
 
@@ -67,6 +68,42 @@ void main() {
           plain.dispose();
         }
         img.dispose();
+      }
+    }
+  });
+
+  test('ID card B&W keeps the photo and signature strip grey (PAN cards); ordinary pages unchanged', () {
+    final cards = (hard['cases'] as Map<String, dynamic>)['pan'] as List;
+    for (final it in cards.cast<Map<String, dynamic>>()) {
+      final img = cv.imread('${hardDir.path}/${it['file']}');
+      final flat = warpPageMat(img, cornersOf(it['corners']));
+      final w = flat.cols, h = flat.rows;
+      int levels(cv.Mat m) {
+        final seen = <int>{};
+        for (var y = (160 * h / 638).toInt(); y < (420 * h / 638).toInt(); y++) {
+          for (var x = (50 * w / 1012).toInt(); x < (250 * w / 1012).toInt(); x++) {
+            seen.add(m.data[y * w + x]);
+          }
+        }
+        return seen.length;
+      }
+
+      final plain = blackAndWhite(flat), kept = blackAndWhite(flat, keepPhoto: true);
+      expect(levels(plain), lessThanOrEqualTo(2), reason: it['file'] as String);
+      expect(levels(kept), greaterThan(20), reason: it['file'] as String);
+      for (final m in [img, flat, plain, kept]) {
+        m.dispose();
+      }
+    }
+    for (final name in ['plain_white', 'handwritten']) {
+      for (final it in ((hard['cases'] as Map<String, dynamic>)[name] as List).cast<Map<String, dynamic>>()) {
+        final img = cv.imread('${hardDir.path}/${it['file']}');
+        final flat = warpPageMat(img, cornersOf(it['corners']));
+        final g = cv.cvtColor(flat, cv.COLOR_BGR2GRAY);
+        expect(findPhotoStrip(g), isNull, reason: it['file'] as String);
+        for (final m in [img, flat, g]) {
+          m.dispose();
+        }
       }
     }
   });

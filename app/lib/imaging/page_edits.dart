@@ -46,7 +46,12 @@ class CropRect {
 }
 
 class PageEdits {
-  const PageEdits({this.filter = PageFilter.magicColor, this.quarterTurns = 0, this.crop = CropRect.full});
+  const PageEdits({
+    this.filter = PageFilter.magicColor,
+    this.quarterTurns = 0,
+    this.crop = CropRect.full,
+    this.idCard = false,
+  });
 
   static const none = PageEdits(filter: PageFilter.original);
 
@@ -56,25 +61,40 @@ class PageEdits {
   final int quarterTurns;
   final CropRect crop;
 
-  PageEdits copyWith({PageFilter? filter, int? quarterTurns, CropRect? crop}) => PageEdits(
+  /// The page is an ID card: B&W keeps the photo/signature strip grey, and the
+  /// page is saved at a higher JPEG quality.
+  final bool idCard;
+
+  PageEdits copyWith({PageFilter? filter, int? quarterTurns, CropRect? crop, bool? idCard}) => PageEdits(
     filter: filter ?? this.filter,
     quarterTurns: (quarterTurns ?? this.quarterTurns) % 4,
     crop: crop ?? this.crop,
+    idCard: idCard ?? this.idCard,
   );
 
   /// Rotate 90 degrees clockwise, keeping the same cropped region.
   PageEdits rotatedClockwise() => copyWith(quarterTurns: quarterTurns + 1, crop: crop.rotatedClockwise());
 
-  Map<String, Object> toJson() => {'filter': filter.wireName, 'turns': quarterTurns, 'crop': crop.toJson()};
+  Map<String, Object> toJson() => {
+    'filter': filter.wireName,
+    'turns': quarterTurns,
+    'crop': crop.toJson(),
+    if (idCard) 'card': true,
+  };
   static PageEdits fromJson(Map<String, dynamic> j) => PageEdits(
     filter: PageFilter.fromWire(j['filter'] as String?),
     quarterTurns: (j['turns'] as int? ?? 0) % 4,
     crop: j['crop'] == null ? CropRect.full : CropRect.fromJson(j['crop'] as List),
+    idCard: j['card'] as bool? ?? false,
   );
 
   @override
   bool operator ==(Object other) =>
-      other is PageEdits && other.filter == filter && other.quarterTurns == quarterTurns && other.crop == crop;
+      other is PageEdits &&
+      other.filter == filter &&
+      other.quarterTurns == quarterTurns &&
+      other.crop == crop &&
+      other.idCard == idCard;
   @override
-  int get hashCode => Object.hash(filter, quarterTurns, crop);
+  int get hashCode => Object.hash(filter, quarterTurns, crop, idCard);
 }

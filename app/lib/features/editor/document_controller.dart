@@ -209,8 +209,18 @@ class DocumentController extends AsyncNotifier<ScanDocument> {
       idCard: info.type,
       idFields: info.fields,
       title: named ? idCardTitle(idCardTypeName(info.type), d.createdAt) : null,
+      pages: await _markIdCardPages(d.pages, true),
     );
   });
+
+  /// Re-render pages whose ID-card flag changes (B&W photo/signature, quality).
+  Future<List<ScanPage>> _markIdCardPages(List<ScanPage> pages, bool idCard) async {
+    final renderer = ref.read(pageRendererProvider);
+    return [
+      for (final p in pages)
+        p.edits.idCard == idCard ? p : await renderer.render(p.copyWith(edits: p.edits.copyWith(idCard: idCard))),
+    ];
+  }
 
   /// The user picked the card type ([IdCardType.none]: not an ID card).
   Future<void> setIdCard(IdCardType type) => _mutate((d) async {
@@ -219,6 +229,7 @@ class DocumentController extends AsyncNotifier<ScanDocument> {
         IdCardType.values.any((t) => d.title == idCardTitle(idCardTypeName(t), d.createdAt));
     return d.edit(
       idCard: type,
+      pages: await _markIdCardPages(d.pages, type != IdCardType.none),
       title: named
           ? (type == IdCardType.none
                 ? ScanDocument.defaultTitle(d.createdAt)

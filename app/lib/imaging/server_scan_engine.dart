@@ -61,17 +61,21 @@ class ServerScanEngine implements ScanEngine {
   );
 
   @override
-  Future<Uint8List> processEncoded(Uint8List bytes, PageEdits edits, {int? maxSide, int quality = 90}) => _orLocal(
-    () async => (await api.process(bytes, {
-      'flat': 'true',
-      'filter': edits.filter.wireName,
-      'rotate': '${edits.quarterTurns}',
-      if (!edits.crop.isFull) 'crop': jsonEncode(edits.crop.toJson()),
-      'max_side': '${maxSide ?? 8000}',
-      'quality': '$quality',
-    })).bodyBytes,
-    () => local.processEncoded(bytes, edits, maxSide: maxSide, quality: quality),
-  );
+  Future<Uint8List> processEncoded(Uint8List bytes, PageEdits edits, {int? maxSide, int quality = 90}) =>
+      // ID card pages: rendered here (the server has no photo/signature handling).
+      edits.idCard
+      ? local.processEncoded(bytes, edits, maxSide: maxSide, quality: quality)
+      : _orLocal(
+          () async => (await api.process(bytes, {
+            'flat': 'true',
+            'filter': edits.filter.wireName,
+            'rotate': '${edits.quarterTurns}',
+            if (!edits.crop.isFull) 'crop': jsonEncode(edits.crop.toJson()),
+            'max_side': '${maxSide ?? 8000}',
+            'quality': '$quality',
+          })).bodyBytes,
+          () => local.processEncoded(bytes, edits, maxSide: maxSide, quality: quality),
+        );
 
   @override
   Future<Uint8List> prepareOcrEncoded(Uint8List bytes, {bool contrast = false, int quality = 92}) =>

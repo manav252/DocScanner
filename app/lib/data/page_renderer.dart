@@ -26,6 +26,9 @@ class PageRenderer {
 
   /// JPEG quality of the rendered page (what is shown and exported).
   static const renderQuality = 85;
+
+  /// ID cards: thin signature strokes and small print stay crisp.
+  static const idCardQuality = 95;
   static const thumbMaxSide = 360;
 
   /// Store a new page from a photo/imported image and render it.
@@ -77,7 +80,11 @@ class PageRenderer {
       flat = await _engine.warpEncoded(source, page.corners, maxSide: flatMaxSide);
       await _repo.putPageImage(page.id, PageImage.flat, flat);
     }
-    final render = await _engine.processEncoded(flat, page.edits, quality: renderQuality);
+    final render = await _engine.processEncoded(
+      flat,
+      page.edits,
+      quality: page.edits.idCard ? idCardQuality : renderQuality,
+    );
     final thumb = await _engine.processEncoded(render, PageEdits.none, maxSide: thumbMaxSide, quality: 80);
     await _repo.putPageImage(page.id, PageImage.render, render);
     await _repo.putPageImage(page.id, PageImage.thumb, thumb);

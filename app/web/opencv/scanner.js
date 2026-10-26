@@ -793,11 +793,54 @@
     return res;
   }
 
-  function blackAndWhite(cv, gray) {
+  const PHOTO = { strip: 0.3, minTone: 0.2 };
+
+  /** numpy.percentile (linear) of 8-bit data, from its histogram. */
+  function percentile8(d, p) {
+    const hist = new Uint32Array(256);
+    for (let i = 0; i < d.length; i++) hist[d[i]]++;
+    const idx = (p / 100) * (d.length - 1);
+    const at = (k) => {
+      let acc = 0;
+      for (let v = 0; v < 256; v++) { acc += hist[v]; if (acc > k) return v; }
+      return 255;
+    };
+    const lo = Math.floor(idx), hi = Math.ceil(idx);
+    return at(lo) + (at(hi) - at(lo)) * (idx - lo);
+  }
+
+  /** ID card: [x, y, w, h] of the short-side strip with the photo (and PAN signature), or null. See filters.py. */
+  function findPhotoStrip(gray) {
+    const w = gray.cols, h = gray.rows, d = gray.data, bg = percentile8(d, 90);
+    const share = ([x0, y0, sw, sh]) => {
+      let n = 0;
+      for (let y = y0; y < y0 + sh; y++) for (let x = x0; x < x0 + sw; x++) {
+        const v = d[y * w + x];
+        if (v < bg - 25 && v > 60) n++;
+      }
+      return n / (sw * sh);
+    };
+    let strips;
+    if (w >= h) { const k = Math.trunc(PHOTO.strip * w); strips = [[0, 0, k, h], [w - k, 0, k, h]]; }
+    else { const k = Math.trunc(PHOTO.strip * h); strips = [[0, 0, w, k], [0, h - k, w, k]]; }
+    const a = share(strips[0]), b = share(strips[1]);
+    const top = Math.max(a, b), other = a >= b ? b : a;
+    return top >= PHOTO.minTone && top >= 1.5 * other ? (a >= b ? strips[0] : strips[1]) : null;
+  }
+
+  function blackAndWhite(cv, gray, keepPhoto = false) {
     const flat = removeShadows(cv, gray), out = new cv.Mat();
     const block = Math.max(15, Math.trunc(Math.min(flat.rows, flat.cols) / 30) | 1);
     cv.adaptiveThreshold(flat, out, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, block, 15);
     flat.delete();
+    // ID cards: the photo/signature strip keeps its grey tones (brightened so the card is white).
+    const strip = keepPhoto ? findPhotoStrip(gray) : null;
+    if (strip) {
+      const bg = Math.max(1, percentile8(gray.data, 90)), [x0, y0, sw, sh] = strip, src = gray.data, dst = out.data, w = out.cols;
+      for (let y = y0; y < y0 + sh; y++) for (let x = x0; x < x0 + sw; x++) {
+        dst[y * w + x] = Math.min(255, Math.max(0, Math.trunc(src[y * w + x] * (255 / bg))));
+      }
+    }
     // The outermost pixels often hold a sliver of desk/page edge: clear them.
     const m = Math.max(2, Math.round(0.004 * Math.min(out.rows, out.cols)));
     const d = out.data, w = out.cols, h = out.rows;
@@ -864,7 +907,7 @@
       case 'bw': {
         const g = new cv.Mat();
         cv.cvtColor(rgb, g, cv.COLOR_RGB2GRAY);
-        out = blackAndWhite(cv, g);
+        out = blackAndWhite(cv, g, !!edits.card);
         g.delete();
         break;
       }
