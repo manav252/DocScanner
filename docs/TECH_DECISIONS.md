@@ -67,21 +67,40 @@ sequenceDiagram
 Detection, step by step (the "How it works" page on the website shows these images
 for any photo you upload, using the real code):
 
-1. Downscale to 500 px and convert to grayscale (speed; colour adds nothing for edges).
-2. Gaussian blur 5×5 (removes paper texture and print noise).
-3. Canny with thresholds at 0.67× / 1.33× the median brightness, then dilate 3×3.
-4. Find contours; for the 12 largest, simplify with `approxPolyDP` and keep convex
-   quadrilaterals that cover ≥ 8 % of the image, have angles between 35° and 145°,
-   and follow the contour closely. A second pass with CLAHE and low thresholds
-   handles low-contrast pages (white paper on a white desk).
-5. Refine each side: sample the strongest gradient across the edge and fit a line
-   (Huber loss), then intersect neighbouring lines for sub-pixel corners.
-6. Perspective warp (`getPerspectiveTransform` + `warpPerspective`, bicubic) to a
-   rectangle sized from the longer opposite sides.
+1. Downscale to 500 px (pad 4 px so a page touching the border still closes).
+2. Edge map: Gaussian blur 5×5, Canny with thresholds from the median brightness
+   (0.67× / 1.33×), dilate 3×3 to close small gaps.
+3. Candidates from the 12 largest outlines: the 4-point `approxPolyDP` quad, the
+   quad from the 4 longest sides (a clipped corner), and the outline's extreme
+   points (still right when a side bows); plus quads made of pairs of long
+   straight edges taken from the simplified outlines and extended to meet, which
+   recovers corners hidden by fingers or merged with clutter. (Not `HoughLinesP`:
+   it is randomised and gave different lines in OpenCV 4 and 5.)
+4. Each candidate must be convex, cover ≥ 4 % of the frame (an ID card at arm's
+   length), have angles 35°–145° and follow its outline (a side may bow up to 12 %).
+   Then it is **scored**: √area × border support × squareness × outline fit. Border
+   support is the share of each side with a consistent brightness step from inside
+   to outside; texture, stripes, other papers' insides and the photo frame have none.
+   The best score wins, not the largest shape.
+5. Passes, until one is confident (score ≥ 0.35), else the best of all: grayscale;
+   CLAHE (white on white); lighting normalised by dividing by a heavily blurred copy
+   + CLAHE (half shadows); colour saturation (a page on a coloured background).
+6. Refine each straight side: strongest gradient across it, Huber line fit,
+   intersect neighbours for sub-pixel corners (bowed outlines are not refined).
+7. Flatten: trace the top and bottom edges from corner to corner; if one bows more
+   than 1.5 % and the edge follows the curve clearly better than the straight side,
+   a grid warp (perspective mapping + an offset blending the two curves) flattens
+   the page; otherwise one perspective warp (bicubic).
+
+Live preview: frames are taken only when the previous one is done (slow phones
+drop frames), on a background isolate / Web Worker; auto-capture also waits for
+a sharp frame (variance of the Laplacian ≥ 60 % of the recent best).
 
 Filters: Magic Color divides by an estimated paper background (dilation to erase
-the ink, then median and Gaussian blur, on a downscaled channel) to remove shadows, then stretches contrast;
-Black & White does the same on gray and applies adaptive thresholding.
+the ink, then median and Gaussian blur, on a downscaled channel) to remove shadows,
+then stretches contrast; Black & White does the same on gray and applies
+adaptive (local) thresholding. On an ID card, B&W keeps the strip with the photo
+and signature in grey (the short side with the most photo-like tones).
 
 ## 3. Decisions and alternatives
 
@@ -98,6 +117,9 @@ Black & White does the same on gray and applies adaptive thresholding.
 | Backend | **FastAPI + PostgreSQL + MinIO** | Firebase, Supabase, Django | Typed request/response models and automatic `/docs`; S3-compatible storage keeps images out of the database; everything runs locally in Docker (no cloud account needed for a demo). |
 | Passwords and sessions | **argon2 (pwdlib) + short JWT access tokens + refresh tokens** | Sessions in cookies, bcrypt | Stateless API for mobile clients; argon2 is the current recommendation. No secrets in the app: the server URL is the only setting. |
 | Text recognition | **ML Kit** on phones, **Tesseract.js** on the web | Cloud OCR (Google Vision, Azure) | Offline and private. Word-level confidence filtering (≥ 50 %) plus a "meaningful text" check stop photos without text from producing random letters. Hindi: ML Kit Devanagari model / Tesseract `hin`. |
+| Hidden corners, clutter | **Score candidate quads**; straight edges from outlines | Largest contour; Hough lines; skin-colour masks | The largest shape is often the busy background; scoring by border support picks the page. Skin colour was tried and dropped: wooden tables fall in the same colour range, so a skin mask erased the table edge around every page. |
+| Curved pages | **Traced edge curves + grid warp** (classic OpenCV) | ML dewarping (DocTr, DewarpNet) | No model download; falls back to the plain warp when the edges are straight, so flat pages are untouched. |
+| ID card mode | **Card shape (1.58:1) + OCR keywords + number patterns** | A trained card classifier | Works offline with the OCR already on the device; the rules are visible and testable. Card details stay on the device; cards are uploaded only after the user agrees. |
 | PDF | **`pdf` package on the device**, invisible text layer | Server-side PDF | Works offline; the invisible OCR text (render mode 3) makes the PDF searchable and copyable; Noto Sans Devanagari is embedded for Hindi. |
 | Markup | **Vector items stored per page**, painted live, **burned in at export** | Draw straight into the image | Items stay editable (move, resize, undo) and survive rotate/crop (they are transformed with the page); export produces a normal image/PDF any viewer shows. |
 | Photo orientation | **Normalise once at entry** (apply EXIF, cap 4000 px, re-encode) | Handle EXIF everywhere | Fixed a real bug: corners were computed on rotated pixels in some browsers. One upright image means corner coordinates mean the same thing everywhere. |

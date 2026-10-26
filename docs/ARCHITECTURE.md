@@ -102,6 +102,10 @@ render.yaml          Render "Blueprint": infrastructure-as-code for the API serv
 4. **Live guidance.** Corners are **smoothed** across frames. Steadiness and brightness are checked, and the user sees an outline plus hints ("Move closer", "Hold still"). Once the page is steady, the app **auto-captures**.
 5. **Normalisation.** The full-resolution photo is made upright using its **EXIF** orientation, capped at 4000 px, and detected again.
 
+Details of the current detector (candidate scoring, hidden corners, curved
+pages, passes) are in [`TECH_DECISIONS.md`](TECH_DECISIONS.md) §2 and
+[`IMPROVEMENTS.md`](IMPROVEMENTS.md).
+
 ### 3.2 Correction and rendering
 
 - **Corner review.** The user can drag corners or edges, use a loupe, or choose "Use full photo".
@@ -131,6 +135,18 @@ render.yaml          Render "Blueprint": infrastructure-as-code for the API serv
   - Each page image is placed on a PDF page, with an **invisible text layer** (render mode 3) on top. The PDF is therefore **searchable and copyable**.
   - Noto Sans Devanagari is embedded for Hindi.
 - **Long tasks** (export, import, OCR, ZIP backup) report progress and can be cancelled through a `CancelToken`.
+
+### 3.3a ID card mode
+
+After OCR, a card-shaped page (85.6 × 54 mm, 1.58 : 1) whose text has an Aadhaar
+number (4-4-4) or PAN (`[A-Z]{5}[0-9]{4}[A-Z]`) plus a keyword or a date is
+labelled "Aadhaar Card – India" / "PAN Card – India" (or "ID card", with a picker),
+renamed "Aadhaar Card – <date>", and its name, date of birth and number are
+filled in for editing (`lib/data/id_card.dart`). Card type and details stay on
+the device. Card-shaped documents are skipped by sync until the user taps
+"Back up this card". Export can hide the first 8 Aadhaar digits (white box +
+"XXXX XXXX" on the image, X in the PDF text layer). Card pages render at JPEG 95,
+and B&W keeps the photo/signature strip grey.
 
 ### 3.4 Local storage
 

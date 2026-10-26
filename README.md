@@ -34,6 +34,11 @@ only adds backup and sync.
   Settings also shows how much space your documents use
 - Web app is **installable** ("Add to Home Screen") and works **offline** after the first visit
 - **Accounts, backup and sync** across devices through the hosted backend
+- **Hard scans**: page held in hand (hidden corners), white on white, cluttered desk,
+  half shadow, curved book pages (flattened), sharp-frame auto-capture
+- **ID card mode**: Aadhaar / PAN recognised (no ML model), editable details, never
+  uploaded without asking, Aadhaar number masking on export, signature and photo
+  kept clear in B&W
 
 ## Architecture in one minute
 
@@ -188,7 +193,7 @@ cd tools/audit && node flow.mjs                  # full flow in Chrome: no conso
 cd tools/audit && node perf.mjs --label after    # seeded 14-page document: load, delete, scroll, memory
 ```
 
-Latest run: **344 passed, 0 failed** (see `docs/TESTING.md`, which also lists the
+Latest run: **380 passed, 0 failed, 1 skipped** (see `docs/TESTING.md`, which also lists the
 checks that need a real phone). Lint/format: `dart analyze`, `dart format`,
 `ruff check .`, `ruff format --check .`.
 
@@ -217,6 +222,7 @@ cd DocScanner && ./start.sh
 ## Documentation
 
 - `docs/ARCHITECTURE.md`: **how it works end to end**: components, scan pipeline, storage, API, auth, sync protocol, deployment, glossary
+- `docs/IMPROVEMENTS.md`: phone PDF import fix, smoothness, detection, OCR and ID card mode, with before/after tables
 - `docs/TECH_DECISIONS.md`: architecture diagram, scan flow, choices vs alternatives, limitations, viva Q&A
 - `docs/TESTING.md`: test results, accessibility audit, manual and phone-only checks
 - `docs/PERFORMANCE.md`: what was slow, why, what changed, before/after measurements

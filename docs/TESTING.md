@@ -1,19 +1,20 @@
 # Testing report
 
-Last full run: **24 Oct 2026**, `tools/run_tests.sh` (the website's *Test results*
+Last full run: **27 Oct 2026**, `tools/run_tests.sh` (the website's *Test results*
 page shows the same run, read from the runners' own reports:
 `website/data/test-results.json`).
 
 | Suite | Command | Passed | Failed | Skipped |
 |---|---|---:|---:|---:|
-| Flutter / Dart app (incl. 10 app ↔ backend sync tests) | `cd app && tool/host_test.sh` | 218 | 0 | 0 |
-| JavaScript: opencv.js detector, filters, Tesseract.js OCR | `cd app/test_js && npm test` | 24 | 0 | 0 |
-| Python `scanner_core` (reference detector) | `cd scanner_core && .venv/bin/python -m pytest` | 80 | 0 | 0 |
-| Backend API (real Postgres + MinIO in Docker) | `cd backend && .venv/bin/python -m pytest` | 22 | 0 | 0 |
-| **Total** | `tools/run_tests.sh` | **344** | **0** | **0** |
+| Flutter / Dart app | `cd app && tool/host_test.sh` | 239 | 0 | 1 |
+| JavaScript: opencv.js detector, filters, Tesseract.js OCR | `cd app/test_js && npm test` | 35 | 0 | 0 |
+| Python `scanner_core` (reference detector) | `cd scanner_core && .venv/bin/python -m pytest` | 83 | 0 | 0 |
+| Backend API (real Postgres + MinIO in Docker) | `cd backend && .venv/bin/python -m pytest` | 23 | 0 | 0 |
+| **Total** | `tools/run_tests.sh` | **380** | **0** | **1** |
 
-The 10 sync tests run only when the backend answers on `http://localhost:8000`
-(`DOCSCANNER_E2E_API`); without it they are reported as skipped, never as passed.
+The app ↔ backend sync tests run only when the backend API answers on
+`http://localhost:8000` (`DOCSCANNER_E2E_API`); in this run the API container was
+not started, so they are counted as 1 skipped, never as passed.
 
 Static checks: `dart analyze` (0 issues), `dart format` at 120 columns (clean),
 `ruff check .` and `ruff format --check .` for all Python (clean).
@@ -21,6 +22,22 @@ Static checks: `dart analyze` (0 issues), `dart format` at 120 columns (clean),
 ## 1. Automated
 
 What the suites cover, by area:
+
+- **Hard detection cases** (`shared/test_fixtures/hard`, 8 cases × 12 seeded synthetic
+  photos with fake card data: hand-held, plain white, cluttered, half shadow,
+  handwritten, curved, Aadhaar, PAN): success rate per case written to
+  `docs/testing/detection-*.json`; Dart and web must match the Python reference
+  within 6 px wherever it is right; curved pages must come out flat (title rule
+  bend < 1 %) and flat pages must keep the plain warp. See `docs/IMPROVEMENTS.md`.
+- **OCR of ID cards**: `app/test_js/eval_ocr.js` (name, DOB, number read exactly);
+  enlarged input, contrast retry and merge; the Original filter is read from its
+  Magic Color version.
+- **ID card mode**: type from real OCR output (30/30), fields, Aadhaar masking,
+  card pages re-rendered, sync holds a card back until approved, B&W keeps the
+  photo/signature strip grey.
+- **PDF import**: page render size capped (a photo-sized page no longer needs a
+  94 MP canvas); skipped files say why.
+- **Crop screen**: one report per drag, separate repaint layers, no swipe-back.
 
 - **Detection and warp**: 8 shared fixture photos (tilted, low contrast, shadow,
   clutter, strong perspective, narrow receipt, fills the frame, no document) with
