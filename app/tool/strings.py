@@ -339,6 +339,10 @@ S = {
     "hintHoldStill": ("Hold still", "स्थिर रखें"),
     "hintFound": ("Document found", "दस्तावेज़ मिल गया"),
     "hintNextPage": ("Page captured. Show the next page.", "पेज की फ़ोटो ली गई। अगला पेज दिखाएँ।"),
+    "hintStillCapture": (
+        "Hold still to capture. You can fix the corners next.",
+        "फ़ोटो लेने के लिए स्थिर रखें। कोने आप अगले कदम में ठीक कर सकते हैं।",
+    ),
     "hintTapShutter": ("Document found: tap Capture", "दस्तावेज़ मिल गया: फ़ोटो लें दबाएँ"),
     "capture": ("Capture", "फ़ोटो लें"),
     "capturedPage": ("Captured, page {page}", "फ़ोटो ली गई, पेज {page}", {"page": "int"}),

@@ -1,0 +1,20 @@
+{
+ "label": "live",
+ "engine": "Chrome (headless), 390x844 phone viewport",
+ "photo": "tilted_paper",
+ "shakePx": 2,
+ "runs": [
+  {
+   "run": 0,
+   "capturedAfterMs": 1642,
+   "lastHint": "",
+   "errors": []
+  },
+  {
+   "run": 1,
+   "capturedAfterMs": 1725,
+   "lastHint": "",
+   "errors": []
+  }
+ ]
+}

@@ -170,3 +170,30 @@ class SharpnessGate {
 
   void reset() => _recent.clear();
 }
+
+/// The frame's brightness on a coarse 32x32 grid, to tell whether the camera
+/// is held still (see [gridMotion]).
+Uint8List lumaGrid(FrameData f) {
+  const n = 32;
+  final bpp = f.format == PixelFormat.luma ? 1 : 4;
+  final out = Uint8List(n * n);
+  for (var gy = 0; gy < n; gy++) {
+    final y = (gy + 0.5) * f.height ~/ n;
+    for (var gx = 0; gx < n; gx++) {
+      final x = (gx + 0.5) * f.width ~/ n;
+      final i = y * f.rowStride + x * bpp;
+      out[gy * n + gx] = bpp == 1 ? f.bytes[i] : (f.bytes[i] + 2 * f.bytes[i + 1] + f.bytes[i + 2]) >> 2;
+    }
+  }
+  return out;
+}
+
+/// Mean brightness change (0-255) between two [lumaGrid]s: small when the
+/// camera is held still.
+double gridMotion(Uint8List a, Uint8List b) {
+  var sum = 0;
+  for (var i = 0; i < a.length; i++) {
+    sum += (a[i] - b[i]).abs();
+  }
+  return sum / a.length;
+}

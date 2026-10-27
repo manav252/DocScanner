@@ -445,13 +445,17 @@ enum ScanHint {
   found,
   nextPage,
   tapShutter,
+  stillCapture,
   none;
 
   static ScanHint of(CaptureState s) {
     if (s.status == CaptureStatus.capturing) return capturing;
     if (s.status != CaptureStatus.running) return none;
     if (s.lowLight) return s.supportsTorch ? tooDarkFlash : tooDark;
-    if (!s.documentFound) return s.tooSmall ? moveCloser : pointCamera;
+    if (!s.documentFound) {
+      if (s.autoCapture && s.stillProgress > 0.25) return stillCapture;
+      return s.tooSmall ? moveCloser : pointCamera;
+    }
     if (s.autoCapture && s.awaitingNextPage) return nextPage;
     if (s.autoCapture) return s.steadyProgress > 0.2 ? holdStill : found;
     return tapShutter;
@@ -467,6 +471,7 @@ enum ScanHint {
     found => l.hintFound,
     nextPage => l.hintNextPage,
     tapShutter => l.hintTapShutter,
+    stillCapture => l.hintStillCapture,
     none => '',
   };
 }

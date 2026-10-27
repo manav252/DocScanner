@@ -17,12 +17,12 @@ void main() {
   late FakeEngine engine;
   late ProviderContainer container;
 
-  ProviderContainer makeContainer({Duration cooldown = Duration.zero}) {
+  ProviderContainer makeContainer({Duration cooldown = Duration.zero, Duration stillCapture = const Duration(seconds: 4)}) {
     final c = ProviderContainer(
       overrides: [
         scanEngineProvider.overrideWithValue(engine),
         cameraFactoryProvider.overrideWithValue(() => camera),
-        captureTuningProvider.overrideWithValue(CaptureTuning(autoCaptureCooldown: cooldown, steadyFrames: 5)),
+        captureTuningProvider.overrideWithValue(CaptureTuning(autoCaptureCooldown: cooldown, steadyFrames: 5, stillCapture: stillCapture)),
       ],
     );
     addTearDown(c.dispose);
@@ -102,6 +102,35 @@ void main() {
     expect(cap.detected, isTrue);
     // Preview page spans x 12..52 of 64 -> ~0.19..0.81 of the still width.
     expect(cap.corners.first.x / cap.width, closeTo(12 / 64, 0.02));
+  });
+
+  test('no page found but the camera held still: captured anyway, once', () async {
+    engine.frameDetector = (_) => noPage;
+    container = makeContainer(stillCapture: const Duration(milliseconds: 300));
+    await waitFor(() => read().status == CaptureStatus.reviewing);
+    expect(read().pendingCapture!.detected, isFalse, reason: 'the corners are set by hand');
+    await ctrl().resume();
+    final before = engine.frames;
+    await waitFor(() => engine.frames > before + 30);
+    expect(camera.pictures, 1, reason: 'the same stillness is not used twice');
+  });
+
+  test('no page found and the camera moving: no capture', () async {
+    engine.frameDetector = (_) => noPage;
+    camera = FakeCamera(frameAt: (i) => lumaFrame(level: i.isEven ? 60 : 180));
+    container = makeContainer(stillCapture: const Duration(milliseconds: 300));
+    await waitFor(() => engine.frames > 40);
+    expect(camera.pictures, 0);
+    expect(read().stillProgress, 0);
+  });
+
+  test('camera-still capture respects the auto-capture switch', () async {
+    engine.frameDetector = (_) => noPage;
+    container = makeContainer(stillCapture: const Duration(milliseconds: 300));
+    await waitFor(() => read().status == CaptureStatus.running);
+    ctrl().setAutoCapture(false);
+    await waitFor(() => engine.frames > 40);
+    expect(camera.pictures, 0);
   });
 
   test('nothing found anywhere: full photo bounds, detected=false', () async {

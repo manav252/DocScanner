@@ -1,0 +1,20 @@
+{
+ "label": "still-no_document",
+ "engine": "Chrome (headless), 390x844 phone viewport",
+ "photo": "no_document",
+ "shakePx": 2,
+ "runs": [
+  {
+   "run": 0,
+   "capturedAfterMs": 5181,
+   "lastHint": "",
+   "errors": []
+  },
+  {
+   "run": 1,
+   "capturedAfterMs": 5132,
+   "lastHint": "",
+   "errors": []
+  }
+ ]
+}

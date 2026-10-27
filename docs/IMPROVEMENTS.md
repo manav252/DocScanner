@@ -142,6 +142,16 @@ Checked in WebKit 18.0 (Safari's engine, Playwright, iPhone 13 emulation:
 | Scanner busy on a slow phone | Each camera frame drawn full-size onto a read-back canvas (28 % of the main thread) | Browser shrinks the frame (`createImageBitmap` resize) | Main thread busy at CPU 6×: 72 % → 58 % |
 | Old iPhones (before iOS 16.4) | No OffscreenCanvas: scanning/importing cannot work | Clear notice on Home | — |
 
+## 7. Auto-capture of a hand-held card (27 Oct)
+
+| Problem | Cause found | Fix | Result |
+|---|---|---|---|
+| Auto-capture waited forever on some phones | It waited for a "sharp" frame measured against the sharpest frame seen; one crisp frame set a bar later frames never reached | After 10 steady frames it captures anyway | Fake-camera page (Chrome, 2 px shake): captured in 1.6–1.8 s |
+| A card held in the hand is never auto-captured | The card's bottom edge and corners are under the fingers, so no outline with four corners is found (checked on a real webcam frame of a card) | Like the Notes app: when no outline is found but the camera is held still for 4 s, the photo is taken anyway and the corner screen opens to fix the corners by hand. Hint "Hold still to capture". Once per stillness; respects the Auto capture switch; the Capture button still works | Fake camera with no page in view: captured in 5.1–5.5 s with 2–8 px shake |
+| Notes-level corner finding | Notes uses an on-device ML model (VisionKit) | Not added: needs an ML model (size and approval) | — |
+
+`tools/audit/autocapture.mjs --photo no_document` re-runs the check.
+
 ## Not solved / not verified
 
 - **iPhone crashes**: not reproduced here; memory and main-thread work reduced.

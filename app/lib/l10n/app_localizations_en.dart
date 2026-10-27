@@ -682,6 +682,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hintNextPage => 'Page captured. Show the next page.';
 
   @override
+  String get hintStillCapture => 'Hold still to capture. You can fix the corners next.';
+
+  @override
   String get hintTapShutter => 'Document found: tap Capture';
 
   @override

@@ -55,7 +55,19 @@ class CaptureTuning {
     this.autoCaptureCooldown = const Duration(milliseconds: 1500),
     this.steadyFrames = 12,
     this.newPageDistance = 0.12,
+    this.stillCapture = const Duration(seconds: 4),
+    this.stillMotion = 6.0,
   });
+
+  /// Like the Notes app: when no page outline is found (a card held in the
+  /// hand, its corners under the fingers) but the camera is held still this
+  /// long, the photo is taken anyway; the corners are then fixed by hand.
+  final Duration stillCapture;
+
+  /// Mean brightness change between frames (0-255, averaged over a few
+  /// frames so one jolt of a hand-held phone does not restart the count)
+  /// below which the camera counts as still.
+  final double stillMotion;
 
   /// After a capture, a corner must move this far (fraction of the frame) to
   /// count as a new page and re-arm auto-capture.
@@ -99,6 +111,7 @@ class CaptureState {
     this.pendingCapture,
     this.message,
     this.debug,
+    this.stillProgress = 0,
   });
 
   final CaptureStatus status;
@@ -128,6 +141,9 @@ class CaptureState {
   /// Diagnostics line (web: `?debug=1`): frame rate, page size, steadiness, sharpness.
   final String? debug;
 
+  /// 0..1 while the camera is held still with no page found (captured at 1).
+  final double stillProgress;
+
   bool get documentFound => corners != null;
 
   CaptureState copyWith({
@@ -147,6 +163,7 @@ class CaptureState {
     Object? pendingCapture = _unset,
     Object? message = _unset,
     String? debug,
+    double? stillProgress,
   }) => CaptureState(
     status: status ?? this.status,
     failure: identical(failure, _unset) ? this.failure : failure as CameraFailure?,
@@ -164,6 +181,7 @@ class CaptureState {
     pendingCapture: identical(pendingCapture, _unset) ? this.pendingCapture : pendingCapture as CaptureResult?,
     message: identical(message, _unset) ? this.message : message as CaptureMessage?,
     debug: debug ?? this.debug,
+    stillProgress: stillProgress ?? this.stillProgress,
   );
 }
 
@@ -174,6 +192,13 @@ class CaptureController extends Notifier<CaptureState> {
   final _smoother = CornerSmoother();
   late StabilityTracker _stability;
   final _sharpness = SharpnessGate();
+
+  /// Camera-still capture: the previous frame's brightness grid, since when
+  /// the camera has been still, and whether that stillness was used already.
+  Uint8List? _lastGrid;
+  double _motion = 255;
+  Duration? _stillSince;
+  bool _stillUsed = false;
 
   /// Steady frames in a row that were not sharp; after [maxSharpWait] the page is captured anyway.
   int _unsharpSteady = 0;
@@ -301,11 +326,31 @@ class CaptureController extends Notifier<CaptureState> {
                   ' (${sharpness.round()}) · ${f.width}x${f.height}'
             : null,
       );
+      // Held still with no page found: count towards a capture anyway.
+      final grid = lumaGrid(f);
+      if (_lastGrid != null) _motion = 0.7 * math.min(_motion, 64) + 0.3 * gridMotion(grid, _lastGrid!);
+      final still = _motion < _tuning.stillMotion;
+      _lastGrid = grid;
+      if (!still) {
+        _stillSince = null;
+        _stillUsed = false;
+      } else {
+        _stillSince ??= _clock.elapsed;
+      }
+      final stillFor = _stillSince == null ? Duration.zero : _clock.elapsed - _stillSince!;
+      final stillCapture = !good && !_stillUsed && stillFor >= _tuning.stillCapture;
+      final stillProgress = good || _stillUsed
+          ? 0.0
+          : (stillFor.inMilliseconds / _tuning.stillCapture.inMilliseconds).clamp(0.0, 1.0);
+      if (stillProgress != state.stillProgress) state = state.copyWith(stillProgress: stillProgress);
       _updateArming(upright);
       if (state.awaitingNextPage != (_lastCaptured != null)) {
         state = state.copyWith(awaitingNextPage: _lastCaptured != null);
       }
       if (steady && sharp && state.autoCapture && _lastCaptured == null && _clock.elapsed >= _autoCaptureAllowedAt) {
+        await capture();
+      } else if (stillCapture && state.autoCapture && _clock.elapsed >= _autoCaptureAllowedAt) {
+        _stillUsed = true; // once per stillness: move the camera to scan again
         await capture();
       }
     }

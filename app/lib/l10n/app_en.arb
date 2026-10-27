@@ -381,6 +381,7 @@
   "hintHoldStill": "Hold still",
   "hintFound": "Document found",
   "hintNextPage": "Page captured. Show the next page.",
+  "hintStillCapture": "Hold still to capture. You can fix the corners next.",
   "hintTapShutter": "Document found: tap Capture",
   "capture": "Capture",
   "capturedPage": "Captured, page {page}",

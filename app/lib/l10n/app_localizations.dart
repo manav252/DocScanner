@@ -1310,6 +1310,12 @@ abstract class AppLocalizations {
   /// **'Page captured. Show the next page.'**
   String get hintNextPage;
 
+  /// No description provided for @hintStillCapture.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold still to capture. You can fix the corners next.'**
+  String get hintStillCapture;
+
   /// No description provided for @hintTapShutter.
   ///
   /// In en, this message translates to:
