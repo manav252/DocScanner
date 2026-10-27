@@ -72,7 +72,8 @@ class WebScanEngine implements ScanEngine {
       ..setProperty('type'.toJS, type.toJS);
     fields.forEach((k, v) => msg.setProperty(k.toJS, v));
     final c = _pending[id] = Completer<JSObject>();
-    if (type != 'detectFrame') {
+    if (type != 'detect') {
+      // (Live preview frames, 'detect', are too frequent to record.)
       // Image work that could exhaust an iPhone's memory: recorded (crash notes).
       final bytes = fields['bytes'];
       final kb = bytes != null && bytes.isA<JSArrayBuffer>()

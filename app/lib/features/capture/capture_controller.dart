@@ -4,6 +4,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -97,6 +98,7 @@ class CaptureState {
     this.fps = 0,
     this.pendingCapture,
     this.message,
+    this.debug,
   });
 
   final CaptureStatus status;
@@ -123,6 +125,9 @@ class CaptureState {
   /// One-off message for a snackbar (e.g. a failed capture).
   final CaptureMessage? message;
 
+  /// Diagnostics line (web: `?debug=1`): frame rate, page size, steadiness, sharpness.
+  final String? debug;
+
   bool get documentFound => corners != null;
 
   CaptureState copyWith({
@@ -141,6 +146,7 @@ class CaptureState {
     double? fps,
     Object? pendingCapture = _unset,
     Object? message = _unset,
+    String? debug,
   }) => CaptureState(
     status: status ?? this.status,
     failure: identical(failure, _unset) ? this.failure : failure as CameraFailure?,
@@ -157,6 +163,7 @@ class CaptureState {
     fps: fps ?? this.fps,
     pendingCapture: identical(pendingCapture, _unset) ? this.pendingCapture : pendingCapture as CaptureResult?,
     message: identical(message, _unset) ? this.message : message as CaptureMessage?,
+    debug: debug ?? this.debug,
   );
 }
 
@@ -167,6 +174,13 @@ class CaptureController extends Notifier<CaptureState> {
   final _smoother = CornerSmoother();
   late StabilityTracker _stability;
   final _sharpness = SharpnessGate();
+
+  /// Steady frames in a row that were not sharp; after [maxSharpWait] the page is captured anyway.
+  int _unsharpSteady = 0;
+  static const maxSharpWait = 10;
+
+  /// `?debug=1` on the web: show a diagnostics line on the scanner.
+  final bool _debug = kIsWeb && Uri.base.queryParameters['debug'] == '1';
   final _brightness = <double>[];
   final _frameTimes = <int>[];
   final _clock = Stopwatch()..start();
@@ -256,8 +270,13 @@ class CaptureController extends Notifier<CaptureState> {
       final upright = good ? frame.toUpright(detection.normalized(f.width, f.height)) : null;
       final smoothed = _smoother.update(upright);
       final steady = _stability.update(upright);
-      // Shake blurs the photo even while the outline looks steady: wait for a sharp frame.
-      final sharp = _sharpness.update(estimateSharpness(f));
+      // Shake blurs the photo even while the outline looks steady: wait for a
+      // sharp frame, but not forever (a camera whose frames never count as
+      // sharp, e.g. heavy noise reduction, must still capture).
+      final sharpness = estimateSharpness(f);
+      final sharpFrame = _sharpness.update(sharpness);
+      _unsharpSteady = steady && !sharpFrame ? _unsharpSteady + 1 : 0;
+      final sharp = sharpFrame || _unsharpSteady >= maxSharpWait;
 
       _brightness.add(estimateBrightness(f));
       if (_brightness.length > 15) _brightness.removeAt(0);
@@ -276,6 +295,11 @@ class CaptureController extends Notifier<CaptureState> {
         lowLight: _brightness.length >= 5 && meanBrightness < _tuning.lowLightThreshold,
         tooSmall: detection.found && detection.score < _tuning.minDocumentArea,
         fps: fps,
+        debug: _debug
+            ? 'fps ${fps.toStringAsFixed(0)} · page ${detection.found ? detection.score.toStringAsFixed(2) : '-'}'
+                  ' · steady ${(_stability.progress * 100).round()}% · sharp ${sharpFrame ? 'yes' : 'no'}'
+                  ' (${sharpness.round()}) · ${f.width}x${f.height}'
+            : null,
       );
       _updateArming(upright);
       if (state.awaitingNextPage != (_lastCaptured != null)) {

@@ -12,9 +12,13 @@ FrameData lumaFrame({int w = 64, int h = 48, int level = 128}) =>
     FrameData(bytes: Uint8List(w * h)..fillRange(0, w * h, level), width: w, height: h, format: PixelFormat.luma);
 
 class FakeCamera implements ScannerCamera {
-  FakeCamera({this.failure, this.brightness = 128});
+  FakeCamera({this.failure, this.brightness = 128, this.frameAt});
   CameraFailure? failure;
   int brightness;
+
+  /// Frame number -> frame (default: uniform [brightness]).
+  FrameData Function(int i)? frameAt;
+  int _frames = 0;
   bool paused = false, disposed = false, torch = false;
   int pictures = 0;
   final photo = Uint8List.fromList([1, 2, 3]);
@@ -38,7 +42,7 @@ class FakeCamera implements ScannerCamera {
     do {
       await Future<void>.delayed(const Duration(milliseconds: 2));
     } while (paused && !disposed);
-    return AnalysisFrame(lumaFrame(level: brightness));
+    return AnalysisFrame(frameAt?.call(_frames++) ?? lumaFrame(level: brightness));
   }
 
   @override

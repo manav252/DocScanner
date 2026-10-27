@@ -1,0 +1,26 @@
+{
+ "label": "now",
+ "engine": "Chrome (headless), 390x844 phone viewport",
+ "photo": "tilted_paper",
+ "shakePx": 2,
+ "runs": [
+  {
+   "run": 0,
+   "capturedAfterMs": 1865,
+   "lastHint": "",
+   "errors": []
+  },
+  {
+   "run": 1,
+   "capturedAfterMs": 1750,
+   "lastHint": "",
+   "errors": []
+  },
+  {
+   "run": 2,
+   "capturedAfterMs": 1718,
+   "lastHint": "",
+   "errors": []
+  }
+ ]
+}

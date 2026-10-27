@@ -501,6 +501,25 @@ class _Viewfinder extends StatelessWidget {
                   ),
                 ),
               ),
+            if (state.debug != null)
+              Positioned(
+                left: 8,
+                right: 8,
+                bottom: 8,
+                child: IgnorePointer(
+                  child: ColoredBox(
+                    color: Colors.black54,
+                    child: Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: Text(
+                        state.debug!,
+                        key: const ValueKey('scanner-debug'),
+                        style: const TextStyle(color: Colors.white, fontSize: 12),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             // Shutter flash (skipped when the system asks for reduced motion).
             if (!MediaQuery.disableAnimationsOf(context))
               IgnorePointer(

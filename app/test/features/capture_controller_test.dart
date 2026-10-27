@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:docscanner/core/providers.dart';
 import 'package:docscanner/features/capture/capture_controller.dart';
 import 'package:docscanner/imaging/geometry.dart';
+import 'package:docscanner/imaging/scan_engine.dart';
 import 'package:docscanner/services/camera/scanner_camera.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -54,6 +55,18 @@ void main() {
     expect(camera.paused, isTrue);
     await Future<void>.delayed(const Duration(milliseconds: 50));
     expect(camera.pictures, 1, reason: 'no second capture while reviewing');
+  });
+
+  test('frames that never count as sharp still auto-capture after a short wait', () async {
+    // One crisp frame first sets the bar; every later frame is flat (no detail), so
+    // the sharpness check alone would wait forever.
+    final crisp = Uint8List.fromList([for (var i = 0; i < 64 * 48; i++) (i ~/ 3).isEven ? 230 : 20]);
+    camera = FakeCamera(
+      frameAt: (i) => i == 0 ? FrameData(bytes: crisp, width: 64, height: 48, format: PixelFormat.luma) : lumaFrame(),
+    );
+    container = makeContainer();
+    await waitFor(() => read().status == CaptureStatus.reviewing);
+    expect(camera.pictures, 1);
   });
 
   test('a moving page is not auto-captured', () async {
