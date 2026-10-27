@@ -1,6 +1,7 @@
 // Recognises text for pages whose OCR is missing or outdated, one page at a
 // time, and stores it through the DocumentController.
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -85,16 +86,47 @@ class OcrRunner {
         final source = flat == null
             ? render
             : await engine.processEncoded(flat, p.edits.copyWith(filter: PageFilter.magicColor), quality: 92);
-        Future<OcrResult> read({bool contrast = false}) async => cleanOcr(
-          await recognizer.recognize(await engine.prepareOcrEncoded(source, contrast: contrast), language: language),
+        Future<OcrResult> read(Uint8List image, {bool contrast = false}) async => cleanOcr(
+          await recognizer.recognize(await engine.prepareOcrEncoded(image, contrast: contrast), language: language),
         );
         final note = noteStep('text recognition: page ${p.renderWidth}x${p.renderHeight}');
-        var result = await read();
+        var result = await read(source);
         // Little text (faint print, an unusual background): try grayscale +
         // CLAHE too, and keep what either pass found.
-        if (littleText(result)) result = mergeOcr(result, await read(contrast: true));
+        if (littleText(result)) result = mergeOcr(result, await read(source, contrast: true));
+        // Hardly a word read: the page may be sideways (a card scanned
+        // across) or upside down. Read it turned; if that reads clearly
+        // better, turn the page itself so it shows upright.
+        var turns = 0;
+        if (readingScore(result) < poorReadingScore) {
+          var best = readingScore(result);
+          for (final t in [1, 3, 2]) {
+            if (t == 2 && turns != 0) break;
+            cancel?.check();
+            final turned = await engine.processEncoded(
+              source,
+              PageEdits(filter: PageFilter.original, quarterTurns: t),
+              quality: 92,
+            );
+            final r = await read(turned);
+            final score = readingScore(r);
+            if (score >= clearReadingScore && score > 2 * best) {
+              (best, result, turns) = (score, r, t);
+            }
+          }
+        }
         noteDone(note);
-        await _ref.read(documentProvider(docId).notifier).setOcr(p.id, p.revision, result, language: language);
+        final notifier = _ref.read(documentProvider(docId).notifier);
+        var revision = p.revision;
+        if (turns != 0) {
+          await notifier.rotate(p.id, turns: turns);
+          final turnedPage = (await _ref.read(documentProvider(docId).future)).pages
+              .where((q) => q.id == p.id)
+              .firstOrNull;
+          if (turnedPage == null) continue;
+          revision = turnedPage.revision;
+        }
+        await notifier.setOcr(p.id, revision, result, language: language);
         done++;
       }
       onProgress?.call(OcrProgress(done, todo.length));

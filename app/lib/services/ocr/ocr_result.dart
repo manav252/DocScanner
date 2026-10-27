@@ -66,6 +66,25 @@ OcrResult cleanOcr(OcrResult r) {
   return OcrResult(lines.map((l) => l.text).join('\n'), lines);
 }
 
+final _realWord = RegExp(r'[\p{L}\p{M}]{3,}|\p{N}{4,}', unicode: true);
+
+/// How well a page was read: letters in words of 3+ letters and digits in runs
+/// of 4+ (card numbers), weighted by each line's confidence. Text read
+/// sideways gives a few short garbled bits.
+double readingScore(OcrResult r) => r.lines.fold(
+  0.0,
+  (s, l) => s + _realWord.allMatches(l.text).fold<int>(0, (n, m) => n + m.end - m.start) * l.confidence,
+);
+
+/// Below this [readingScore] (a card, or a page with little text) the page is
+/// also read turned, in case it is sideways or upside down
+/// (test_js/eval_turns.js).
+const poorReadingScore = 100.0;
+
+/// A turned reading is kept when it scores at least this and more than twice
+/// the best so far.
+const clearReadingScore = 15.0;
+
 /// Fewer letters/digits than this: "little text", worth a second try.
 const littleTextChars = 40;
 

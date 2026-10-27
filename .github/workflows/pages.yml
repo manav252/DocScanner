@@ -35,7 +35,7 @@ jobs:
         working-directory: app
         run: |
           flutter pub get
-          flutter build web --release --no-wasm-dry-run \
+          flutter build web --release --no-wasm-dry-run --no-web-resources-cdn \
             --base-href "/${{ github.event.repository.name }}/app/" \
             --dart-define=ASSET_VERSION=${{ github.sha }} \
             --dart-define=API_URL=${{ vars.API_URL || 'https://docscanner-api.onrender.com' }}

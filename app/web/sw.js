@@ -1,8 +1,12 @@
 // DocScanner service worker: makes the web app installable and usable offline.
 //   install  : pre-cache every file listed in precache.json (written after each build
-//              by tools/pwa_precache.py), so scanning, OCR and PDF import work offline
-//   fetch    : the page itself network-first (updates arrive when online), everything
-//              else cache-first, filling the cache with anything not pre-cached
+//              by tools/pwa_precache.py), so scanning, OCR and PDF import work offline.
+//              Entries carry a content hash: unchanged files are copied from the
+//              previous version's cache, so an update downloads only what changed.
+//   fetch    : the page itself network-first, but from the cache if the network has
+//              not answered in 4 s (a slow or stalled mobile connection must not
+//              leave a blank page); everything else cache-first, filling the cache
+//              with anything not pre-cached
 //   activate : delete caches of older builds
 const VERSION = new URL(self.location).searchParams.get('v') || 'dev';
 const CACHE = `docscanner-${VERSION}`;
@@ -13,9 +17,16 @@ self.addEventListener('install', (event) => {
       const cache = await caches.open(CACHE);
       try {
         const list = await (await fetch('precache.json', { cache: 'no-store' })).json();
-        // In small batches: a failed file must not abort the whole install.
-        for (let i = 0; i < list.length; i += 8) {
-          await Promise.all(list.slice(i, i + 8).map((u) => cache.add(new Request(u, { cache: 'reload' })).catch(() => {})));
+        // Unchanged files (same hash) from an older version's cache; the rest
+        // downloaded 3 at a time (gentle on a phone), a failed file not
+        // aborting the install.
+        const get = async (u) => {
+          const old = await caches.match(u);
+          if (old) return cache.put(u, old);
+          return cache.add(new Request(u, { cache: 'reload' }));
+        };
+        for (let i = 0; i < list.length; i += 3) {
+          await Promise.all(list.slice(i, i + 3).map((u) => get(u).catch(() => {})));
         }
       } catch (_) {
         // No list (development build): files are cached as they are used.
@@ -42,12 +53,18 @@ self.addEventListener('fetch', (event) => {
   if (req.mode === 'navigate') {
     event.respondWith(
       (async () => {
-        try {
-          const fresh = await fetch(req);
-          (await caches.open(CACHE)).put('./', fresh.clone());
+        const cached = async () => (await caches.match('./')) || (await caches.match('index.html'));
+        const network = fetch(req).then(async (fresh) => {
+          if (fresh.ok) (await caches.open(CACHE)).put('./', fresh.clone());
           return fresh;
+        });
+        const slow = new Promise((resolve) => setTimeout(() => resolve('slow'), 4000));
+        try {
+          const first = await Promise.race([network, slow]);
+          if (first !== 'slow') return first;
+          return (await cached()) || (await network);
         } catch (_) {
-          return (await caches.match('./')) || (await caches.match('index.html')) || Response.error();
+          return (await cached()) || Response.error();
         }
       })(),
     );

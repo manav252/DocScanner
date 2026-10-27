@@ -21,11 +21,16 @@ import 'package:pdf/widgets.dart' as pw;
 import '../imaging/fixtures.dart';
 import '../support/fakes.dart';
 
-const invoice = OcrResult('INVOICE 42\nTotal 99.50\nPayment due within thirty days', [
-  OcrLine('INVOICE 42', 0.1, 0.1, 0.5, 0.05),
-  OcrLine('Total 99.50', 0.1, 0.8, 0.3, 0.04),
-  OcrLine('Payment due within thirty days', 0.1, 0.9, 0.6, 0.04),
-]);
+/// A page that reads well (readingScore above poorReadingScore).
+const invoice = OcrResult(
+  'INVOICE 42\nTotal 99.50\nPayment due within thirty days\nThank you for your business, Sharma Traders Private Limited, account 12345678',
+  [
+    OcrLine('INVOICE 42', 0.1, 0.1, 0.5, 0.05),
+    OcrLine('Total 99.50', 0.1, 0.8, 0.3, 0.04),
+    OcrLine('Payment due within thirty days', 0.1, 0.9, 0.6, 0.04),
+    OcrLine('Thank you for your business, Sharma Traders Private Limited, account 12345678', 0.1, 0.95, 0.8, 0.03),
+  ],
+);
 
 class FakeRecognizer implements TextRecognizer {
   int calls = 0;
@@ -97,6 +102,25 @@ void main() {
     await c.read(documentProvider(id).notifier).rotate(first.id);
     expect((await pages()).first.needsOcr, isTrue);
     expect(await c.read(ocrRunnerProvider).run(id), 1);
+  });
+
+  test('a sideways page (hardly a word read) is read turned and turned upright', () async {
+    const garble = OcrResult('3 of\noff', [OcrLine('3 of', 0.1, 0.1, 0.2, 0.05), OcrLine('off', 0.1, 0.2, 0.2, 0.05)]);
+    // Upright reading, its contrast retry, then a quarter turn (clear text), then three quarters.
+    recognizer.queue.addAll([garble, garble, invoice, garble]);
+    final first = (await pages()).first;
+    await c.read(ocrRunnerProvider).run(id, pageIds: {first.id});
+    final turned = (await pages()).first;
+    expect(turned.edits.quarterTurns, 1);
+    expect(turned.ocrText, invoice.text);
+    expect(turned.needsOcr, isFalse, reason: 'the text belongs to the turned page');
+    expect(recognizer.calls, 4);
+  });
+
+  test('a page that reads well is not tried turned', () async {
+    await c.read(ocrRunnerProvider).run(id);
+    expect(recognizer.calls, 2);
+    expect((await pages()).every((p) => p.edits.quarterTurns == 0), isTrue);
   });
 
   test('OCR for an outdated revision is ignored', () async {
@@ -175,9 +199,20 @@ void main() {
         OcrLine('Asha Verma', 0.3, 0.25, 0.3, 0.06),
         OcrLine('DOB 01/02/1990', 0.3, 0.4, 0.3, 0.05), // same place: not added twice
       ]),
+      // Few words, so it is also read turned (each way, then upside down): nothing better.
+      const OcrResult('', []),
+      const OcrResult('', []),
+      const OcrResult('', []),
     ]);
     expect(await c.read(ocrRunnerProvider).run(id, pageIds: {(await pages()).first.id}), 1);
-    expect(engine.ocrPrepared, [false, true], reason: 'first pass, then grayscale + CLAHE');
+    expect(engine.ocrPrepared, [
+      false,
+      true,
+      false,
+      false,
+      false,
+    ], reason: 'first pass, then grayscale + CLAHE, then turned');
+    expect((await pages()).first.edits.quarterTurns, 0);
     expect((await pages()).first.ocrText, 'Asha Verma\nDOB 01/02/1990');
   });
 

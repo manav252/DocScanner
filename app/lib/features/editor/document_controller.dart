@@ -101,13 +101,13 @@ class DocumentController extends AsyncNotifier<ScanDocument> {
   Future<void> setFilter(String pageId, PageFilter f) => _setEdits(pageId, (e) => e.copyWith(filter: f));
 
   /// Rotate 90 degrees clockwise; markup turns with the page.
-  Future<void> rotate(String pageId) => _mutate((d) async {
-    final p = _page(d, pageId);
-    final page = await ref
-        .read(pageRendererProvider)
-        .render(
-          p.copyWith(edits: p.edits.rotatedClockwise(), markup: [for (final m in p.markup) m.rotatedClockwise()]),
-        );
+  /// Turn the page [turns] quarter turns clockwise.
+  Future<void> rotate(String pageId, {int turns = 1}) => _mutate((d) async {
+    var p = _page(d, pageId);
+    for (var i = 0; i < turns % 4; i++) {
+      p = p.copyWith(edits: p.edits.rotatedClockwise(), markup: [for (final m in p.markup) m.rotatedClockwise()]);
+    }
+    final page = await ref.read(pageRendererProvider).render(p);
     return d.edit(pages: _replace(d, page));
   });
 
@@ -195,16 +195,21 @@ class DocumentController extends AsyncNotifier<ScanDocument> {
   /// ID card mode: once the pages' text is known, label a card-shaped
   /// document as an Aadhaar or PAN card (or an ID card of unknown type), fill in
   /// its details and give it a matching name. Leaves documents the user has
-  /// labelled (or said are not cards) alone.
+  /// labelled (or said are not cards) alone. A card first seen as "ID card"
+  /// (type unknown, e.g. its text was read sideways) becomes an Aadhaar or PAN
+  /// card once its text is read properly.
   Future<void> recognizeIdCard() => _mutate((d) async {
-    if (d.idCard != null || d.pages.isEmpty || d.pages.length > 2) return d;
+    final unknownCard = d.idCard == IdCardType.other;
+    if ((d.idCard != null && !unknownCard) || d.pages.isEmpty || d.pages.length > 2) return d;
     final shaped = d.pages.every((p) {
       final (w, h) = flatSize(p.corners);
       return hasCardShape(w, h);
     });
     final info = classifyIdCard(text: d.pages.map((p) => p.ocrText ?? '').join('\n'), cardShaped: shaped);
-    if (info == null) return d;
-    final named = d.title == ScanDocument.defaultTitle(d.createdAt);
+    if (info == null || (unknownCard && info.type == IdCardType.other)) return d;
+    final named =
+        d.title == ScanDocument.defaultTitle(d.createdAt) ||
+        (unknownCard && d.title == idCardTitle(idCardTypeName(IdCardType.other), d.createdAt));
     return d.edit(
       idCard: info.type,
       idFields: info.fields,

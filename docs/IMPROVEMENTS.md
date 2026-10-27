@@ -163,6 +163,21 @@ Checked in WebKit 18.0 (Safari's engine, Playwright, iPhone 13 emulation:
 `tools/audit/scanner_profile.mjs` measures CPU (`cpuPercent`) and main-thread busy %.
 `tools/audit/iphone_flow.mjs` (WebKit, iPhone 13 emulation): all steps pass, no page errors.
 
+## 9. Sideways cards, page buttons, loading (27 Oct)
+
+| Problem | Cause found | Fix | Result |
+|---|---|---|---|
+| A card scanned sideways: number and name not read ("3 of", "off") | The text was read as it lay, 90° turned | When a page reads poorly (a card, little text), it is also read turned a quarter turn each way (then upside down); a clearly better reading wins and the page is turned upright | `test_js/eval_turns.js`, Tesseract, fake cards scanned at 0/90/180/270°: Aadhaar **16/16** upright, number read 16/16; PAN 16/16 and 16/16; no upright page turned by mistake |
+| Card stays "ID card" instead of "Aadhaar Card" | A card first labelled "type unknown" (from a bad reading) was never looked at again | Re-checked after each reading; becomes Aadhaar/PAN once "Government of India"/the number pattern is read | Unit test |
+| "Move earlier / later" seemed to do nothing | The page did move, but the view follows it, so the same picture stayed on screen | The view slides to the new position and says "Page moved to position N"; Previous/Next page slide too | `tools/audit/pager.mjs` (WebKit taps): pages change; reorder unit test |
+| Slow, hot phone after each update | The offline copy (~50 MB) was downloaded again in full after every update, 8 files at a time, while the app was in use | Files carry a content hash; unchanged files are copied from the previous offline copy, the rest downloaded 3 at a time; unused renderer files and the old-browser OCR core left out (52 → 45 MB first time) | Update: **1 file** downloaded (was 48) — `tools/audit/swcheck.mjs` |
+| Blank page on a stalled connection | The app's page waited for the network with no time limit | After 4 s without an answer, the saved copy opens | Network stalled 8 s per request: app shown after 4.4 s |
+| Graphics engine from a second site (gstatic.com) | Flutter's default | Served with the app (`--no-web-resources-cdn`): one site to reach, and the offline copy is complete | Live load check: no failed requests, no page errors (Chrome, WebKit) |
+
+**Handwriting** is still not read by the web engine (Tesseract): on the handwritten
+test pages the reading score is 0–7 in every orientation. Reading handwriting needs a
+model such as TrOCR or a cloud service (section 4); not added.
+
 ## Not solved / not verified
 
 - **iPhone crashes**: not reproduced here; memory and main-thread work reduced.

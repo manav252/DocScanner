@@ -1,0 +1,519 @@
+{
+ "engine": "Tesseract.js (web)",
+ "summary": {
+  "aadhaar 0°": {
+   "pages": 4,
+   "upright": 4,
+   "number": 4
+  },
+  "aadhaar 90°": {
+   "pages": 4,
+   "upright": 4,
+   "number": 4
+  },
+  "aadhaar 180°": {
+   "pages": 4,
+   "upright": 4,
+   "number": 4
+  },
+  "aadhaar 270°": {
+   "pages": 4,
+   "upright": 4,
+   "number": 4
+  },
+  "pan 0°": {
+   "pages": 4,
+   "upright": 4,
+   "number": 4
+  },
+  "pan 90°": {
+   "pages": 4,
+   "upright": 4,
+   "number": 4
+  },
+  "pan 180°": {
+   "pages": 4,
+   "upright": 4,
+   "number": 4
+  },
+  "pan 270°": {
+   "pages": 4,
+   "upright": 4,
+   "number": 4
+  },
+  "plain_white 0°": {
+   "pages": 2,
+   "upright": 2,
+   "number": 0
+  },
+  "plain_white 90°": {
+   "pages": 2,
+   "upright": 1,
+   "number": 0
+  },
+  "plain_white 180°": {
+   "pages": 2,
+   "upright": 1,
+   "number": 0
+  },
+  "plain_white 270°": {
+   "pages": 2,
+   "upright": 1,
+   "number": 0
+  },
+  "handwritten 0°": {
+   "pages": 2,
+   "upright": 2,
+   "number": 0
+  },
+  "handwritten 90°": {
+   "pages": 2,
+   "upright": 0,
+   "number": 0
+  },
+  "handwritten 180°": {
+   "pages": 2,
+   "upright": 0,
+   "number": 0
+  },
+  "handwritten 270°": {
+   "pages": 2,
+   "upright": 0,
+   "number": 0
+  }
+ },
+ "rows": [
+  {
+   "file": "aadhaar_00.jpg",
+   "kind": "aadhaar",
+   "scannedTurned": 0,
+   "firstScore": 35,
+   "turnedBy": 0,
+   "upright": true,
+   "numberRead": true
+  },
+  {
+   "file": "aadhaar_00.jpg",
+   "kind": "aadhaar",
+   "scannedTurned": 90,
+   "firstScore": 2,
+   "turnedBy": 270,
+   "upright": true,
+   "numberRead": true
+  },
+  {
+   "file": "aadhaar_00.jpg",
+   "kind": "aadhaar",
+   "scannedTurned": 180,
+   "firstScore": 2,
+   "turnedBy": 180,
+   "upright": true,
+   "numberRead": true
+  },
+  {
+   "file": "aadhaar_00.jpg",
+   "kind": "aadhaar",
+   "scannedTurned": 270,
+   "firstScore": 0,
+   "turnedBy": 90,
+   "upright": true,
+   "numberRead": true
+  },
+  {
+   "file": "aadhaar_01.jpg",
+   "kind": "aadhaar",
+   "scannedTurned": 0,
+   "firstScore": 37,
+   "turnedBy": 0,
+   "upright": true,
+   "numberRead": true
+  },
+  {
+   "file": "aadhaar_01.jpg",
+   "kind": "aadhaar",
+   "scannedTurned": 90,
+   "firstScore": 0,
+   "turnedBy": 270,
+   "upright": true,
+   "numberRead": true
+  },
+  {
+   "file": "aadhaar_01.jpg",
+   "kind": "aadhaar",
+   "scannedTurned": 180,
+   "firstScore": 11,
+   "turnedBy": 180,
+   "upright": true,
+   "numberRead": true
+  },
+  {
+   "file": "aadhaar_01.jpg",
+   "kind": "aadhaar",
+   "scannedTurned": 270,
+   "firstScore": 0,
+   "turnedBy": 90,
+   "upright": true,
+   "numberRead": true
+  },
+  {
+   "file": "aadhaar_02.jpg",
+   "kind": "aadhaar",
+   "scannedTurned": 0,
+   "firstScore": 45,
+   "turnedBy": 0,
+   "upright": true,
+   "numberRead": true
+  },
+  {
+   "file": "aadhaar_02.jpg",
+   "kind": "aadhaar",
+   "scannedTurned": 90,
+   "firstScore": 2,
+   "turnedBy": 270,
+   "upright": true,
+   "numberRead": true
+  },
+  {
+   "file": "aadhaar_02.jpg",
+   "kind": "aadhaar",
+   "scannedTurned": 180,
+   "firstScore": 14,
+   "turnedBy": 180,
+   "upright": true,
+   "numberRead": true
+  },
+  {
+   "file": "aadhaar_02.jpg",
+   "kind": "aadhaar",
+   "scannedTurned": 270,
+   "firstScore": 2,
+   "turnedBy": 90,
+   "upright": true,
+   "numberRead": true
+  },
+  {
+   "file": "aadhaar_03.jpg",
+   "kind": "aadhaar",
+   "scannedTurned": 0,
+   "firstScore": 39,
+   "turnedBy": 0,
+   "upright": true,
+   "numberRead": true
+  },
+  {
+   "file": "aadhaar_03.jpg",
+   "kind": "aadhaar",
+   "scannedTurned": 90,
+   "firstScore": 0,
+   "turnedBy": 270,
+   "upright": true,
+   "numberRead": true
+  },
+  {
+   "file": "aadhaar_03.jpg",
+   "kind": "aadhaar",
+   "scannedTurned": 180,
+   "firstScore": 8,
+   "turnedBy": 180,
+   "upright": true,
+   "numberRead": true
+  },
+  {
+   "file": "aadhaar_03.jpg",
+   "kind": "aadhaar",
+   "scannedTurned": 270,
+   "firstScore": 2,
+   "turnedBy": 90,
+   "upright": true,
+   "numberRead": true
+  },
+  {
+   "file": "pan_00.jpg",
+   "kind": "pan",
+   "scannedTurned": 0,
+   "firstScore": 81,
+   "turnedBy": 0,
+   "upright": true,
+   "numberRead": true
+  },
+  {
+   "file": "pan_00.jpg",
+   "kind": "pan",
+   "scannedTurned": 90,
+   "firstScore": 3,
+   "turnedBy": 270,
+   "upright": true,
+   "numberRead": true
+  },
+  {
+   "file": "pan_00.jpg",
+   "kind": "pan",
+   "scannedTurned": 180,
+   "firstScore": 5,
+   "turnedBy": 180,
+   "upright": true,
+   "numberRead": true
+  },
+  {
+   "file": "pan_00.jpg",
+   "kind": "pan",
+   "scannedTurned": 270,
+   "firstScore": 0,
+   "turnedBy": 90,
+   "upright": true,
+   "numberRead": true
+  },
+  {
+   "file": "pan_01.jpg",
+   "kind": "pan",
+   "scannedTurned": 0,
+   "firstScore": 58,
+   "turnedBy": 0,
+   "upright": true,
+   "numberRead": true
+  },
+  {
+   "file": "pan_01.jpg",
+   "kind": "pan",
+   "scannedTurned": 90,
+   "firstScore": 0,
+   "turnedBy": 270,
+   "upright": true,
+   "numberRead": true
+  },
+  {
+   "file": "pan_01.jpg",
+   "kind": "pan",
+   "scannedTurned": 180,
+   "firstScore": 3,
+   "turnedBy": 180,
+   "upright": true,
+   "numberRead": true
+  },
+  {
+   "file": "pan_01.jpg",
+   "kind": "pan",
+   "scannedTurned": 270,
+   "firstScore": 3,
+   "turnedBy": 90,
+   "upright": true,
+   "numberRead": true
+  },
+  {
+   "file": "pan_02.jpg",
+   "kind": "pan",
+   "scannedTurned": 0,
+   "firstScore": 66,
+   "turnedBy": 0,
+   "upright": true,
+   "numberRead": true
+  },
+  {
+   "file": "pan_02.jpg",
+   "kind": "pan",
+   "scannedTurned": 90,
+   "firstScore": 2,
+   "turnedBy": 270,
+   "upright": true,
+   "numberRead": true
+  },
+  {
+   "file": "pan_02.jpg",
+   "kind": "pan",
+   "scannedTurned": 180,
+   "firstScore": 11,
+   "turnedBy": 180,
+   "upright": true,
+   "numberRead": true
+  },
+  {
+   "file": "pan_02.jpg",
+   "kind": "pan",
+   "scannedTurned": 270,
+   "firstScore": 2,
+   "turnedBy": 90,
+   "upright": true,
+   "numberRead": true
+  },
+  {
+   "file": "pan_03.jpg",
+   "kind": "pan",
+   "scannedTurned": 0,
+   "firstScore": 69,
+   "turnedBy": 0,
+   "upright": true,
+   "numberRead": true
+  },
+  {
+   "file": "pan_03.jpg",
+   "kind": "pan",
+   "scannedTurned": 90,
+   "firstScore": 0,
+   "turnedBy": 270,
+   "upright": true,
+   "numberRead": true
+  },
+  {
+   "file": "pan_03.jpg",
+   "kind": "pan",
+   "scannedTurned": 180,
+   "firstScore": 9,
+   "turnedBy": 180,
+   "upright": true,
+   "numberRead": true
+  },
+  {
+   "file": "pan_03.jpg",
+   "kind": "pan",
+   "scannedTurned": 270,
+   "firstScore": 3,
+   "turnedBy": 90,
+   "upright": true,
+   "numberRead": true
+  },
+  {
+   "file": "plain_white_00.jpg",
+   "kind": "plain_white",
+   "scannedTurned": 0,
+   "firstScore": 0,
+   "turnedBy": 0,
+   "upright": true,
+   "numberRead": null
+  },
+  {
+   "file": "plain_white_00.jpg",
+   "kind": "plain_white",
+   "scannedTurned": 90,
+   "firstScore": 0,
+   "turnedBy": 0,
+   "upright": false,
+   "numberRead": null
+  },
+  {
+   "file": "plain_white_00.jpg",
+   "kind": "plain_white",
+   "scannedTurned": 180,
+   "firstScore": 0,
+   "turnedBy": 0,
+   "upright": false,
+   "numberRead": null
+  },
+  {
+   "file": "plain_white_00.jpg",
+   "kind": "plain_white",
+   "scannedTurned": 270,
+   "firstScore": 0,
+   "turnedBy": 0,
+   "upright": false,
+   "numberRead": null
+  },
+  {
+   "file": "plain_white_01.jpg",
+   "kind": "plain_white",
+   "scannedTurned": 0,
+   "firstScore": 640,
+   "turnedBy": 0,
+   "upright": true,
+   "numberRead": null
+  },
+  {
+   "file": "plain_white_01.jpg",
+   "kind": "plain_white",
+   "scannedTurned": 90,
+   "firstScore": 0,
+   "turnedBy": 270,
+   "upright": true,
+   "numberRead": null
+  },
+  {
+   "file": "plain_white_01.jpg",
+   "kind": "plain_white",
+   "scannedTurned": 180,
+   "firstScore": 76,
+   "turnedBy": 180,
+   "upright": true,
+   "numberRead": null
+  },
+  {
+   "file": "plain_white_01.jpg",
+   "kind": "plain_white",
+   "scannedTurned": 270,
+   "firstScore": 3,
+   "turnedBy": 90,
+   "upright": true,
+   "numberRead": null
+  },
+  {
+   "file": "handwritten_00.jpg",
+   "kind": "handwritten",
+   "scannedTurned": 0,
+   "firstScore": 4,
+   "turnedBy": 0,
+   "upright": true,
+   "numberRead": null
+  },
+  {
+   "file": "handwritten_00.jpg",
+   "kind": "handwritten",
+   "scannedTurned": 90,
+   "firstScore": 0,
+   "turnedBy": 0,
+   "upright": false,
+   "numberRead": null
+  },
+  {
+   "file": "handwritten_00.jpg",
+   "kind": "handwritten",
+   "scannedTurned": 180,
+   "firstScore": 7,
+   "turnedBy": 0,
+   "upright": false,
+   "numberRead": null
+  },
+  {
+   "file": "handwritten_00.jpg",
+   "kind": "handwritten",
+   "scannedTurned": 270,
+   "firstScore": 0,
+   "turnedBy": 0,
+   "upright": false,
+   "numberRead": null
+  },
+  {
+   "file": "handwritten_01.jpg",
+   "kind": "handwritten",
+   "scannedTurned": 0,
+   "firstScore": 0,
+   "turnedBy": 0,
+   "upright": true,
+   "numberRead": null
+  },
+  {
+   "file": "handwritten_01.jpg",
+   "kind": "handwritten",
+   "scannedTurned": 90,
+   "firstScore": 0,
+   "turnedBy": 0,
+   "upright": false,
+   "numberRead": null
+  },
+  {
+   "file": "handwritten_01.jpg",
+   "kind": "handwritten",
+   "scannedTurned": 180,
+   "firstScore": 4,
+   "turnedBy": 0,
+   "upright": false,
+   "numberRead": null
+  },
+  {
+   "file": "handwritten_01.jpg",
+   "kind": "handwritten",
+   "scannedTurned": 270,
+   "firstScore": 0,
+   "turnedBy": 0,
+   "upright": false,
+   "numberRead": null
+  }
+ ]
+}

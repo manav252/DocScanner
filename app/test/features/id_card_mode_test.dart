@@ -26,10 +26,13 @@ import 'package:http/testing.dart';
 import '../support/fakes.dart';
 
 class CardRecognizer implements TextRecognizer {
+  /// When set, returned instead of the card's text (e.g. a card read sideways).
+  OcrResult? instead;
   @override
   bool get isAvailable => true;
   @override
   Future<OcrResult> recognize(Uint8List image, {String language = 'eng'}) async =>
+      instead ??
       const OcrResult('Government of India\nAsha Verma\nDOB: 18/06/1981\nFemale\n3026 9266 9721', [
         OcrLine('Government of India', 0.3, 0.05, 0.4, 0.06),
         OcrLine('Asha Verma', 0.3, 0.25, 0.3, 0.06),
@@ -76,6 +79,41 @@ void main() {
     await c.read(documentProvider(doc.id).notifier).setIdCard(IdCardType.none);
     final n = (await c.read(documentRepositoryProvider).get(doc.id))!;
     expect((n.isIdCard, n.pages.single.edits.idCard, n.title), (false, false, ScanDocument.defaultTitle(n.createdAt)));
+  });
+
+  test('a card first read badly ("ID card", type unknown) becomes an Aadhaar card once read properly', () async {
+    final engine = FakeEngine(frameDetector: (_) => noPage);
+    final recognizer = CardRecognizer()
+      ..instead = const OcrResult('Aadhaar no. issued: 26/11/2012\n1111', [
+        OcrLine('Aadhaar no. issued: 26/11/2012', 0.1, 0.05, 0.5, 0.05),
+        OcrLine('1111', 0.1, 0.2, 0.1, 0.05),
+      ]);
+    final c = ProviderContainer(
+      overrides: [
+        keyValueStoreProvider.overrideWithValue(MemoryStore()),
+        scanEngineProvider.overrideWithValue(engine),
+        textRecognizerProvider.overrideWithValue(recognizer),
+        pageRendererProvider.overrideWith(
+          (ref) => PageRenderer(engine, ref.watch(documentRepositoryProvider), measure: (_) async => (856, 540)),
+        ),
+      ],
+    );
+    addTearDown(c.dispose);
+    final doc = await c.read(libraryActionsProvider).createDocument();
+    c.listen(documentProvider(doc.id), (_, _) {});
+    final ctrl = c.read(documentProvider(doc.id).notifier);
+    await ctrl.addImage(Uint8List.fromList([1]), 1000, 1400, cardCorners);
+    await c.read(ocrRunnerProvider).run(doc.id);
+    expect((await c.read(documentRepositoryProvider).get(doc.id))!.idCard, IdCardType.other);
+
+    recognizer.instead = null;
+    final page = (await c.read(documentRepositoryProvider).get(doc.id))!.pages.single;
+    await ctrl.invalidateOcr(page.id);
+    await c.read(ocrRunnerProvider).run(doc.id);
+    final d = (await c.read(documentRepositoryProvider).get(doc.id))!;
+    expect(d.idCard, IdCardType.aadhaar);
+    expect(d.title, startsWith('Aadhaar Card – '));
+    expect(d.idFields['number'], '3026 9266 9721');
   });
 
   test('sync uploads ordinary documents but an ID card only after the user agrees', () async {

@@ -87,9 +87,15 @@ class _DocumentEditorPageState extends ConsumerState<DocumentEditorPage> {
     }
   }
 
-  void _goTo(int i) {
+  /// Show page [i]; [slide] animates there so the change is visible.
+  void _goTo(int i, {bool slide = false}) {
     setState(() => _current = i);
-    if (_pager.hasClients) _pager.jumpToPage(i);
+    if (!_pager.hasClients) return;
+    if (slide) {
+      _pager.animateToPage(i, duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
+    } else {
+      _pager.jumpToPage(i);
+    }
   }
 
   Future<void> _rename(ScanDocument doc) async {
@@ -182,8 +188,13 @@ class _DocumentEditorPageState extends ConsumerState<DocumentEditorPage> {
     if (to < 0 || to >= doc.pages.length) return;
     final l = context.l10n;
     await _run(() => _doc.reorder(from, to));
-    _goTo(to);
-    if (mounted) SemanticsService.sendAnnouncement(View.of(context), l.pageMoved(to + 1), Directionality.of(context));
+    _goTo(to, slide: true);
+    if (!mounted) return;
+    // The view follows the moved page, so say where it went.
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(l.pageMoved(to + 1)), duration: const Duration(seconds: 2)));
+    SemanticsService.sendAnnouncement(View.of(context), l.pageMoved(to + 1), Directionality.of(context));
   }
 
   Future<void> _addPages() async {
@@ -328,7 +339,7 @@ class _DocumentEditorPageState extends ConsumerState<DocumentEditorPage> {
                   children: [
                     TextButton.icon(
                       key: const ValueKey('prev-page'),
-                      onPressed: index > 0 ? () => _goTo(index - 1) : null,
+                      onPressed: index > 0 ? () => _goTo(index - 1, slide: true) : null,
                       icon: const Icon(Icons.chevron_left),
                       label: Text(l.previousPage),
                     ),
@@ -338,7 +349,7 @@ class _DocumentEditorPageState extends ConsumerState<DocumentEditorPage> {
                     ),
                     TextButton.icon(
                       key: const ValueKey('next-page'),
-                      onPressed: index < pages.length - 1 ? () => _goTo(index + 1) : null,
+                      onPressed: index < pages.length - 1 ? () => _goTo(index + 1, slide: true) : null,
                       icon: const Icon(Icons.chevron_right),
                       iconAlignment: IconAlignment.end,
                       label: Text(l.nextPage),
