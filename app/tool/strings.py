@@ -64,6 +64,10 @@ S = {
         {"step": "String"},
     ),
     "copyDetails": ("Copy details", "विवरण कॉपी करें"),
+    "crashOcrOff": (
+        "Automatic text recognition has been turned off so this does not happen again. You can still read a page's text with Text, or turn it back on in Settings.",
+        "ऐसा दोबारा न हो, इसलिए अपने-आप टेक्स्ट पहचानना बंद कर दिया गया है। आप अब भी Text से पेज का टेक्स्ट पढ़ सकते हैं, या सेटिंग्स में इसे फिर चालू कर सकते हैं।",
+    ),
     # ---------- documents ----------
     "documents": ("Documents", "दस्तावेज़"),
     "searchDocuments": ("Search documents and text inside pages", "दस्तावेज़ और पेजों के अंदर का टेक्स्ट खोजें"),

@@ -14,3 +14,6 @@ class CrashNote {
   /// Steps, screens and errors before it, and the device, for a bug report.
   final String details;
 }
+
+/// The page died while reading a page's text (OCR).
+bool diedReadingText(CrashNote c) => c.step.startsWith('text recognition');

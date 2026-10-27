@@ -1,0 +1,57 @@
+{
+ "label": "live",
+ "engine": "WebKit (Playwright), iPhone 13 emulation",
+ "date": "2026-10-27T06:33:39.980Z",
+ "steps": [
+  {
+   "name": "open the app (WebKit, iPhone 13), skip the guide",
+   "ok": true,
+   "ms": 3634,
+   "peakTabMB": 373,
+   "peakGpuMB": 78
+  },
+  {
+   "name": "import a photo-sized PDF (4032 x 3024 pt page)",
+   "ok": true,
+   "ms": 8323,
+   "peakTabMB": 684,
+   "peakGpuMB": 151
+  },
+  {
+   "name": "scan 3 pages with the demo camera, OCR runs after",
+   "ok": true,
+   "ms": 17929,
+   "peakTabMB": 765,
+   "peakGpuMB": 139
+  },
+  {
+   "name": "open Corners and confirm",
+   "ok": true,
+   "ms": 2150,
+   "peakTabMB": 624,
+   "peakGpuMB": 73
+  },
+  {
+   "name": "open Crop and apply",
+   "ok": true,
+   "ms": 6897,
+   "peakTabMB": 530,
+   "peakGpuMB": 74
+  },
+  {
+   "name": "import a 12 MP iPhone photo",
+   "ok": true,
+   "ms": 8622,
+   "peakTabMB": 751,
+   "peakGpuMB": 164
+  },
+  {
+   "name": "the app is still running (no reload, no error screen)",
+   "ok": true,
+   "ms": 31,
+   "peakTabMB": 662,
+   "peakGpuMB": 158
+  }
+ ],
+ "errors": []
+}

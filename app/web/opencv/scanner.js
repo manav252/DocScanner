@@ -543,7 +543,13 @@
   /** Flatten the quad to a rectangle. Returns RGBA {data, width, height}. */
   // ---------- OCR input (see ocr_prep in opencv_filters.dart) ----------
 
-  const OCR = { minSide: 2000, maxSide: 2400, maxUpscale: 3, claheClip: 2.0 };
+  // iPhone/iPad: a smaller text recognition image (Tesseract's memory grows with
+  // it; the page crashed during recognition on an iPhone).
+  const IOS = typeof navigator !== 'undefined' &&
+    (/iPhone|iPad|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1));
+  const OCR = IOS
+    ? { minSide: 1600, maxSide: 1600, maxUpscale: 3, claheClip: 2.0 }
+    : { minSide: 2000, maxSide: 2400, maxUpscale: 3, claheClip: 2.0 };
 
   /**
    * The page image prepared for text recognition: small pages (an ID card far

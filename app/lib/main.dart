@@ -62,9 +62,14 @@ class DocScannerApp extends ConsumerWidget {
     final crash = ref.read(lastCrashProvider);
     if (crash != null && !_crashShown) {
       _crashShown = true;
+      // It died while reading text: stop doing that automatically (the user can
+      // still read a page's text on request, or turn it back on).
+      final current = ref.read(appSettingsProvider);
+      final ocrOff = diedReadingText(crash) && current.autoOcr;
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (ocrOff) ref.read(appSettingsProvider.notifier).update(current.copyWith(autoOcr: false));
         final ctx = appNavigatorKey.currentContext;
-        if (ctx != null) showCrashNote(ctx, crash);
+        if (ctx != null) showCrashNote(ctx, crash, ocrTurnedOff: ocrOff);
       });
     }
     final s = ref.watch(appSettingsProvider);

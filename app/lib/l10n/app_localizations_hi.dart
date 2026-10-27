@@ -99,6 +99,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String get copyDetails => 'विवरण कॉपी करें';
 
   @override
+  String get crashOcrOff =>
+      'ऐसा दोबारा न हो, इसलिए अपने-आप टेक्स्ट पहचानना बंद कर दिया गया है। आप अब भी Text से पेज का टेक्स्ट पढ़ सकते हैं, या सेटिंग्स में इसे फिर चालू कर सकते हैं।';
+
+  @override
   String get documents => 'दस्तावेज़';
 
   @override

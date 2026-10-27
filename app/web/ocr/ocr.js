@@ -20,6 +20,13 @@
   const MIN_CONFIDENCE = 50;
   const workers = {};
 
+  /** iPhone / iPad (any browser there is WebKit; iPadOS reports as a Mac with touch). */
+  function isIOS() {
+    const nav = root.navigator || {};
+    const ua = nav.userAgent || '';
+    return /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && nav.maxTouchPoints > 1);
+  }
+
   function baseUrl() {
     return new URL('ocr/', root.document.baseURI).href;
   }
@@ -50,7 +57,10 @@
           1 /* LSTM only */,
           {
             workerPath: base + 'worker.min.js',
-            corePath: base, // picks the (relaxed)SIMD or plain LSTM core the browser supports
+            // Picks the (relaxed-)SIMD or plain LSTM core the browser supports. On iPhone the
+            // relaxed-SIMD core is skipped: the page crashed during text recognition on
+            // iOS 26, where WebKit runs it; the plain SIMD core is long established there.
+            corePath: isIOS() ? base + 'tesseract-core-simd-lstm.wasm.js' : base,
             langPath: base + 'lang',
             gzip: true,
           },
@@ -122,5 +132,5 @@
     }
   }
 
-  return { recognize, release, toResult, meaningful, langs, MIN_CONFIDENCE };
+  return { recognize, release, toResult, meaningful, langs, isIOS, MIN_CONFIDENCE };
 });

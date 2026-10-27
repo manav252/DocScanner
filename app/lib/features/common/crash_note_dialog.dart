@@ -7,7 +7,8 @@ import '../../core/crash_note.dart';
 import '../../core/l10n.dart';
 
 /// The page closed during a step last time: say so, and offer the details.
-Future<void> showCrashNote(BuildContext context, CrashNote crash) => showDialog<void>(
+/// [ocrTurnedOff]: automatic text recognition was switched off because of it.
+Future<void> showCrashNote(BuildContext context, CrashNote crash, {bool ocrTurnedOff = false}) => showDialog<void>(
   context: context,
   builder: (context) {
     final l = context.l10n;
@@ -20,6 +21,7 @@ Future<void> showCrashNote(BuildContext context, CrashNote crash) => showDialog<
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(l.crashBody(crash.step)),
+            if (ocrTurnedOff) ...[const SizedBox(height: 8), Text(l.crashOcrOff, key: const ValueKey('crash-ocr-off'))],
             const SizedBox(height: 12),
             SelectableText(crash.details, style: Theme.of(context).textTheme.bodySmall),
           ],

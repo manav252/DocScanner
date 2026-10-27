@@ -242,6 +242,12 @@ abstract class AppLocalizations {
   /// **'Copy details'**
   String get copyDetails;
 
+  /// No description provided for @crashOcrOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic text recognition has been turned off so this does not happen again. You can still read a page\'s text with Text, or turn it back on in Settings.'**
+  String get crashOcrOff;
+
   /// No description provided for @documents.
   ///
   /// In en, this message translates to:

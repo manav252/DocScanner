@@ -25,6 +25,11 @@ const browser = await webkit.launch();
 const context = await browser.newContext({ ...devices['iPhone 13'] });
 const page = await context.newPage();
 const errors = [];
+const cores = new Set(); // which Tesseract build the page loads
+page.on('request', (r) => {
+  const m = r.url().match(/tesseract-core[\w-]*\.wasm\.js/);
+  if (m) cores.add(m[0]);
+});
 page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
 // The tab's web content process died (on an iPhone: the page reloads / "A problem repeatedly occurred").
 let crashed = false;
@@ -203,7 +208,12 @@ await browser.close();
 const failed = steps.filter((s) => !s.ok).length + errors.length;
 fs.writeFileSync(
   path.join(here, `../../docs/testing/iphone-flow-${label}.json`),
-  JSON.stringify({ label, engine: 'WebKit (Playwright), iPhone 13 emulation', date: new Date().toISOString(), steps, errors }, null, 1),
+  JSON.stringify(
+    { label, engine: `WebKit ${browser.version?.() ?? ''} (Playwright), iPhone 13 emulation`, date: new Date().toISOString(), steps, errors, ocrCore: [...cores] },
+    null,
+    1,
+  ),
 );
 console.log(errors.length ? `errors:\n${errors.join('\n')}` : 'no page errors');
+console.log('OCR core loaded:', [...cores].join(', ') || 'none');
 process.exit(failed ? 1 : 0);

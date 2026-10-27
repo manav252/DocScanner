@@ -46,6 +46,7 @@
     }
   },
   "copyDetails": "Copy details",
+  "crashOcrOff": "Automatic text recognition has been turned off so this does not happen again. You can still read a page's text with Text, or turn it back on in Settings.",
   "documents": "Documents",
   "searchDocuments": "Search documents and text inside pages",
   "noResults": "No documents match “{query}”.",

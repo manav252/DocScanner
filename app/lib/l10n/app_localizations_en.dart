@@ -98,6 +98,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get copyDetails => 'Copy details';
 
   @override
+  String get crashOcrOff =>
+      'Automatic text recognition has been turned off so this does not happen again. You can still read a page\'s text with Text, or turn it back on in Settings.';
+
+  @override
   String get documents => 'Documents';
 
   @override
