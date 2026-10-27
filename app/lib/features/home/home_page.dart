@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/app_settings.dart';
 import '../../core/browser_support.dart';
 import '../../core/l10n.dart';
+import '../../core/providers.dart';
 import '../../data/sync/sync_controller.dart';
 import '../capture/capture_page.dart';
 import '../common/document_card.dart';
@@ -63,6 +64,15 @@ class HomePage extends ConsumerWidget {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
               children: [
+                if (ref.watch(storageFailedProvider))
+                  Card(
+                    key: const ValueKey('storage-failed'),
+                    color: theme.colorScheme.errorContainer,
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Semantics(liveRegion: true, child: Text(l.storageFailed)),
+                    ),
+                  ),
                 if (!canProcessImages)
                   Card(
                     key: const ValueKey('browser-too-old'),

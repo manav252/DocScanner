@@ -102,6 +102,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Automatic text recognition has been turned off so this does not happen again. You can still read a page\'s text with Text, or turn it back on in Settings.';
 
   @override
+  String get storageFailed =>
+      'Your saved scans could not be opened right now, so new scans are only kept until you close this page. To get them back: close the browser completely (swipe it away in the app switcher) and open the app again.';
+
+  @override
   String get documents => 'Documents';
 
   @override

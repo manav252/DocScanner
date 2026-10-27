@@ -29,7 +29,19 @@ Future<void> main() async {
   if (kIsWeb) SemanticsBinding.instance.ensureSemantics();
   // Did the page close during a step last time (iPhone Safari kills it silently)?
   final crash = takeCrashNote();
-  final store = await KeyValueStore.open();
+  final starting = noteStep('app start: opening saved scans');
+  // After a crash, Safari can leave the page's database locked and opening it
+  // never finishes: the app would never appear. Give up after 8 s and run on
+  // temporary storage, saying how to get the saved scans back.
+  KeyValueStore store;
+  var storageFailed = false;
+  try {
+    store = await KeyValueStore.open().timeout(const Duration(seconds: 8));
+  } catch (_) {
+    store = MemoryStore();
+    storageFailed = true;
+  }
+  noteDone(starting);
   final (settings, session) = await loadSettingsAndSession(store);
   // `?demo=1` on the web (or --dart-define=DEMO_CAMERA=true) starts with the demo camera.
   final demo = const bool.fromEnvironment('DEMO_CAMERA') || (kIsWeb && Uri.base.queryParameters['demo'] == '1');
@@ -38,6 +50,7 @@ Future<void> main() async {
       overrides: [
         keyValueStoreProvider.overrideWithValue(store),
         lastCrashProvider.overrideWithValue(crash),
+        storageFailedProvider.overrideWithValue(storageFailed),
         appSettingsProvider.overrideWith(() => AppSettingsNotifier(settings)),
         sessionProvider.overrideWith(() => SessionNotifier(session)),
         if (demo) cameraModeProvider.overrideWith(() => CameraModeNotifier(CameraMode.demo)),

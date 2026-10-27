@@ -87,11 +87,12 @@ class ThumbnailService {
 
   /// Background upkeep: make thumbnails that are missing and remove files of
   /// pages no document uses any more. Returns (thumbnails made, orphan pages removed).
-  Future<(int, int)> repair() async {
+  Future<(int, int)> repair({int? limit}) async {
     var made = 0;
     for (final doc in await _repo.listAll()) {
       if (doc.deleted) continue;
       for (final p in doc.pages) {
+        if (limit != null && made >= limit) break; // the rest next launch
         if (await _repo.pageImage(p.id, PageImage.thumb) != null) continue;
         if (await regenerate(p.id).catchError((Object _) => null) != null) made++;
       }

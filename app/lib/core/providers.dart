@@ -1,4 +1,5 @@
 // App-wide service providers. Tests override these with fakes.
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app_settings.dart';
@@ -97,9 +98,12 @@ final storageUsageProvider = FutureProvider.autoDispose<({int? bytes, int docume
 
 /// Upkeep a few seconds after start: missing thumbnails, leftovers of interrupted deletes.
 final maintenanceProvider = FutureProvider<(int, int)>((ref) async {
+  // Not right after a crash (it could be what crashed), nor on temporary storage.
+  if (ref.read(lastCrashProvider) != null || ref.read(storageFailedProvider)) return (0, 0);
   await Future<void>.delayed(const Duration(seconds: 3));
   try {
-    return await ref.read(thumbnailServiceProvider).repair();
+    // Web: a few pages per launch, so a phone never rebuilds many large images at once.
+    return await ref.read(thumbnailServiceProvider).repair(limit: kIsWeb ? 5 : null);
   } catch (_) {
     return (0, 0); // best effort; previews fall back to a placeholder anyway
   }
@@ -114,6 +118,10 @@ final shareServiceProvider = Provider<ShareService>((_) => const ShareService())
 
 /// Left by a previous session that closed during a step (web; see crash_note.dart).
 final lastCrashProvider = Provider<CrashNote?>((_) => null);
+
+/// The saved scans could not be opened (the browser's database did not answer);
+/// the app runs on temporary storage this time.
+final storageFailedProvider = Provider<bool>((_) => false);
 
 /// The scanner screen (camera) is open. Text recognition waits meanwhile, so
 /// the camera, detection and OCR never all use memory at once (iPhone Safari

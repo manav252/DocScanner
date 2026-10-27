@@ -68,6 +68,10 @@ S = {
         "Automatic text recognition has been turned off so this does not happen again. You can still read a page's text with Text, or turn it back on in Settings.",
         "ऐसा दोबारा न हो, इसलिए अपने-आप टेक्स्ट पहचानना बंद कर दिया गया है। आप अब भी Text से पेज का टेक्स्ट पढ़ सकते हैं, या सेटिंग्स में इसे फिर चालू कर सकते हैं।",
     ),
+    "storageFailed": (
+        "Your saved scans could not be opened right now, so new scans are only kept until you close this page. To get them back: close the browser completely (swipe it away in the app switcher) and open the app again.",
+        "आपके सहेजे गए स्कैन अभी खुल नहीं सके, इसलिए नए स्कैन सिर्फ़ यह पेज बंद होने तक रहेंगे। उन्हें वापस पाने के लिए: ब्राउज़र को पूरी तरह बंद करें (ऐप स्विचर में ऊपर खिसकाएँ) और ऐप फिर से खोलें।",
+    ),
     # ---------- documents ----------
     "documents": ("Documents", "दस्तावेज़"),
     "searchDocuments": ("Search documents and text inside pages", "दस्तावेज़ और पेजों के अंदर का टेक्स्ट खोजें"),
