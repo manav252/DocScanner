@@ -53,7 +53,7 @@ class CaptureTuning {
     this.minDocumentArea = 0.12,
     this.lowLightThreshold = 45,
     this.autoCaptureCooldown = const Duration(milliseconds: 1500),
-    this.steadyFrames = 12,
+    this.steadyFrames = 8,
     this.newPageDistance = 0.12,
     this.stillCapture = const Duration(seconds: 4),
     this.stillMotion = 6.0,
@@ -202,7 +202,7 @@ class CaptureController extends Notifier<CaptureState> {
 
   /// Steady frames in a row that were not sharp; after [maxSharpWait] the page is captured anyway.
   int _unsharpSteady = 0;
-  static const maxSharpWait = 10;
+  static const maxSharpWait = 6;
 
   /// `?debug=1` on the web: show a diagnostics line on the scanner.
   final bool _debug = kIsWeb && Uri.base.queryParameters['debug'] == '1';
@@ -286,6 +286,7 @@ class CaptureController extends Notifier<CaptureState> {
       if (gen != _generation) return;
       if (state.status != CaptureStatus.running) continue;
       final f = frame.data;
+      final analysisStart = _clock.elapsed;
       final detection = await engine
           .detectFrame(f)
           .catchError((Object _) => Detection(fullBounds(f.width, f.height), found: false));
@@ -353,6 +354,10 @@ class CaptureController extends Notifier<CaptureState> {
         _stillUsed = true; // once per stillness: move the camera to scan again
         await capture();
       }
+      // A slow phone: rest as long as the analysis took, so the scanner uses
+      // at most about half of it and the phone stays cool.
+      final spent = _clock.elapsed - analysisStart;
+      if (spent > const Duration(milliseconds: 50)) await Future<void>.delayed(spent);
     }
   }
 

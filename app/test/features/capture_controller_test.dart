@@ -17,12 +17,17 @@ void main() {
   late FakeEngine engine;
   late ProviderContainer container;
 
-  ProviderContainer makeContainer({Duration cooldown = Duration.zero, Duration stillCapture = const Duration(seconds: 4)}) {
+  ProviderContainer makeContainer({
+    Duration cooldown = Duration.zero,
+    Duration stillCapture = const Duration(seconds: 4),
+  }) {
     final c = ProviderContainer(
       overrides: [
         scanEngineProvider.overrideWithValue(engine),
         cameraFactoryProvider.overrideWithValue(() => camera),
-        captureTuningProvider.overrideWithValue(CaptureTuning(autoCaptureCooldown: cooldown, steadyFrames: 5, stillCapture: stillCapture)),
+        captureTuningProvider.overrideWithValue(
+          CaptureTuning(autoCaptureCooldown: cooldown, steadyFrames: 5, stillCapture: stillCapture),
+        ),
       ],
     );
     addTearDown(c.dispose);

@@ -50,14 +50,18 @@ void main() {
     expect(t.progress, 1.0);
   });
 
-  test('stability: never steady while moving, resets on miss', () {
+  test('stability: never steady while moving; a brief miss is forgiven, a longer one resets', () {
     final t = StabilityTracker(window: 3);
     expect([for (var i = 0; i < 10; i++) t.update(shift(0.02 * i))].any((x) => x), isFalse);
     for (var i = 0; i < 3; i++) {
       t.update(base);
     }
     expect(t.isSteady, isTrue);
-    t.update(null);
+    expect(t.update(null), isFalse, reason: 'no capture on a frame without a page');
+    expect(t.update(base), isTrue, reason: 'one missed frame does not restart the count');
+    for (var i = 0; i < 3; i++) {
+      t.update(null);
+    }
     expect(t.isSteady, isFalse);
     expect(t.progress, 0);
   });

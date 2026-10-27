@@ -1,0 +1,60 @@
+{
+ "label": "throttle",
+ "engine": "WebKit 27.2 (Playwright), iPhone 13 emulation",
+ "date": "2026-10-27T09:03:35.515Z",
+ "steps": [
+  {
+   "name": "open the app (WebKit, iPhone 13), skip the guide",
+   "ok": true,
+   "ms": 1852,
+   "peakTabMB": 343,
+   "peakGpuMB": 79
+  },
+  {
+   "name": "import a photo-sized PDF (4032 x 3024 pt page)",
+   "ok": true,
+   "ms": 6838,
+   "peakTabMB": 934,
+   "peakGpuMB": 143
+  },
+  {
+   "name": "scan 3 pages with the demo camera, OCR runs after",
+   "ok": true,
+   "ms": 16164,
+   "peakTabMB": 863,
+   "peakGpuMB": 167
+  },
+  {
+   "name": "open Corners and confirm",
+   "ok": true,
+   "ms": 2147,
+   "peakTabMB": 755,
+   "peakGpuMB": 126
+  },
+  {
+   "name": "open Crop and apply",
+   "ok": true,
+   "ms": 6935,
+   "peakTabMB": 549,
+   "peakGpuMB": 67
+  },
+  {
+   "name": "import a 12 MP iPhone photo",
+   "ok": true,
+   "ms": 8654,
+   "peakTabMB": 688,
+   "peakGpuMB": 160
+  },
+  {
+   "name": "the app is still running (no reload, no error screen)",
+   "ok": true,
+   "ms": 30,
+   "peakTabMB": 688,
+   "peakGpuMB": 60
+  }
+ ],
+ "errors": [],
+ "ocrCore": [
+  "tesseract-core-simd-lstm.wasm.js"
+ ]
+}

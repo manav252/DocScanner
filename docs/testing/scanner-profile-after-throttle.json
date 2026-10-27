@@ -1,0 +1,33 @@
+{
+ "label": "after-throttle",
+ "cpuSlowdown": 6,
+ "camera": "Chrome fake camera",
+ "runs": [
+  {
+   "run": 0,
+   "cpuPercent": 56,
+   "busyPercent": 36.2,
+   "drawImagePercent": 0,
+   "top": [
+    "getImageData 3.0%",
+    "createImageBitmap 0.9%",
+    "(anonymous) 0.9%",
+    "j 0.6%",
+    "(garbage collector) 0.5%"
+   ]
+  },
+  {
+   "run": 1,
+   "cpuPercent": 56,
+   "busyPercent": 32.1,
+   "drawImagePercent": 0,
+   "top": [
+    "getImageData 2.4%",
+    "createImageBitmap 0.8%",
+    "(anonymous) 0.7%",
+    "j 0.7%",
+    "(garbage collector) 0.5%"
+   ]
+  }
+ ]
+}

@@ -53,20 +53,28 @@ class CornerSmoother {
 
 class StabilityTracker {
   /// Steady when the last [window] detections all lie within [tolerance]
-  /// (fraction of the frame diagonal) of their mean. At 15 fps, 12 frames ~ 0.8 s.
-  StabilityTracker({this.window = 12, this.tolerance = 0.012});
+  /// (fraction of the frame diagonal) of their mean. At 10 fps, 8 frames ~ 0.8 s.
+  /// Up to [allowedMisses] frames in a row without a page (the detector missing
+  /// one frame of a hand-held page) do not restart the count.
+  StabilityTracker({this.window = 8, this.tolerance = 0.012, this.allowedMisses = 2});
 
   final int window;
   final double tolerance;
+  final int allowedMisses;
   final _buf = Queue<List<Pt>>();
+  int _misses = 0;
 
-  void reset() => _buf.clear();
+  void reset() {
+    _buf.clear();
+    _misses = 0;
+  }
 
   bool update(List<Pt>? corners) {
     if (corners == null) {
-      _buf.clear();
+      if (++_misses > allowedMisses) _buf.clear();
       return false;
     }
+    _misses = 0;
     _buf.addLast(corners);
     while (_buf.length > window) {
       _buf.removeFirst();

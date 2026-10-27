@@ -1,0 +1,26 @@
+{
+ "label": "live-shake6",
+ "engine": "Chrome (headless), 390x844 phone viewport",
+ "photo": "tilted_paper",
+ "shakePx": 6,
+ "runs": [
+  {
+   "run": 0,
+   "capturedAfterMs": 1725,
+   "lastHint": "",
+   "errors": []
+  },
+  {
+   "run": 1,
+   "capturedAfterMs": 1723,
+   "lastHint": "",
+   "errors": []
+  },
+  {
+   "run": 2,
+   "capturedAfterMs": 1705,
+   "lastHint": "",
+   "errors": []
+  }
+ ]
+}

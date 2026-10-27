@@ -152,6 +152,17 @@ Checked in WebKit 18.0 (Safari's engine, Playwright, iPhone 13 emulation:
 
 `tools/audit/autocapture.mjs --photo no_document` re-runs the check.
 
+## 8. Scanner heat, lag and unreliable auto-capture (27 Oct)
+
+| Problem | Cause found | Fix | Result |
+|---|---|---|---|
+| Phone heats up, scanner laggy | The page was analysed up to 30 times a second, without a pause: page + worker used **112 %** of a desktop CPU core | Analysis at most 10 times a second; on a slow phone the scanner rests as long as each analysis took (uses at most about half the phone) | CPU **112 % → 56 %**; main thread busy at CPU 6× **55 % → 32–36 %** |
+| Outline jumpy at the lower rate | Outline redrawn only when a new detection arrives | Outline glides to the new corners over 0.1 s | — |
+| Auto-capture "sometimes works" | One frame where the detector missed the page (fingers, glare) restarted the 12-frame steadiness count | Up to 2 missed frames in a row are forgiven; steadiness = 8 frames (0.8 s) | Fake-camera page: captured in 1.7 s with 2 px and with 6 px shake (3/3 each) |
+
+`tools/audit/scanner_profile.mjs` measures CPU (`cpuPercent`) and main-thread busy %.
+`tools/audit/iphone_flow.mjs` (WebKit, iPhone 13 emulation): all steps pass, no page errors.
+
 ## Not solved / not verified
 
 - **iPhone crashes**: not reproduced here; memory and main-thread work reduced.

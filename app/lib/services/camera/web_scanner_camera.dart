@@ -32,8 +32,10 @@ class WebScannerCamera implements ScannerCamera {
   /// (`?oldgrab=1` in the URL: the previous way, for measurements.)
   bool _bitmapResize = !web.window.location.search.contains('oldgrab=1');
 
-  /// Upper bound on analysis rate, to leave CPU for the page.
-  static const minFrameInterval = Duration(milliseconds: 33);
+  /// Upper bound on analysis rate (10 per second): enough to follow a page,
+  /// and it keeps a phone from heating up (30 per second used more than a
+  /// whole CPU core).
+  static const minFrameInterval = Duration(milliseconds: 100);
 
   static var _viewCounter = 0;
   late final String _viewType = 'docscanner-camera-${_viewCounter++}';
