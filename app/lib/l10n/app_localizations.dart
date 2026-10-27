@@ -224,6 +224,24 @@ abstract class AppLocalizations {
   /// **'This browser is too old to scan or import (it needs iOS 16.4 or later). Update your iPhone in Settings › General › Software Update, or use another browser.'**
   String get browserTooOld;
 
+  /// No description provided for @crashTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The app closed unexpectedly'**
+  String get crashTitle;
+
+  /// No description provided for @crashBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It closed while: {step}. Your saved scans are safe. To help fix it, copy these details and send them to the developer.'**
+  String crashBody(String step);
+
+  /// No description provided for @copyDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy details'**
+  String get copyDetails;
+
   /// No description provided for @documents.
   ///
   /// In en, this message translates to:

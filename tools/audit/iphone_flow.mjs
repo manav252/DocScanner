@@ -26,6 +26,12 @@ const context = await browser.newContext({ ...devices['iPhone 13'] });
 const page = await context.newPage();
 const errors = [];
 page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
+// The tab's web content process died (on an iPhone: the page reloads / "A problem repeatedly occurred").
+let crashed = false;
+page.on('crash', () => {
+  crashed = true;
+  errors.push('TAB CRASHED');
+});
 page.on('console', (m) => {
   // The local build pings a backend on localhost:8000 that may not be running.
   if (m.type() === 'error' && !/Failed to load resource|Could not connect to the server/.test(m.text())) {
@@ -37,6 +43,7 @@ const texts = () =>
 async function waitText(needle, timeout = 90000) {
   const t0 = Date.now();
   while (Date.now() - t0 < timeout) {
+    if (crashed) throw new Error('the browser tab crashed');
     const t = await texts();
     if (t.some((x) => x.includes('Something went wrong'))) throw new Error('the app showed its error screen');
     if (t.some((x) => x.includes(needle))) return Date.now() - t0;
@@ -152,6 +159,30 @@ await step('open Corners and confirm', async () => {
   }
   await click('Confirm');
   await waitText('Page 1 of 3');
+  await click('Back');
+  await waitText('Scan Document');
+});
+await step('open Crop and apply', async () => {
+  await page.evaluate(() => {
+    const n = [...document.querySelectorAll('flt-semantics')].find(
+      (n) => /\b3 pages\b/.test(n.getAttribute('aria-label') || n.textContent || '') && n.getAttribute('role'),
+    );
+    n?.click();
+  });
+  await waitText('Page 1 of 3');
+  for (let tries = 0; ; tries++) {
+    await click('Crop');
+    try {
+      await waitText('Drag the edges or corners of the box', 8000);
+      break;
+    } catch (e) {
+      if (tries === 4) throw e;
+    }
+  }
+  await sleep(2500);
+  await click('Apply');
+  await waitText('Page 1 of 3');
+  await sleep(2000);
   await click('Back');
   await waitText('Scan Document');
 });

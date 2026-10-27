@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/app_settings.dart';
 import '../../core/cancel.dart';
+import '../../core/crash_note.dart';
 import '../../core/providers.dart';
 import '../../data/models.dart';
 import '../../imaging/page_edits.dart';
@@ -87,10 +88,12 @@ class OcrRunner {
         Future<OcrResult> read({bool contrast = false}) async => cleanOcr(
           await recognizer.recognize(await engine.prepareOcrEncoded(source, contrast: contrast), language: language),
         );
+        final note = noteStep('text recognition: page ${p.renderWidth}x${p.renderHeight}');
         var result = await read();
         // Little text (faint print, an unusual background): try grayscale +
         // CLAHE too, and keep what either pass found.
         if (littleText(result)) result = mergeOcr(result, await read(contrast: true));
+        noteDone(note);
         await _ref.read(documentProvider(docId).notifier).setOcr(p.id, p.revision, result, language: language);
         done++;
       }

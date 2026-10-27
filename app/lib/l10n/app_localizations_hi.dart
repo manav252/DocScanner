@@ -88,6 +88,17 @@ class AppLocalizationsHi extends AppLocalizations {
       'यह ब्राउज़र स्कैन या इम्पोर्ट के लिए बहुत पुराना है (iOS 16.4 या नया चाहिए)। iPhone को सेटिंग्स › सामान्य › सॉफ़्टवेयर अपडेट में अपडेट करें, या कोई और ब्राउज़र इस्तेमाल करें।';
 
   @override
+  String get crashTitle => 'ऐप अचानक बंद हो गया';
+
+  @override
+  String crashBody(String step) {
+    return 'यह इस दौरान बंद हुआ: $step। आपके सहेजे गए स्कैन सुरक्षित हैं। ठीक करने में मदद के लिए ये विवरण कॉपी करके डेवलपर को भेजें।';
+  }
+
+  @override
+  String get copyDetails => 'विवरण कॉपी करें';
+
+  @override
   String get documents => 'दस्तावेज़';
 
   @override

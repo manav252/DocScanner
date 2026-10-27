@@ -9,6 +9,8 @@ import 'dart:ui_web' as ui_web;
 import 'package:flutter/widgets.dart';
 import 'package:web/web.dart' as web;
 
+import '../../core/crash_note.dart';
+
 import '../../imaging/scan_engine.dart';
 import 'scanner_camera.dart';
 
@@ -168,10 +170,12 @@ class WebScannerCamera implements ScannerCamera {
   Future<CapturedPhoto> takePicture() async {
     final w = _video.videoWidth, h = _video.videoHeight;
     if (w == 0) throw const CameraFailure(CameraFailureKind.other, 'camera not ready');
+    final note = noteStep('camera: take photo ${w}x$h');
     final canvas = web.OffscreenCanvas(w, h);
     (canvas.getContext('2d')! as web.OffscreenCanvasRenderingContext2D).drawImage(_video, 0, 0);
     final blob = await canvas.convertToBlob(web.ImageEncodeOptions(type: 'image/jpeg', quality: 0.95)).toDart;
     final buf = await blob.arrayBuffer().toDart;
+    noteDone(note);
     return CapturedPhoto(buf.toDart.asUint8List());
   }
 

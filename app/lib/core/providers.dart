@@ -15,6 +15,7 @@ import '../services/import/import_service.dart';
 import '../services/ocr/text_recognizer.dart';
 import '../services/camera/demo_scanner_camera.dart';
 import '../services/camera/scanner_camera.dart';
+import 'crash_note.dart';
 
 /// The on-device OpenCV engine (isolate on mobile, Web Worker on web). Lives for the whole app.
 final localScanEngineProvider = Provider<ScanEngine>((ref) {
@@ -110,6 +111,9 @@ final pageRendererProvider = Provider<PageRenderer>(
 
 final importServiceProvider = Provider<ImportService>((_) => const ImportService());
 final shareServiceProvider = Provider<ShareService>((_) => const ShareService());
+
+/// Left by a previous session that closed during a step (web; see crash_note.dart).
+final lastCrashProvider = Provider<CrashNote?>((_) => null);
 
 /// The scanner screen (camera) is open. Text recognition waits meanwhile, so
 /// the camera, detection and OCR never all use memory at once (iPhone Safari

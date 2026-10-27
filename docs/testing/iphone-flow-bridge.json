@@ -1,49 +1,56 @@
 {
- "label": "live",
+ "label": "bridge",
  "engine": "WebKit (Playwright), iPhone 13 emulation",
- "date": "2026-10-26T21:42:57.333Z",
+ "date": "2026-10-27T06:26:08.288Z",
  "steps": [
   {
    "name": "open the app (WebKit, iPhone 13), skip the guide",
    "ok": true,
-   "ms": 4085,
-   "peakTabMB": 412,
-   "peakGpuMB": 145
+   "ms": 12088,
+   "peakTabMB": 371,
+   "peakGpuMB": 80
   },
   {
    "name": "import a photo-sized PDF (4032 x 3024 pt page)",
    "ok": true,
-   "ms": 8553,
-   "peakTabMB": 859,
-   "peakGpuMB": 248
+   "ms": 6882,
+   "peakTabMB": 881,
+   "peakGpuMB": 179
   },
   {
    "name": "scan 3 pages with the demo camera, OCR runs after",
    "ok": true,
-   "ms": 18332,
-   "peakTabMB": 848,
-   "peakGpuMB": 256
+   "ms": 17048,
+   "peakTabMB": 773,
+   "peakGpuMB": 125
   },
   {
    "name": "open Corners and confirm",
    "ok": true,
-   "ms": 2185,
-   "peakTabMB": 627,
-   "peakGpuMB": 152
+   "ms": 2190,
+   "peakTabMB": 614,
+   "peakGpuMB": 73
+  },
+  {
+   "name": "open Crop and apply",
+   "ok": true,
+   "ms": 6883,
+   "peakTabMB": 531,
+   "peakGpuMB": 67
   },
   {
    "name": "import a 12 MP iPhone photo",
    "ok": true,
-   "ms": 8704,
-   "peakTabMB": 649,
-   "peakGpuMB": 230
+   "ms": 8731,
+   "peakTabMB": 790,
+   "peakGpuMB": 137
   },
   {
    "name": "the app is still running (no reload, no error screen)",
    "ok": true,
-   "ms": 149,
-   "peakTabMB": 210,
-   "peakGpuMB": 28
+   "ms": 31,
+   "peakTabMB": 767,
+   "peakGpuMB": 59
   }
  ],
  "errors": []

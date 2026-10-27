@@ -29,7 +29,15 @@ async function decode(bytes) {
   const ctx = canvas.getContext('2d');
   ctx.drawImage(bitmap, 0, 0);
   bitmap.close();
-  return ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  release(canvas);
+  return img;
+}
+
+// Free a canvas's memory now (Safari counts canvas memory per page and frees it late).
+function release(canvas) {
+  canvas.width = 0;
+  canvas.height = 0;
 }
 
 const asImage = (img) => ({ data: new Uint8ClampedArray(img.data), width: img.width, height: img.height });
@@ -55,20 +63,28 @@ self.onmessage = async (e) => {
       ctx.drawImage(probe, 0, 0, w, h);
       probe.close();
       const blob = await canvas.convertToBlob({ type: 'image/jpeg', quality: e.data.quality });
+      release(canvas);
       const data = await blob.arrayBuffer();
       self.postMessage({ id, ok: true, result: { data, width: w, height: h } }, [data]);
       return;
     } else if (type === 'warpEncoded' || type === 'processEncoded' || type === 'prepareOcr') {
-      const img = await decode(e.data.bytes);
+      // From engine_bridge.js (iPhone): raw pixels in, raw pixels out (the page encodes).
+      const img = e.data.image ? asImage(e.data.image) : await decode(e.data.bytes);
       const out =
         type === 'warpEncoded'
           ? DocScanner.warpPage(cv, img, e.data.corners, e.data.maxSide)
           : type === 'prepareOcr'
             ? DocScanner.prepareOcr(cv, img, e.data.contrast ? 'contrast' : 'main')
             : DocScanner.applyEdits(cv, img, e.data.edits, e.data.maxSide);
+      if (e.data.raw) {
+        const data = out.data.buffer;
+        self.postMessage({ id, ok: true, result: { data, width: out.width, height: out.height } }, [data]);
+        return;
+      }
       const canvas = new OffscreenCanvas(out.width, out.height);
       canvas.getContext('2d').putImageData(new ImageData(out.data, out.width, out.height), 0, 0);
       const blob = await canvas.convertToBlob({ type: 'image/jpeg', quality: e.data.quality });
+      release(canvas);
       const jpeg = await blob.arrayBuffer();
       self.postMessage({ id, ok: true, result: jpeg }, [jpeg]);
       return;

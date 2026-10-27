@@ -7,19 +7,31 @@ import 'dart:typed_data';
 
 import 'package:web/web.dart' as web;
 
+import '../../core/crash_note.dart';
+
 import '../scan_engine.dart';
 import '../geometry.dart';
 import '../page_edits.dart';
 
 ScanEngine createScanEngine() => WebScanEngine();
 
+/// The OpenCV worker, behind web/opencv/engine_bridge.js when the page loaded
+/// it (on iPhone/iPad it decodes and encodes images on the page; same
+/// interface as a Worker).
+web.Worker _start(String url) {
+  final bridge = web.window.getProperty<JSObject?>('DocScannerEngine'.toJS);
+  if (bridge == null) return web.Worker(url.toJS);
+  final w = bridge.callMethod<JSObject>('create'.toJS, url.toJS);
+  noteEvent('image codec: ${w.getProperty<JSString>('codec'.toJS).toDart}');
+  return w as web.Worker;
+}
+
 /// Changes every build (scripts/build_web.sh passes the git commit) so browsers
 /// never run a cached worker from an older build.
 const assetVersion = String.fromEnvironment('ASSET_VERSION', defaultValue: 'dev');
 
 class WebScanEngine implements ScanEngine {
-  WebScanEngine({String? workerUrl})
-    : _worker = web.Worker((workerUrl ?? 'opencv/scanner_worker.js?v=$assetVersion').toJS) {
+  WebScanEngine({String? workerUrl}) : _worker = _start(workerUrl ?? 'opencv/scanner_worker.js?v=$assetVersion') {
     _worker.onmessage = _onMessage.toJS;
     _worker.onerror = ((web.Event e) {
       if (!_ready.isCompleted) _ready.completeError(StateError('failed to start the OpenCV worker'));
@@ -29,6 +41,7 @@ class WebScanEngine implements ScanEngine {
   final web.Worker _worker;
   final _ready = Completer<void>();
   final _pending = <int, Completer<JSObject>>{};
+  final _notes = <int, int>{}; // call id -> crash note token
   var _nextId = 0;
 
   @override
@@ -42,6 +55,8 @@ class WebScanEngine implements ScanEngine {
     }
     final id = (data.getProperty<JSNumber>('id'.toJS)).toDartInt;
     final c = _pending.remove(id);
+    final note = _notes.remove(id);
+    if (note != null) noteDone(note);
     if (c == null) return;
     if (data.getProperty<JSBoolean>('ok'.toJS).toDart) {
       c.complete(data.getProperty<JSObject>('result'.toJS));
@@ -57,6 +72,14 @@ class WebScanEngine implements ScanEngine {
       ..setProperty('type'.toJS, type.toJS);
     fields.forEach((k, v) => msg.setProperty(k.toJS, v));
     final c = _pending[id] = Completer<JSObject>();
+    if (type != 'detectFrame') {
+      // Image work that could exhaust an iPhone's memory: recorded (crash notes).
+      final bytes = fields['bytes'];
+      final kb = bytes != null && bytes.isA<JSArrayBuffer>()
+          ? (bytes as JSArrayBuffer).toDart.lengthInBytes ~/ 1024
+          : null;
+      _notes[id] = noteStep('image work: $type${kb == null ? '' : ' ($kb KB)'}');
+    }
     _worker.postMessage(msg, transfer.toJS);
     return c.future;
   }

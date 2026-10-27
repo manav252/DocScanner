@@ -36,6 +36,16 @@
     }
   },
   "browserTooOld": "This browser is too old to scan or import (it needs iOS 16.4 or later). Update your iPhone in Settings › General › Software Update, or use another browser.",
+  "crashTitle": "The app closed unexpectedly",
+  "crashBody": "It closed while: {step}. Your saved scans are safe. To help fix it, copy these details and send them to the developer.",
+  "@crashBody": {
+    "placeholders": {
+      "step": {
+        "type": "String"
+      }
+    }
+  },
+  "copyDetails": "Copy details",
   "documents": "Documents",
   "searchDocuments": "Search documents and text inside pages",
   "noResults": "No documents match “{query}”.",

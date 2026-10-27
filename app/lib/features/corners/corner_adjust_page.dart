@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n.dart';
+import '../../core/crash_note.dart';
 
 import '../../core/providers.dart';
 import '../../imaging/geometry.dart';
@@ -65,6 +66,7 @@ class _CornerAdjustPageState extends ConsumerState<CornerAdjustPage> {
   late Uint8List _bytes = widget.bytes;
   late int _w = widget.width, _h = widget.height;
   late List<Pt> _detected = widget.corners;
+  bool _noted = false; // screen recorded in the crash notes
   late List<Pt> _corners = widget.corners;
   late MemoryImage _image = MemoryImage(_bytes);
   bool _rotated = false, _busy = false;
@@ -109,6 +111,10 @@ class _CornerAdjustPageState extends ConsumerState<CornerAdjustPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (!_noted) {
+      _noted = true;
+      noteEvent('screen: corners, photo ${widget.width}x${widget.height}');
+    }
     final l = context.l10n;
     final valid = isValidQuad(_corners, _size);
     final scheme = Theme.of(context).colorScheme;

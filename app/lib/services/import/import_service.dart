@@ -5,6 +5,8 @@ import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:printing/printing.dart';
 
+import '../../core/crash_note.dart';
+
 import 'picker_options.dart';
 
 class ImportedFile {
@@ -66,9 +68,11 @@ class ImportService {
       while (end < dpis.length && dpis[end] == dpis[start]) {
         end++;
       }
+      final note = noteStep('PDF: render pages ${start + 1}-$end of ${dpis.length} at ${dpis[start].round()} dpi');
       await for (final page in Printing.raster(pdf, pages: [for (var i = start; i < end; i++) i], dpi: dpis[start])) {
         yield await page.toPng();
       }
+      noteDone(note);
       start = end;
     }
   }

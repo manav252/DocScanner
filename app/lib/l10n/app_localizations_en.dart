@@ -87,6 +87,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'This browser is too old to scan or import (it needs iOS 16.4 or later). Update your iPhone in Settings › General › Software Update, or use another browser.';
 
   @override
+  String get crashTitle => 'The app closed unexpectedly';
+
+  @override
+  String crashBody(String step) {
+    return 'It closed while: $step. Your saved scans are safe. To help fix it, copy these details and send them to the developer.';
+  }
+
+  @override
+  String get copyDetails => 'Copy details';
+
+  @override
   String get documents => 'Documents';
 
   @override

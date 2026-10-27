@@ -14,6 +14,8 @@ import 'data/sync/server_waker.dart';
 import 'data/sync/sync_controller.dart';
 import 'features/home/home_page.dart';
 import 'features/onboarding/onboarding_page.dart';
+import 'core/crash_note.dart';
+import 'features/common/crash_note_dialog.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,6 +27,8 @@ Future<void> main() async {
   // Web: build the accessibility tree from the start, so screen readers and
   // keyboard users don't first have to find Flutter's hidden "Enable accessibility" button.
   if (kIsWeb) SemanticsBinding.instance.ensureSemantics();
+  // Did the page close during a step last time (iPhone Safari kills it silently)?
+  final crash = takeCrashNote();
   final store = await KeyValueStore.open();
   final (settings, session) = await loadSettingsAndSession(store);
   // `?demo=1` on the web (or --dart-define=DEMO_CAMERA=true) starts with the demo camera.
@@ -33,6 +37,7 @@ Future<void> main() async {
     ProviderScope(
       overrides: [
         keyValueStoreProvider.overrideWithValue(store),
+        lastCrashProvider.overrideWithValue(crash),
         appSettingsProvider.overrideWith(() => AppSettingsNotifier(settings)),
         sessionProvider.overrideWith(() => SessionNotifier(session)),
         if (demo) cameraModeProvider.overrideWith(() => CameraModeNotifier(CameraMode.demo)),
@@ -45,12 +50,23 @@ Future<void> main() async {
 class DocScannerApp extends ConsumerWidget {
   const DocScannerApp({super.key});
 
+  static bool _crashShown = false;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Background sync runs only when signed in; everything else works as a guest.
     ref.watch(syncControllerProvider);
     ref.listen(maintenanceProvider, (_, _) {}); // runs once in the background; never rebuilds the app
     ref.listen(serverWarmupProvider, (_, _) {}); // wakes a sleeping free-tier backend early
+    // The page closed during a step last time (iPhone Safari): say so, once.
+    final crash = ref.read(lastCrashProvider);
+    if (crash != null && !_crashShown) {
+      _crashShown = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final ctx = appNavigatorKey.currentContext;
+        if (ctx != null) showCrashNote(ctx, crash);
+      });
+    }
     final s = ref.watch(appSettingsProvider);
     final reduceMotion = MediaQueryData.fromView(View.of(context)).disableAnimations;
     ThemeData theme(Brightness b, {bool hc = false}) =>

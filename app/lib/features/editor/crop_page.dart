@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n.dart';
 import '../../core/providers.dart';
+import '../../core/crash_note.dart';
 import '../../data/models.dart';
 import '../../imaging/page_edits.dart';
 
@@ -28,10 +29,15 @@ class CropPage extends ConsumerStatefulWidget {
 
 class _CropPageState extends ConsumerState<CropPage> {
   late CropRect _crop = widget.page.edits.crop;
+  bool _noted = false; // screen recorded in the crash notes
 
   @override
   Widget build(BuildContext context) {
     final preview = ref.watch(uncroppedPreviewProvider(widget.page));
+    if (!_noted) {
+      _noted = true;
+      noteEvent('screen: crop, page ${widget.page.renderWidth}x${widget.page.renderHeight}');
+    }
     // Aspect of the rotated, uncropped page.
     final turned = widget.page.edits.quarterTurns.isOdd;
     final w = (widget.page.renderWidth / widget.page.edits.crop.width).round();

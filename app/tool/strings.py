@@ -57,6 +57,13 @@ S = {
         "This browser is too old to scan or import (it needs iOS 16.4 or later). Update your iPhone in Settings › General › Software Update, or use another browser.",
         "यह ब्राउज़र स्कैन या इम्पोर्ट के लिए बहुत पुराना है (iOS 16.4 या नया चाहिए)। iPhone को सेटिंग्स › सामान्य › सॉफ़्टवेयर अपडेट में अपडेट करें, या कोई और ब्राउज़र इस्तेमाल करें।",
     ),
+    "crashTitle": ("The app closed unexpectedly", "ऐप अचानक बंद हो गया"),
+    "crashBody": (
+        "It closed while: {step}. Your saved scans are safe. To help fix it, copy these details and send them to the developer.",
+        "यह इस दौरान बंद हुआ: {step}। आपके सहेजे गए स्कैन सुरक्षित हैं। ठीक करने में मदद के लिए ये विवरण कॉपी करके डेवलपर को भेजें।",
+        {"step": "String"},
+    ),
+    "copyDetails": ("Copy details", "विवरण कॉपी करें"),
     # ---------- documents ----------
     "documents": ("Documents", "दस्तावेज़"),
     "searchDocuments": ("Search documents and text inside pages", "दस्तावेज़ और पेजों के अंदर का टेक्स्ट खोजें"),

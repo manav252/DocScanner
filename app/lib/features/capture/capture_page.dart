@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart' show openAppSettings;
 
 import '../../core/app_settings.dart';
+import '../../core/crash_note.dart';
 import '../../core/l10n.dart';
 import '../../core/providers.dart';
 import '../../data/models.dart';
@@ -63,6 +64,7 @@ class _CapturePageState extends ConsumerState<CapturePage> with WidgetsBindingOb
     _repo; // capture before dispose, where ref may no longer be used
     if (_docId != null) _keepDocumentAlive(_docId!);
     _camera = ref.read(cameraActiveProvider.notifier);
+    noteEvent('screen: scanner');
     Future.microtask(() => _camera.active = true);
     WidgetsBinding.instance.addObserver(this);
     if (!kIsWeb) SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);

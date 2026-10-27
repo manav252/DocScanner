@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'l10n.dart';
+import 'crash_note.dart';
 
 /// Bumped by Retry: the app rebuilds its screens from scratch.
 final appRetry = ValueNotifier<int>(0);
@@ -21,6 +22,9 @@ void installErrorHandling() {
   ErrorWidget.builder = (details) => SomethingWentWrong(details: details);
   final defaultOnError = FlutterError.onError;
   FlutterError.onError = (details) {
+    // Kept with the crash notes (web), shortened.
+    final msg = details.exceptionAsString().replaceAll('\n', ' ');
+    noteEvent('error: ${msg.length > 200 ? msg.substring(0, 200) : msg}');
     defaultOnError?.call(details); // keeps the normal report (console / test failures)
   };
   PlatformDispatcher.instance.onError = (error, stack) {
