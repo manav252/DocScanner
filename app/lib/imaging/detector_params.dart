@@ -22,6 +22,14 @@ abstract final class DetectorParams {
   static const confidentScore = 0.35;
   static const lineMinLength = 0.12;
   static const lineEpsilon = 0.005;
+  static const frameMargin = 0.012;
+  static const maxFrameSides = 2;
+  static const maxArea = 0.95;
+  static const frameSideFactor = 0.8;
+  static const paperSatMax = 60;
+  static const paperMorph = 0.02;
+  static const glarePercentile = 99.0;
+  static const textureMorph = 0.02;
 
   static Map<String, Object> toJson() => {
     'max_dim': maxDim,
@@ -46,5 +54,13 @@ abstract final class DetectorParams {
     'confident_score': confidentScore,
     'line_min_length': lineMinLength,
     'line_epsilon': lineEpsilon,
+    'frame_margin': frameMargin,
+    'max_frame_sides': maxFrameSides,
+    'max_area': maxArea,
+    'frame_side_factor': frameSideFactor,
+    'paper_sat_max': paperSatMax,
+    'paper_morph': paperMorph,
+    'glare_percentile': glarePercentile,
+    'texture_morph': textureMorph,
   };
 }

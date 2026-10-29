@@ -41,12 +41,15 @@ Detection detectDocumentMat(cv.Mat image, {int maxDim = _P.maxDim}) {
     4 => cv.cvtColor(padded, cv.COLOR_BGRA2GRAY),
     final n => throw ArgumentError('unsupported channel count $n'),
   };
+  final bgr = switch (padded.channels) {
+    1 => null,
+    3 => padded.clone(),
+    _ => cv.cvtColor(padded, cv.COLOR_BGRA2BGR),
+  };
   // Colour saturation: a page on a coloured background of the same brightness.
   cv.Mat? saturation() {
-    if (padded.channels == 1) return null;
-    final bgr = padded.channels == 4 ? cv.cvtColor(padded, cv.COLOR_BGRA2BGR) : padded.clone();
+    if (bgr == null) return null;
     final hsv = cv.cvtColor(bgr, cv.COLOR_BGR2HSV);
-    bgr.dispose();
     final parts = cv.split(hsv);
     hsv.dispose();
     parts[0].dispose();
@@ -55,10 +58,11 @@ Detection detectDocumentMat(cv.Mat image, {int maxDim = _P.maxDim}) {
   }
 
   try {
-    return _detectPadded(gray, saturation, w, h, scale);
+    return _detectPadded(gray, saturation, bgr == null ? null : () => _paperMask(bgr), w, h, scale);
   } finally {
     gray.dispose();
     padded.dispose();
+    bgr?.dispose();
   }
 }
 
@@ -83,21 +87,44 @@ Detection detectDocumentBytes(Uint8List encoded) {
   return d;
 }
 
-Detection _detectPadded(cv.Mat gray, cv.Mat? Function() saturation, int w, int h, double scale) {
+Detection _detectPadded(
+  cv.Mat gray,
+  cv.Mat? Function() saturation,
+  cv.Mat Function()? paperMask,
+  int w,
+  int h,
+  double scale,
+) {
   const pad = _P.pad;
-  final passes = <(cv.Mat? Function(), bool)>[
-    (() => gray.clone(), false),
-    (() => _clahe(gray), true),
-    (() => _normalizeLighting(gray), true),
-    (saturation, false),
+  // (channel, low thresholds, borders checked on the grayscale image instead of the channel)
+  final passes = <(cv.Mat? Function(), bool, bool)>[
+    (() => gray.clone(), false, false),
+    (() => _clahe(gray), true, false),
+    (() => _normalizeLighting(gray), true, false),
+    // Lighting divided out, without CLAHE (whose builds differ by a grey level
+    // here and there between OpenCV versions).
+    (
+      () {
+        final clipped = _clipGlare(gray), flat = _flatten(clipped);
+        clipped.dispose();
+        final out = _suppressTexture(flat);
+        flat.dispose();
+        return out;
+      },
+      true,
+      false,
+    ),
+    (saturation, false, false),
+    // The paper mask: its outlines are checked against the photo's own edges
+    // (the mask's are always crisp), so a blob of paper plus pale cloth does not pass.
+    if (paperMask != null) (paperMask, false, true),
   ];
   ScoredQuad? best;
-  for (final (make, low) in passes) {
+  for (final (make, low, onGray) in passes) {
     final channel = make(); // built only when needed
     if (channel == null) continue;
     final edges = _edgeMap(channel, low);
-    // Border support is measured on the same channel the pass searched.
-    final blurred = cv.gaussianBlur(channel, (5, 5), 0);
+    final blurred = cv.gaussianBlur(onGray ? gray : channel, (5, 5), 0);
     final res = _bestQuad(edges, GrayImage(Uint8List.fromList(blurred.data), blurred.cols, blurred.rows));
     for (final m in [channel, edges, blurred]) {
       m.dispose();
@@ -125,21 +152,138 @@ cv.Mat _clahe(cv.Mat gray) {
   return out;
 }
 
-/// Even out shadows and uneven light: divide by a heavily blurred copy (the
-/// lighting), then boost local contrast with CLAHE.
-cv.Mat _normalizeLighting(cv.Mat gray) {
-  final k = math.max(3, (math.max(gray.rows, gray.cols) ~/ 8) | 1);
-  final bg = cv.gaussianBlur(gray, (k, k), 0);
-  final g = gray.data, b = bg.data;
+final _f32 = Float32List(1);
+
+/// [v] rounded to float32, as numpy computes on float32 arrays.
+double _toF32(double v) {
+  _f32[0] = v;
+  return _f32[0];
+}
+
+/// Divide by the lighting (two box blurs, about a Gaussian with sigma = long
+/// side / 50; computed identically by every OpenCV version): shadows and
+/// light falloff even out, local differences stay.
+cv.Mat _flatten(cv.Mat channel) {
+  final k = math.max(3, (math.max(channel.rows, channel.cols) ~/ 20) | 1);
+  final b1 = cv.blur(channel, (k, k));
+  final bg = cv.blur(b1, (k, k));
+  b1.dispose();
+  final g = channel.data, b = bg.data;
   final flat = Uint8List(g.length);
   for (var i = 0; i < g.length; i++) {
-    flat[i] = (g[i] / (b[i] + 1) * 180).clamp(0, 255).toInt();
+    flat[i] = _toF32(_toF32(g[i] / (b[i] + 1)) * 180).clamp(0, 255).toInt();
   }
   bg.dispose();
-  final m = cv.Mat.fromList(gray.rows, gray.cols, cv.MatType.CV_8UC1, flat);
-  final out = _clahe(m);
-  m.dispose();
+  return cv.Mat.fromList(channel.rows, channel.cols, cv.MatType.CV_8UC1, flat);
+}
+
+/// numpy.percentile (linear) of an 8-bit image.
+double _percentile(cv.Mat m, double p) {
+  final hist = Uint32List(256);
+  final d = m.data;
+  for (var i = 0; i < d.length; i++) {
+    hist[d[i]]++;
+  }
+  final idx = p / 100 * (d.length - 1), lo = idx.floor(), hi = idx.ceil();
+  int at(int k) {
+    var acc = 0;
+    for (var v = 0; v < 256; v++) {
+      acc += hist[v];
+      if (acc > k) return v;
+    }
+    return 255;
+  }
+
+  final a = at(lo), b = at(hi);
+  return a + (idx - lo) * (b - a);
+}
+
+/// Flash glare: brightness above the glarePercentile-th percentile cut to it,
+/// so a burnt-out highlight does not outshine the page edge.
+cv.Mat _clipGlare(cv.Mat gray) {
+  final top = _percentile(gray, _P.glarePercentile).truncate(); // as numpy.uint8() does
+  final d = Uint8List.fromList(gray.data);
+  for (var i = 0; i < d.length; i++) {
+    if (d[i] > top) d[i] = top;
+  }
+  return cv.Mat.fromList(gray.rows, gray.cols, cv.MatType.CV_8UC1, d);
+}
+
+/// Even out shadows, uneven light and glare: clip highlights, divide by the
+/// lighting, then boost local contrast with CLAHE.
+cv.Mat _normalizeLighting(cv.Mat gray) {
+  final clipped = _clipGlare(gray), flat = _flatten(clipped);
+  clipped.dispose();
+  final out = _clahe(flat);
+  flat.dispose();
   return out;
+}
+
+/// Page outline without what is on or under the page: a closing fills in dark
+/// strokes (handwriting, ruled lines, print), a median blur flattens weave.
+cv.Mat _suppressTexture(cv.Mat gray) {
+  final k = math.max(3, (_P.textureMorph * math.max(gray.rows, gray.cols)).truncate() | 1);
+  final kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE, (k, k));
+  final closed = cv.morphologyEx(gray, cv.MORPH_CLOSE, kernel);
+  kernel.dispose();
+  final out = cv.medianBlur(closed, 5);
+  closed.dispose();
+  return out;
+}
+
+/// Where the paper is: colourless (saturation below paperSatMax) and bright
+/// for its surroundings (brightness with the lighting divided out, above the
+/// Otsu threshold); opened and closed to drop checks, rules and text; only the
+/// largest region kept. 255 = paper. BGR in.
+cv.Mat _paperMask(cv.Mat bgr) {
+  final hsv = cv.cvtColor(bgr, cv.COLOR_BGR2HSV);
+  final parts = cv.split(hsv);
+  hsv.dispose();
+  final val = _flatten(parts[2]);
+  final (_, bright) = cv.threshold(val, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU);
+  final s = parts[1].data, br = bright.data;
+  final mask = Uint8List(s.length);
+  for (var i = 0; i < mask.length; i++) {
+    mask[i] = s[i] < _P.paperSatMax && br[i] > 0 ? 255 : 0;
+  }
+  for (final m in [...parts, val, bright]) {
+    m.dispose();
+  }
+  final k = math.max(3, (_P.paperMorph * math.max(bgr.rows, bgr.cols)).truncate() | 1);
+  final kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE, (k, k));
+  final raw = cv.Mat.fromList(bgr.rows, bgr.cols, cv.MatType.CV_8UC1, mask);
+  final opened = cv.morphologyEx(raw, cv.MORPH_OPEN, kernel);
+  final closed = cv.morphologyEx(opened, cv.MORPH_CLOSE, kernel);
+  for (final m in [kernel, raw, opened]) {
+    m.dispose();
+  }
+  final labels = cv.Mat.empty(), stats = cv.Mat.empty(), centroids = cv.Mat.empty();
+  final n = cv.connectedComponentsWithStats(
+    closed,
+    labels,
+    stats,
+    centroids,
+    8,
+    cv.MatType.CV_32S,
+    cv.CCL_DEFAULT,
+  );
+  var biggest = -1, area = -1;
+  for (var i = 1; i < n; i++) {
+    final a = stats.at<int>(i, cv.CC_STAT_AREA);
+    if (a > area) {
+      area = a;
+      biggest = i;
+    }
+  }
+  final l = labels.data.buffer.asInt32List(labels.data.offsetInBytes, labels.rows * labels.cols);
+  final out = Uint8List(l.length);
+  for (var i = 0; i < l.length; i++) {
+    out[i] = biggest > 0 && l[i] == biggest ? 255 : 0;
+  }
+  for (final m in [closed, labels, stats, centroids]) {
+    m.dispose();
+  }
+  return cv.Mat.fromList(bgr.rows, bgr.cols, cv.MatType.CV_8UC1, out);
 }
 
 double _median(cv.Mat m) {
@@ -270,7 +414,7 @@ List<Pt> _refineCorners(List<Pt> quad, cv.Mat gray) {
   final g = blurred.convertTo(cv.MatType.CV_32FC1);
   blurred.dispose();
   final gxm = cv.sobel(g, cv.MatType.CV_32F, 1, 0), gym = cv.sobel(g, cv.MatType.CV_32F, 0, 1);
-  final w = g.cols, h = g.rows, gx = _floatData(gxm), gy = _floatData(gym);
+  final w = g.cols, h = g.rows, gx = _floatData(gxm), gy = _floatData(gym), gv = _floatData(g);
   var q = [...quad];
   for (final band in _P.refineBands) {
     final lines = <(Pt, Pt)>[];
@@ -279,6 +423,23 @@ List<Pt> _refineCorners(List<Pt> quad, cv.Mat gray) {
       final length = ab.length;
       final n = Pt(-ab.y / (length + 1e-6), ab.x / (length + 1e-6));
       final samples = math.max(12, length ~/ 3);
+      // The border's direction: is the page brighter or darker than what is
+      // outside it here? Only edges stepping the same way count, so an inner
+      // box (a card's photo) or a shadow cannot capture the side.
+      final centre = (q[0] + q[1] + q[2] + q[3]) * 0.25;
+      final b = q[(i + 1) % 4];
+      final outSign = (n.x * (a.x + b.x) + n.y * (a.y + b.y)) / 2 - (n.x * centre.x + n.y * centre.y) > 0 ? 1.0 : -1.0;
+      double at(Pt p) => gv[_rint(p.y).clamp(0, h - 1) * w + _rint(p.x).clamp(0, w - 1)];
+      final steps = [
+        for (var s = 0; s < samples; s++)
+          () {
+            final base = a + ab * (0.1 + 0.8 * s / (samples - 1));
+            final d = n * (_P.stepOffset * outSign);
+            return at(base - d) - at(base + d);
+          }(),
+      ]..sort();
+      final step = samples.isOdd ? steps[(samples - 1) ~/ 2] : (steps[samples ~/ 2 - 1] + steps[samples ~/ 2]) / 2;
+      final want = step >= 0 ? -outSign : outSign; // sign of the gradient along n at the border
       final peaks = <Pt>[];
       for (var s = 0; s < samples; s++) {
         final base = a + ab * (0.1 + 0.8 * s / (samples - 1));
@@ -287,7 +448,7 @@ List<Pt> _refineCorners(List<Pt> quad, cv.Mat gray) {
         for (var k = 0; k <= 2 * band; k++) {
           final o = (k - band).toDouble();
           final x = _rint(base.x + o * n.x).clamp(0, w - 1), y = _rint(base.y + o * n.y).clamp(0, h - 1);
-          final r = (gx[y * w + x] * n.x + gy[y * w + x] * n.y).abs();
+          final r = math.max(0.0, want * (gx[y * w + x] * n.x + gy[y * w + x] * n.y));
           if (r > bestR) {
             bestR = r;
             bestK = k;

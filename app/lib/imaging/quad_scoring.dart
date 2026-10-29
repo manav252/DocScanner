@@ -136,11 +136,31 @@ List<double> edgeSupport(List<Pt> q, List<double> bows, GrayImage img) {
 
 /// Check candidate [q] (made from [contour], or from straight lines when
 /// [contour] is null) and score it; null when it fails a check.
+/// For each side of [q]: does it lie along the photo's border (both ends
+/// within frameMargin of the same edge of the unpadded [w] x [h] photo)?
+List<bool> onFrame(List<Pt> q, int w, int h) {
+  final m = _P.frameMargin * math.max(w, h);
+  final lo = _P.pad + m, hx = w - 1 - _P.pad - m, hy = h - 1 - _P.pad - m;
+  return [
+    for (var i = 0; i < 4; i++)
+      () {
+        final a = q[i], b = q[(i + 1) % 4];
+        return (a.x <= lo && b.x <= lo) ||
+            (a.x >= hx && b.x >= hx) ||
+            (a.y <= lo && b.y <= lo) ||
+            (a.y >= hy && b.y >= hy);
+      }(),
+  ];
+}
+
 ScoredQuad? scoreQuad(List<Pt>? contour, double contourArea, List<Pt> q, double imgArea, GrayImage img) {
   q = orderCorners(q);
   if (!isConvex(q)) return null;
   final qArea = polygonArea(q);
   if (qArea < _P.minAreaRatio * imgArea || (contour != null && contourArea / qArea < _P.minFillRatio)) return null;
+  // Never the photo itself (a checked cloth or the padding forms its border).
+  final frameSides = onFrame(q, img.width, img.height).where((f) => f).length;
+  if (qArea > _P.maxArea * imgArea || frameSides > _P.maxFrameSides) return null;
   final ang = interiorAngles(q);
   if (ang.reduce(math.min) < _P.minAngle || ang.reduce(math.max) > _P.maxAngle) return null;
   List<double> bows;
@@ -169,7 +189,14 @@ ScoredQuad? scoreQuad(List<Pt>? contour, double contourArea, List<Pt> q, double 
   final squareness = 1 - ang.map((a) => (a - 90).abs()).reduce((a, b) => a + b) / 4 / 90;
   final meanSupport = support.reduce((a, b) => a + b) / 4;
   // Tie-break between near-identical quads: the one hugging its outline wins.
-  final score = math.sqrt(qArea / imgArea) * meanSupport * squareness * (1 - 0.1 * fit);
+  // A side along the photo's border is less likely a page edge than the
+  // photo's own border meeting cloth: prefer outlines inside the photo.
+  final score =
+      math.sqrt(qArea / imgArea) *
+      meanSupport *
+      squareness *
+      (1 - 0.1 * fit) *
+      math.pow(_P.frameSideFactor, frameSides);
   return ScoredQuad(q, score, curved: contour != null && bowRatio > _P.curvedBow);
 }
 

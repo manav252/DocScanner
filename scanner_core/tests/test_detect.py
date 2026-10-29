@@ -119,3 +119,9 @@ def test_params_match_shared_json():
         p["line_min_length"],
         p["line_epsilon"],
     )
+    assert (D.PAD, D.FRAME_MARGIN, D.MAX_FRAME_SIDES, D.MAX_AREA, D.FRAME_SIDE_FACTOR) == (
+        p["pad"], p["frame_margin"], p["max_frame_sides"], p["max_area"], p["frame_side_factor"]
+    )
+    assert (D.PAPER_SAT_MAX, D.PAPER_MORPH, D.GLARE_PERCENTILE, D.TEXTURE_MORPH) == (
+        p["paper_sat_max"], p["paper_morph"], p["glare_percentile"], p["texture_morph"]
+    )

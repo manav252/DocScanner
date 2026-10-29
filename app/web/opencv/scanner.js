@@ -45,6 +45,14 @@
     confident_score: 0.35,
     line_min_length: 0.12,
     line_epsilon: 0.005,
+    frame_margin: 0.012,
+    max_frame_sides: 2,
+    max_area: 0.95,
+    frame_side_factor: 0.8,
+    paper_sat_max: 60,
+    paper_morph: 0.02,
+    glare_percentile: 99.0,
+    texture_morph: 0.02,
   };
 
   // ---------- pure geometry (no OpenCV) ----------
@@ -240,11 +248,24 @@
   }
 
   /** {quad, score, curved} if q passes every check, else null. contour is null for a quad made of straight edges. */
+  /** For each side of q: does it lie along the photo's border (both ends within frame_margin of the same edge of the unpadded photo)? */
+  function onFrame(q, w, h) {
+    const m = PARAMS.frame_margin * Math.max(w, h), pad = PARAMS.pad;
+    const lo = pad + m, hx = w - 1 - pad - m, hy = h - 1 - pad - m;
+    return [0, 1, 2, 3].map((i) => {
+      const a = q[i], b = q[(i + 1) % 4];
+      return (a[0] <= lo && b[0] <= lo) || (a[0] >= hx && b[0] >= hx) || (a[1] <= lo && b[1] <= lo) || (a[1] >= hy && b[1] >= hy);
+    });
+  }
+
   function scoreQuad(contour, cArea, q, imgArea, img) {
     q = orderCorners(q);
     if (!isConvex(q)) return null;
     const qArea = polyArea(q);
     if (qArea < PARAMS.min_area_ratio * imgArea || (contour && cArea / qArea < PARAMS.min_fill_ratio)) return null;
+    // Never the photo itself (a checked cloth or the padding forms its border).
+    const frameSides = onFrame(q, img.width, img.height).filter(Boolean).length;
+    if (qArea > PARAMS.max_area * imgArea || frameSides > PARAMS.max_frame_sides) return null;
     const ang = interiorAngles(q);
     if (Math.min(...ang) < PARAMS.min_angle || Math.max(...ang) > PARAMS.max_angle) return null;
     let bows, minSupport, fit, bowRatio = 0;
@@ -267,7 +288,10 @@
     const support = bowed.map((v, i) => Math.max(v, straight[i]));
     if (Math.min(...support) < minSupport) return null;
     const squareness = 1 - ang.reduce((s, a) => s + Math.abs(a - 90), 0) / 4 / 90;
-    const score = Math.sqrt(qArea / imgArea) * (support.reduce((s, v) => s + v, 0) / 4) * squareness * (1 - 0.1 * fit);
+    // A side along the photo's border is less likely a page edge than the
+    // photo's own border meeting cloth: prefer outlines inside the photo.
+    const score = Math.sqrt(qArea / imgArea) * (support.reduce((s, v) => s + v, 0) / 4) * squareness * (1 - 0.1 * fit) *
+      PARAMS.frame_side_factor ** frameSides;
     return { quad: q, score, curved: !!contour && bowRatio > PARAMS.curved_bow };
   }
 
@@ -377,26 +401,105 @@
     return out;
   }
 
-  /** Even out shadows: divide by a heavily blurred copy (the lighting), then CLAHE. */
-  function normalizeLighting(cv, gray) {
-    const k = Math.max(3, Math.floor(Math.max(gray.rows, gray.cols) / 8) | 1);
+  /** Divide by a heavily blurred copy (the lighting): shadows and light falloff even out. New Mat. */
+  function flatten(cv, channel) {
+    // Two box blurs (about a Gaussian with sigma = long side / 50): fast at any
+    // size, and computed identically by every OpenCV version (Python, web, Dart).
+    const k = Math.max(3, Math.floor(Math.max(channel.rows, channel.cols) / 20) | 1);
     const bg = new cv.Mat();
-    cv.GaussianBlur(gray, bg, new cv.Size(k, k), 0);
-    const flat = new cv.Mat(gray.rows, gray.cols, cv.CV_8UC1);
-    const g = gray.data, b = bg.data, f = flat.data;
-    for (let i = 0; i < g.length; i++) f[i] = Math.min(255, Math.max(0, Math.trunc((g[i] / (b[i] + 1)) * 180)));
+    cv.blur(channel, bg, new cv.Size(k, k));
+    cv.blur(bg, bg, new cv.Size(k, k));
+    const flat = new cv.Mat(channel.rows, channel.cols, cv.CV_8UC1);
+    const g = channel.data, b = bg.data, f = flat.data;
+    // In float32 steps, as numpy computes it.
+    for (let i = 0; i < g.length; i++) f[i] = Math.min(255, Math.max(0, Math.trunc(Math.fround(Math.fround(g[i] / (b[i] + 1)) * 180))));
     bg.delete();
+    return flat;
+  }
+
+  /** Flash glare: brightness above the glare_percentile-th percentile cut to it. New Mat. */
+  function clipGlare(cv, gray) {
+    const top = Math.trunc(percentile8(gray.data, PARAMS.glare_percentile)); // as numpy.uint8(numpy.percentile())
+    const out = gray.clone(), d = out.data;
+    for (let i = 0; i < d.length; i++) if (d[i] > top) d[i] = top;
+    return out;
+  }
+
+  /** Even out shadows, uneven light and glare: clip highlights, divide by the lighting, then CLAHE. */
+  function normalizeLighting(cv, gray) {
+    const clipped = clipGlare(cv, gray);
+    const flat = flatten(cv, clipped);
+    clipped.delete();
     const out = clahe(cv, flat);
     flat.delete();
     return out;
   }
 
-  /** The detection passes over a working image, in order: [name, make channel, low thresholds]. */
+  /** Page outline without what is on or under it: closing fills in strokes and rules, median flattens weave. */
+  function suppressTexture(cv, gray) {
+    const k = Math.max(3, Math.trunc(PARAMS.texture_morph * Math.max(gray.rows, gray.cols)) | 1);
+    const kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(k, k));
+    const closed = new cv.Mat(), out = new cv.Mat();
+    cv.morphologyEx(gray, closed, cv.MORPH_CLOSE, kernel);
+    cv.medianBlur(closed, out, 5);
+    kernel.delete(); closed.delete();
+    return out;
+  }
+
+  /**
+   * Where the paper is: colourless (saturation below paper_sat_max) and bright
+   * for its surroundings (brightness with the lighting divided out, above the
+   * Otsu threshold); opened and closed to drop checks, rules and text; only
+   * the largest region kept. 255 = paper. RGBA in.
+   */
+  function paperMask(cv, color) {
+    const rgb = new cv.Mat(), hsv = new cv.Mat(), parts = new cv.MatVector();
+    cv.cvtColor(color, rgb, cv.COLOR_RGBA2RGB);
+    cv.cvtColor(rgb, hsv, cv.COLOR_RGB2HSV);
+    cv.split(hsv, parts);
+    const sat = parts.get(1), v = parts.get(2);
+    const val = flatten(cv, v);
+    const bright = new cv.Mat();
+    cv.threshold(val, bright, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU);
+    const mask = new cv.Mat(val.rows, val.cols, cv.CV_8UC1);
+    const S = sat.data, B = bright.data, M = mask.data;
+    for (let i = 0; i < M.length; i++) M[i] = S[i] < PARAMS.paper_sat_max && B[i] > 0 ? 255 : 0;
+    rgb.delete(); hsv.delete(); sat.delete(); v.delete(); parts.delete(); val.delete(); bright.delete();
+    const k = Math.max(3, Math.trunc(PARAMS.paper_morph * Math.max(mask.rows, mask.cols)) | 1);
+    const kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(k, k));
+    cv.morphologyEx(mask, mask, cv.MORPH_OPEN, kernel);
+    cv.morphologyEx(mask, mask, cv.MORPH_CLOSE, kernel);
+    kernel.delete();
+    const labels = new cv.Mat(), stats = new cv.Mat(), centroids = new cv.Mat();
+    const n = cv.connectedComponentsWithStats(mask, labels, stats, centroids, 8, cv.CV_32S);
+    let biggest = -1, area = -1;
+    for (let i = 1; i < n; i++) {
+      const a = stats.intAt(i, cv.CC_STAT_AREA);
+      if (a > area) { area = a; biggest = i; }
+    }
+    const L = labels.data32S;
+    for (let i = 0; i < M.length; i++) M[i] = biggest > 0 && L[i] === biggest ? 255 : 0;
+    labels.delete(); stats.delete(); centroids.delete();
+    return mask;
+  }
+
+  /**
+   * The detection passes over a working image, in order: [name, make channel,
+   * low thresholds, borders checked on the grayscale image instead of the channel].
+   */
   function passes(cv, work) {
     return [
       ['normal', () => work.gray.clone(), false],
       ['low contrast (CLAHE)', () => clahe(cv, work.gray), true],
       ['shadows (lighting normalised)', () => normalizeLighting(cv, work.gray), true],
+      ['texture suppressed', () => {
+        // Lighting divided out, without CLAHE (whose opencv.js build differs
+        // from native OpenCV by a grey level here and there).
+        const clipped = clipGlare(cv, work.gray), flat = flatten(cv, clipped);
+        const out = suppressTexture(cv, flat);
+        clipped.delete(); flat.delete();
+        return out;
+      }, true],
       ['colour (saturation)', () => {
         const rgb = new cv.Mat(), hsv = new cv.Mat(), parts = new cv.MatVector();
         cv.cvtColor(work.color, rgb, cv.COLOR_RGBA2RGB);
@@ -406,15 +509,23 @@
         rgb.delete(); hsv.delete(); parts.delete();
         return s;
       }, false],
+      // Its outlines are checked against the photo's own edges (the mask's are
+      // always crisp), so a blob of paper plus pale cloth does not pass.
+      ['paper (bright, colourless)', () => paperMask(cv, work.color), false, true],
     ];
   }
 
   /** Run the passes; best result {quad, score, curved, ratio, pass} or null. keep(steps) may keep the chosen pass's images. */
   function searchPasses(cv, work, keep) {
     let best = null;
-    for (const [name, make, low] of passes(cv, work)) {
+    for (const [name, make, low, onGray] of passes(cv, work)) {
       const channel = make();
       const st = edgeSteps(cv, channel, low);
+      if (onGray) {
+        st.blurred.delete();
+        st.blurred = new cv.Mat();
+        cv.GaussianBlur(work.gray, st.blurred, new cv.Size(5, 5), 0);
+      }
       const res = bestQuad(cv, st.edges, { data: st.blurred.data, width: st.blurred.cols, height: st.blurred.rows });
       channel.delete();
       if (res && (!best || res.score > best.score)) {
@@ -455,7 +566,7 @@
     g.convertTo(g, cv.CV_32F);
     cv.Sobel(g, gx, cv.CV_32F, 1, 0, 3);
     cv.Sobel(g, gy, cv.CV_32F, 0, 1, 3);
-    const w = g.cols, h = g.rows, GX = gx.data32F, GY = gy.data32F;
+    const w = g.cols, h = g.rows, GX = gx.data32F, GY = gy.data32F, G = g.data32F;
     let q = quad.map((p) => p.slice());
     for (const band of PARAMS.refine_bands) {
       const lines = [];
@@ -465,6 +576,21 @@
         const length = Math.hypot(abx, aby);
         const nx = -aby / (length + 1e-6), ny = abx / (length + 1e-6);
         const S = Math.max(12, Math.trunc(length / 3));
+        // The border's direction: is the page brighter or darker than what is
+        // outside it here? Only edges stepping the same way count, so an inner
+        // box (a card's photo) or a shadow cannot capture the side.
+        const cx = (q[0][0] + q[1][0] + q[2][0] + q[3][0]) / 4, cy = (q[0][1] + q[1][1] + q[2][1] + q[3][1]) / 4;
+        const outSign = (nx * (a[0] + b[0]) + ny * (a[1] + b[1])) / 2 - (nx * cx + ny * cy) > 0 ? 1 : -1;
+        const px = (v) => Math.min(w - 1, Math.max(0, Math.round(v))), py = (v) => Math.min(h - 1, Math.max(0, Math.round(v)));
+        const steps = [];
+        for (let s = 0; s < S; s++) {
+          const t = 0.1 + (0.8 * s) / (S - 1);
+          const bx = a[0] + t * abx, by = a[1] + t * aby, d = PARAMS.step_offset * outSign;
+          steps.push(G[py(by - d * ny) * w + px(bx - d * nx)] - G[py(by + d * ny) * w + px(bx + d * nx)]);
+        }
+        steps.sort((u, v) => u - v);
+        const step = S % 2 ? steps[(S - 1) / 2] : (steps[S / 2 - 1] + steps[S / 2]) / 2;
+        const want = step >= 0 ? -outSign : outSign; // sign of the gradient along n at the border
         const peaks = [];
         for (let s = 0; s < S; s++) {
           const t = 0.1 + (0.8 * s) / (S - 1);
@@ -474,7 +600,7 @@
             const o = k - band;
             const x = Math.min(w - 1, Math.max(0, Math.round(bx + o * nx)));
             const y = Math.min(h - 1, Math.max(0, Math.round(by + o * ny)));
-            const r = Math.abs(GX[y * w + x] * nx + GY[y * w + x] * ny);
+            const r = Math.max(0, want * (GX[y * w + x] * nx + GY[y * w + x] * ny));
             if (r > bestR) { bestR = r; bestK = k; }
           }
           if (bestR > PARAMS.refine_min_grad && bestK > 0 && bestK < 2 * band) {
@@ -1025,6 +1151,7 @@
     PARAMS, detectDocument, explainDetection, warpPerspective, warpPage, pageCurves, curveAt, applyEdits, prepareOcr, OCR, orderCorners,
     fullBounds, outputSize,
     // For tests: compare the scoring step by step with the Python reference.
+    __test: { clipGlare, flatten, refineCorners },
     internals: { workingImage, passes, edgeSteps, bestQuad, scoreQuad, sideFits, edgeSupport, extremePoints, lineQuads },
   };
 });

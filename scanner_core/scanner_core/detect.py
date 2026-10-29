@@ -33,6 +33,15 @@ LINE_COUNT = 8  # longest distinct straight edges combined into quads
 LINE_MIN_LENGTH = 0.12  # straight edges at least this long (fraction of the image's long side)
 LINE_EPSILON = 0.005  # outline simplification for straight edges (fraction of its perimeter)
 CONFIDENT_SCORE = 0.35  # a pass result this good ends the search; weaker ones let later passes try
+PAD = 4  # working image padding (replicated border) so a page touching the edge still closes
+FRAME_MARGIN = 0.012  # a side this close (fraction of the long side) to the photo's border lies on it
+MAX_FRAME_SIDES = 2  # more sides on the photo's border: that is the photo itself, not a page
+MAX_AREA = 0.95  # a quad covering more of the photo than this is the photo itself
+FRAME_SIDE_FACTOR = 0.8  # score factor per side lying on the photo's border
+TEXTURE_MORPH = 0.02  # texture pass: closing kernel (fraction of the long side) wiping out text and ruled lines
+PAPER_SAT_MAX = 60  # paper mask: colourless (HSV saturation below this) ...
+PAPER_MORPH = 0.02  # ... morphology kernel (fraction of the long side) removing checks, text and gaps
+GLARE_PERCENTILE = 99.0  # lighting pass: highlights (flash glare) clipped at this brightness percentile
 
 
 @dataclass(frozen=True)
@@ -311,6 +320,11 @@ def _validate(c, c_area, q, img_area, img):
     q_area = cv2.contourArea(q)
     if q_area < MIN_AREA_RATIO * img_area or (c is not None and c_area / q_area < MIN_FILL_RATIO):
         return None
+    # Never the photo itself (a checked cloth or the padding forms its border).
+    on_frame = _on_frame(q, img.shape[1], img.shape[0])
+    frame_sides = sum(on_frame)
+    if q_area > MAX_AREA * img_area or frame_sides > MAX_FRAME_SIDES:
+        return None
     ang = _interior_angles(q)
     if ang.min() < MIN_ANGLE or ang.max() > MAX_ANGLE:
         return None
@@ -336,8 +350,25 @@ def _validate(c, c_area, q, img_area, img):
     squareness = 1 - float(np.abs(ang - 90).mean()) / 90
     # Tie-break between near-identical quads: the one hugging its outline wins.
     score = float(np.sqrt(q_area / img_area)) * float(np.mean(support)) * squareness * (1 - 0.1 * fit)
+    # A side along the photo's border is less likely a page edge than the
+    # photo's own border meeting cloth: prefer outlines inside the photo.
+    score *= FRAME_SIDE_FACTOR**frame_sides
     curved = c is not None and bow_ratio > CURVED_BOW
     return q, score, curved
+
+
+def _on_frame(q: np.ndarray, w: int, h: int) -> list[bool]:
+    """For each side of q: does it lie along the photo's border (both ends
+    within FRAME_MARGIN of the same edge of the unpadded photo)?"""
+    m = FRAME_MARGIN * max(w, h)
+    lo, hx, hy = PAD + m, w - 1 - PAD - m, h - 1 - PAD - m
+    out = []
+    for i in range(4):
+        a, b = q[i], q[(i + 1) % 4]
+        out.append(
+            bool((a[0] <= lo and b[0] <= lo) or (a[0] >= hx and b[0] >= hx) or (a[1] <= lo and b[1] <= lo) or (a[1] >= hy and b[1] >= hy))
+        )
+    return out
 
 
 def refine_corners(quad: np.ndarray, gray: np.ndarray, bands=(10, 5, 3), min_grad: float = 20.0) -> np.ndarray:
@@ -366,10 +397,19 @@ def refine_corners(quad: np.ndarray, gray: np.ndarray, bands=(10, 5, 3), min_gra
             n = np.array([-ab[1], ab[0]]) / (length + 1e-6)
             ts = np.linspace(0.1, 0.9, max(12, int(length / 3)))
             base = a + ts[:, None] * ab  # (S, 2)
+            # The border's direction: is the page brighter or darker than what
+            # is outside it here? Only edges stepping the same way count, so an
+            # inner box (a card's photo) or a shadow cannot capture the side.
+            centre = q.mean(axis=0)
+            out_sign = 1.0 if float(n @ (a + b) / 2 - n @ centre) > 0 else -1.0  # n * out_sign points outwards
+            pin = np.clip(np.rint(base - STEP_OFFSET * out_sign * n).astype(int), 0, [w - 1, h - 1])
+            pout = np.clip(np.rint(base + STEP_OFFSET * out_sign * n).astype(int), 0, [w - 1, h - 1])
+            step = float(np.median(g[pin[:, 1], pin[:, 0]] - g[pout[:, 1], pout[:, 0]]))
+            want = -out_sign if step >= 0 else out_sign  # sign of the gradient along n at the border
             cand = base[:, None, :] + offs[None, :, None] * n  # (S, K, 2)
             xi = np.clip(np.rint(cand[..., 0]).astype(int), 0, w - 1)
             yi = np.clip(np.rint(cand[..., 1]).astype(int), 0, h - 1)
-            resp = np.abs(gx[yi, xi] * n[0] + gy[yi, xi] * n[1])  # gradient across the side
+            resp = np.maximum(0.0, want * (gx[yi, xi] * n[0] + gy[yi, xi] * n[1]))  # gradient across the side, right way
             k = resp.argmax(axis=1)
             ok = (resp[np.arange(len(k)), k] > min_grad) & (k > 0) & (k < len(offs) - 1)
             peaks = cand[np.arange(len(k)), k][ok]
@@ -386,13 +426,57 @@ def refine_corners(quad: np.ndarray, gray: np.ndarray, bands=(10, 5, 3), min_gra
     return q
 
 
+def _flatten(channel: np.ndarray) -> np.ndarray:
+    """Divide by a heavily blurred copy (the lighting): shadows and light
+    falloff even out, local differences stay."""
+    # Two box blurs (about a Gaussian with sigma = long side / 50): fast at any
+    # size, and computed identically by every OpenCV version (Python, web, Dart).
+    k = max(3, (max(channel.shape) // 20) | 1)
+    bg = cv2.blur(cv2.blur(channel, (k, k)), (k, k))
+    return np.clip(channel.astype(np.float32) / (bg.astype(np.float32) + 1) * 180, 0, 255).astype(np.uint8)
+
+
+def _clip_glare(gray: np.ndarray) -> np.ndarray:
+    """Flash glare: brightness above the GLARE_PERCENTILE-th percentile is cut
+    to it, so a burnt-out highlight does not outshine the page edge."""
+    top = np.uint8(np.percentile(gray, GLARE_PERCENTILE))
+    return np.minimum(gray, top)
+
+
 def normalize_lighting(gray: np.ndarray) -> np.ndarray:
-    """Even out shadows and uneven light: divide by a heavily blurred copy (the
-    lighting), then boost local contrast with CLAHE."""
-    k = max(3, (max(gray.shape) // 8) | 1)
-    bg = cv2.GaussianBlur(gray, (k, k), 0).astype(np.float32) + 1
-    flat = np.clip(gray.astype(np.float32) / bg * 180, 0, 255).astype(np.uint8)
-    return cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8)).apply(flat)
+    """Even out shadows, uneven light and glare: clip highlights, divide by a
+    heavily blurred copy (the lighting), then boost local contrast with CLAHE."""
+    return cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8)).apply(_flatten(_clip_glare(gray)))
+
+
+def suppress_texture(gray: np.ndarray) -> np.ndarray:
+    """Page outline without what is on or under the page: a closing with a
+    kernel of TEXTURE_MORPH of the long side fills in dark strokes (handwriting,
+    ruled lines, print) and a median blur flattens cloth weave."""
+    k = max(3, int(TEXTURE_MORPH * max(gray.shape)) | 1)
+    closed = cv2.morphologyEx(gray, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k, k)))
+    return cv2.medianBlur(closed, 5)
+
+
+def paper_mask(bgr: np.ndarray) -> np.ndarray:
+    """Where the paper is: colourless (low saturation) and bright for its
+    surroundings (brightness with the lighting divided out, above the Otsu
+    threshold). Opening then closing with a kernel of PAPER_MORPH of the long
+    side removes cloth checks, ruled lines and text; only the largest connected
+    region is kept. 255 = paper."""
+    hsv = cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV)
+    sat, val = hsv[..., 1], _flatten(hsv[..., 2])
+    _, bright = cv2.threshold(val, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    mask = np.where((sat < PAPER_SAT_MAX) & (bright > 0), 255, 0).astype(np.uint8)
+    k = max(3, int(PAPER_MORPH * max(mask.shape)) | 1)
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k, k))
+    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+    n, labels, stats, _ = cv2.connectedComponentsWithStats(mask, connectivity=8)
+    if n <= 1:
+        return np.zeros_like(mask)
+    biggest = 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))
+    return np.where(labels == biggest, 255, 0).astype(np.uint8)
 
 
 def edge_map(channel: np.ndarray, low: bool = False) -> np.ndarray:
@@ -420,23 +504,28 @@ def detect_document(image: np.ndarray, max_dim: int = MAX_DIM) -> Detection:
         cv2.resize(image, (round(w * scale), round(h * scale)), interpolation=cv2.INTER_AREA) if scale < 1 else image
     )
     # Pad by a few pixels so a page touching the border still forms a closed contour.
-    pad = 4
+    pad = PAD
     small = cv2.copyMakeBorder(small, pad, pad, pad, pad, cv2.BORDER_REPLICATE)
     color = small.ndim == 3
     gray = cv2.cvtColor(small, cv2.COLOR_BGR2GRAY) if color else small
     clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
+    # (channel, low thresholds, image the borders are checked on: None = the channel itself)
     passes = [
-        (gray, False),
-        (lambda: clahe.apply(gray), True),
-        (lambda: normalize_lighting(gray), True),
+        (gray, False, None),
+        (lambda: clahe.apply(gray), True, None),
+        (lambda: normalize_lighting(gray), True, None),
+        (lambda: suppress_texture(_flatten(_clip_glare(gray))), True, None),
     ]
     if color:
-        passes.append((lambda: cv2.cvtColor(small, cv2.COLOR_BGR2HSV)[..., 1], False))
+        passes.append((lambda: cv2.cvtColor(small, cv2.COLOR_BGR2HSV)[..., 1], False, None))
+        # The paper mask: its outlines are checked against the photo's own
+        # edges (the mask's are always crisp), so a blob of paper plus pale
+        # cloth does not pass.
+        passes.append((lambda: paper_mask(small), False, gray))
     best = None
-    for channel, low in passes:
+    for channel, low, support in passes:
         channel = channel() if callable(channel) else channel  # built only when needed
-        # Edge support is measured on the same channel the pass searched.
-        res = _best_quad(edge_map(channel, low), cv2.GaussianBlur(channel, (5, 5), 0))
+        res = _best_quad(edge_map(channel, low), cv2.GaussianBlur(channel if support is None else support, (5, 5), 0))
         if res is not None and (best is None or res[3] > best[3]):
             best = res
         if best is not None and best[3] >= CONFIDENT_SCORE:

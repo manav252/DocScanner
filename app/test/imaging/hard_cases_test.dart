@@ -21,8 +21,49 @@ final hard = jsonDecode(File('${hardDir.path}/hard_cases.json').readAsStringSync
 final hardReference =
     jsonDecode(File('${hardDir.path}/python_reference.json').readAsStringSync()) as Map<String, dynamic>;
 
+final scenesDir = Directory('${fixturesDir.path}/scenes');
+final scenes = jsonDecode(File('${scenesDir.path}/scene_cases.json').readAsStringSync()) as Map<String, dynamic>;
+final scenesReference =
+    jsonDecode(File('${scenesDir.path}/python_reference.json').readAsStringSync()) as Map<String, dynamic>;
+
+/// Parity with the Python reference: the same decision (page found or not) and
+/// corners within 6 px. A photo may differ when both results are right (within
+/// tolerance of the truth; at most 5 % of photos, checked at the end) or both
+/// wrong (listed); one right and the other wrong fails at once. (See
+/// test_js/scanner.test.js; both read the JPEGs with libjpeg here.)
+final parityDiffers = <String>[];
+var parityPhotos = 0;
+void checkParity(String file, Detection d, Map<String, dynamic> py, List<Pt> truth) {
+  parityPhotos++;
+  final pyFound = py['found'] as bool, pyCorners = cornersOf(py['corners']);
+  bool right(bool found, List<Pt> c) => found && maxCornerError(c, truth) < tolerance;
+  final same = d.found == pyFound && (!d.found || maxCornerError(d.corners, pyCorners) < 6);
+  if (same) return;
+  final why = d.found != pyFound
+      ? 'found differs'
+      : 'corners differ by ${maxCornerError(d.corners, pyCorners).toStringAsFixed(1)}px';
+  final r = right(d.found, d.corners);
+  expect(r, right(pyFound, pyCorners), reason: '$file: $why from the Python reference, and only one of them is right');
+  parityDiffers.add('$file ($why; both ${r ? 'right' : 'wrong'})');
+}
+
 void main() {
   final results = <String, Map<String, int>>{};
+  final sceneResults = <String, Map<String, int>>{};
+  for (final MapEntry(key: name, value: items as List) in (scenes['cases'] as Map<String, dynamic>).entries) {
+    test('scene: $name', () {
+      var ok = 0;
+      for (final it in items.cast<Map<String, dynamic>>()) {
+        final img = cv.imread('${scenesDir.path}/${it['file']}');
+        final d = detectDocumentMat(img);
+        img.dispose();
+        final truth = orderCorners(cornersOf(it['corners']));
+        checkParity(it['file'] as String, d, scenesReference[it['file']] as Map<String, dynamic>, truth);
+        if (d.found && maxCornerError(d.corners, truth) < tolerance) ok++;
+      }
+      sceneResults[name] = {'success': ok, 'total': items.length};
+    });
+  }
   for (final MapEntry(key: name, value: items as List) in (hard['cases'] as Map<String, dynamic>).entries) {
     test('hard case: $name', () {
       var ok = 0;
@@ -30,17 +71,9 @@ void main() {
         final img = cv.imread('${hardDir.path}/${it['file']}');
         final d = detectDocumentMat(img);
         img.dispose();
-        final py = hardReference[it['file']] as Map<String, dynamic>;
-        expect(d.found, py['found'], reason: '${it['file']}: found differs from the Python reference');
-        if (d.found) {
-          final truth = orderCorners(cornersOf(it['corners']));
-          // Where the reference is right, the port must land on the same corners.
-          if (maxCornerError(cornersOf(py['corners']), truth) < tolerance) {
-            final diff = maxCornerError(d.corners, cornersOf(py['corners']));
-            expect(diff, lessThan(6), reason: '${it['file']} differs from the Python reference by ${diff.round()} px');
-          }
-          if (maxCornerError(d.corners, truth) < tolerance) ok++;
-        }
+        final truth = orderCorners(cornersOf(it['corners']));
+        checkParity(it['file'] as String, d, hardReference[it['file']] as Map<String, dynamic>, truth);
+        if (d.found && maxCornerError(d.corners, truth) < tolerance) ok++;
       }
       results[name] = {'success': ok, 'total': items.length};
     });
@@ -108,9 +141,19 @@ void main() {
     }
   });
 
+  test('parity: no more than 5 % of photos differ from the Python reference while both are right', () {
+    if (parityDiffers.isNotEmpty) {
+      // ignore: avoid_print
+      print('differ (${parityDiffers.length}/$parityPhotos): ${parityDiffers.join(', ')}');
+    }
+    expect(parityPhotos, greaterThan(0));
+    expect(parityDiffers.where((d) => d.endsWith('both right)')).length, lessThanOrEqualTo(0.05 * parityPhotos));
+  });
   tearDownAll(() {
     File('../docs/testing/detection-after-dart.json')
         .writeAsStringSync(const JsonEncoder.withIndent(' ').convert(results));
+    File('../docs/testing/scenes-after-dart.json')
+        .writeAsStringSync(const JsonEncoder.withIndent(' ').convert(sceneResults));
   });
 }
 

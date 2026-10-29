@@ -26,6 +26,25 @@ test.before(async () => {
 
 test('params match shared/detector_params.json', () => assert.deepStrictEqual(S.PARAMS, params));
 
+// Parity with the Python reference (scanner_core, OpenCV 4.12 like opencv.js):
+// the same decision (page found or not) and corners within 6 px. The two read
+// the JPEG with different decoders (libjpeg-turbo / jpeg-js), whose pixels
+// differ slightly; on a borderline photo that can move a corner by a pixel or
+// two of the 500 px working image. So a photo may differ when both results are
+// right (within TOL of the truth), on no more than 5 % of the photos, or when
+// both are wrong (listed, not counted); a photo where one is right and the
+// other wrong fails at once.
+const parity = { photos: 0, differ: [] };
+function checkParity(file, d, py, truth) {
+  parity.photos++;
+  const right = (r) => r.found && maxErr(r.corners, truth) < TOL;
+  const same = d.found === py.found && (!d.found || maxErr(d.corners, py.corners) < 6);
+  if (same) return;
+  const why = d.found !== py.found ? 'found differs' : `corners differ by ${maxErr(d.corners, py.corners).toFixed(1)}px`;
+  assert.ok(right(d) === right(py), `${file}: ${why} from the Python reference, and only one of them is right`);
+  parity.differ.push(`${file} (${why}; both ${right(d) ? 'right' : 'wrong'})`);
+}
+
 // Hard cases: same page found as the Python reference, within 6 px wherever the
 // reference is right; success per case -> docs/testing/detection-after-web.json.
 const HARD = path.join(FIX, 'hard');
@@ -38,19 +57,44 @@ for (const [name, items] of Object.entries(hard.cases)) {
     for (const it of items) {
       const img = jpeg.decode(fs.readFileSync(path.join(HARD, it.file)), { useTArray: true, formatAsRGBA: true });
       const d = S.detectDocument(cv, img);
-      const py = hardRef[it.file];
-      assert.strictEqual(d.found, py.found, `${it.file}: found differs from the Python reference`);
-      if (!d.found) continue;
       const truth = S.orderCorners(it.corners);
-      if (maxErr(py.corners, truth) < TOL) {
-        const diff = maxErr(d.corners, py.corners);
-        assert.ok(diff < 6, `${it.file}: differs from the Python reference by ${diff.toFixed(1)}px`);
-      }
-      if (maxErr(d.corners, truth) < TOL) ok++;
+      checkParity(it.file, d, hardRef[it.file], truth);
+      if (d.found && maxErr(d.corners, truth) < TOL) ok++;
     }
     hardResults[name] = { success: ok, total: items.length };
   });
 }
+// Phone-test scenes (shared/test_fixtures/scenes): same checks as the hard cases.
+const SCENES = path.join(FIX, 'scenes');
+const scenes = JSON.parse(fs.readFileSync(path.join(SCENES, 'scene_cases.json')));
+const scenesRef = JSON.parse(fs.readFileSync(path.join(SCENES, 'python_reference.json')));
+const sceneResults = {};
+for (const [name, items] of Object.entries(scenes.cases)) {
+  test(`scene: ${name}`, () => {
+    let ok = 0;
+    for (const it of items) {
+      const img = jpeg.decode(fs.readFileSync(path.join(SCENES, it.file)), { useTArray: true, formatAsRGBA: true });
+      const d = S.detectDocument(cv, img);
+      const truth = S.orderCorners(it.corners);
+      checkParity(it.file, d, scenesRef[it.file], truth);
+      if (d.found && maxErr(d.corners, truth) < TOL) ok++;
+    }
+    sceneResults[name] = { success: ok, total: items.length };
+  });
+}
+test('parity: no more than 5 % of photos differ from the Python reference while both are right', () => {
+  if (parity.differ.length) console.log(`  differ (${parity.differ.length}/${parity.photos}): ${parity.differ.join(', ')}`);
+  const bothRight = parity.differ.filter((d) => d.endsWith('both right)')).length;
+  assert.ok(parity.photos > 0);
+  assert.ok(bothRight <= 0.05 * parity.photos, `${bothRight} of ${parity.photos} photos differ`);
+});
+
+test.after(() => {
+  if (Object.keys(sceneResults).length) {
+    fs.writeFileSync(path.join(__dirname, '..', '..', 'docs', 'testing', 'scenes-after-web.json'), JSON.stringify(sceneResults, null, 1));
+  }
+});
+
 /** How much the red rule under the page title bends (% of page height); RGBA image. */
 function ruleBend({ data, width: w, height: h }) {
   const ys = [];

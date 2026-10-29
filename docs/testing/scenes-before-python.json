@@ -1,0 +1,38 @@
+{
+ "card_on_white": {
+  "success": 1,
+  "total": 8,
+  "median_error_px": 46.9,
+  "whole_frame": 0
+ },
+ "card_flash": {
+  "success": 8,
+  "total": 8,
+  "median_error_px": 5.7,
+  "whole_frame": 0
+ },
+ "card_close": {
+  "success": 4,
+  "total": 8,
+  "median_error_px": 60.2,
+  "whole_frame": 0
+ },
+ "blank_on_cloth": {
+  "success": 3,
+  "total": 8,
+  "median_error_px": 226.5,
+  "whole_frame": 2
+ },
+ "blank_shadow": {
+  "success": 7,
+  "total": 8,
+  "median_error_px": 2.2,
+  "whole_frame": 0
+ },
+ "notebook": {
+  "success": 0,
+  "total": 8,
+  "median_error_px": 1290.7,
+  "whole_frame": 0
+ }
+}

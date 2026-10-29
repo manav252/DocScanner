@@ -1,0 +1,26 @@
+{
+ "card_on_white": {
+  "success": 2,
+  "total": 8
+ },
+ "card_flash": {
+  "success": 8,
+  "total": 8
+ },
+ "card_close": {
+  "success": 4,
+  "total": 8
+ },
+ "blank_on_cloth": {
+  "success": 8,
+  "total": 8
+ },
+ "blank_shadow": {
+  "success": 7,
+  "total": 8
+ },
+ "notebook": {
+  "success": 0,
+  "total": 8
+ }
+}

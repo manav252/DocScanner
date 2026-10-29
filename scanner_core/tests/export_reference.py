@@ -1,6 +1,7 @@
 """Write the Python detector's output for every fixture to
 shared/test_fixtures/python_reference.json, and for every hard case to
-shared/test_fixtures/hard/python_reference.json. The Dart and JS ports compare
+shared/test_fixtures/hard/python_reference.json (and scenes/python_reference.json
+for the phone-test scenes). The Dart and JS ports compare
 against them to prove they behave the same as this reference implementation.
 
 Usage: python tests/export_reference.py
@@ -36,4 +37,11 @@ for items in hard["cases"].values():
         curves = page_curves(cv2.imread(str(FIX / "hard" / it["file"])), np.float32(it["corners"]))
         out_hard[it["file"]]["curves"] = None if curves is None else [[round(float(v), 3) for v in c] for c in curves]
 (FIX / "hard" / "python_reference.json").write_text(json.dumps(out_hard, indent=1))
-print(f"wrote {len(out)} + {len(out_hard)} reference results")
+scenes = json.loads((FIX / "scenes" / "scene_cases.json").read_text())
+out_scenes = {}
+for items in scenes["cases"].values():
+    for it in items:
+        d = detect_document(cv2.imread(str(FIX / "scenes" / it["file"])))
+        out_scenes[it["file"]] = {"found": d.found, "corners": [[round(float(x), 2), round(float(y), 2)] for x, y in d.corners]}
+(FIX / "scenes" / "python_reference.json").write_text(json.dumps(out_scenes, indent=1))
+print(f"wrote {len(out)} + {len(out_hard)} + {len(out_scenes)} reference results")
