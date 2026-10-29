@@ -353,3 +353,22 @@ test('meaningful-text filter', () => {
   assert.ok(meaningful('भारत एक देश'));
   for (const junk of ['|', '— —', 'i', '|| ~ ;', '.,;:']) assert.ok(!meaningful(junk), junk);
 });
+
+test('tracking: the previous outline is kept; a hint with no page under it is ignored', () => {
+  const img = load('tilted_paper');
+  const d = S.detectDocument(cv, img);
+  const t = S.detectDocument(cv, img, undefined, d.corners);
+  assert.ok(t.found && maxErr(t.corners, d.corners) < 3);
+  const { width: w, height: h } = img;
+  const wrong = [[0.1 * w, 0.1 * h], [0.3 * w, 0.1 * h], [0.3 * w, 0.3 * h], [0.1 * w, 0.3 * h]];
+  assert.ok(maxErr(S.detectDocument(cv, img, undefined, wrong).corners, d.corners) < 3);
+  assert.equal(S.detectDocument(cv, load('no_document'), undefined, d.corners).found, false);
+});
+
+test('document proportions: ID card, A4 and Letter yes; square and strip no', () => {
+  const rect = (w, h) => [[0, 0], [w, 0], [w, h], [0, h]];
+  const k = S.internals.knownRatio;
+  assert.ok(k(rect(856, 540)) && k(rect(540, 856)) && k(rect(210, 297)) && k(rect(216, 279)));
+  assert.ok(!k(rect(100, 100)) && !k(rect(300, 100)));
+});
+

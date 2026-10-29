@@ -9,6 +9,8 @@ shared/test_fixtures/scenes/ with scene_cases.json:
   blank_shadow    blank page with a half shadow across it
   notebook        ruled, handwritten page of an open notebook: soft spine side,
                   shadow on top, bottom running off the frame
+  card_on_pattern ID card, flash on, on a busy block-printed cloth (blue stepped
+                  diamonds and orange vines on cream) whose edges merge with the card's
 
 "corners" is the page (or card) outline, TL,TR,BR,BL; corners outside the
 photo are clamped to it (what the detector should return). All card data is
@@ -89,6 +91,22 @@ def light_checks(rng):
     colour = rng.integers(120, 210, 3).astype(np.float32)
     img = white * (1 - a) + colour * a
     return np.clip(img + rng.normal(0, 4, img.shape), 0, 255).astype(np.uint8)
+
+
+def block_print(rng):
+    """Cream cloth with blue stepped (pixelated) diamonds and thin orange vines."""
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    p = rng.uniform(150, 220)  # diamond period
+    step = p / rng.uniform(7, 10)  # stair steps along the diamond's edges
+    qx, qy = np.floor(xx / step) * step, np.floor(yy / step) * step
+    d = np.abs(((qx + qy) % p) - p / 2) + np.abs(((qx - qy) % p) - p / 2)
+    diamonds = (d < p * 0.42).astype(np.float32)[..., None]
+    cream = np.float32([175, 205, 225]) + rng.uniform(-10, 10, 3)
+    blue = np.float32([120, 70, 40]) + rng.uniform(-15, 15, 3)
+    img = cream * (1 - diamonds) + blue * diamonds
+    vines = (np.abs(np.sin(xx / rng.uniform(17, 25) + 3 * np.sin(yy / rng.uniform(30, 45)))) < 0.08)[..., None]
+    img = np.where(vines, np.float32([60, 120, 200]), img)
+    return np.clip(img + rng.normal(0, 5, img.shape), 0, 255).astype(np.uint8)
 
 
 def clamp(q):
@@ -183,6 +201,19 @@ def main():
         shadow = cv2.GaussianBlur(shadow, (0, 0), 30)
         img = img * (1 - rng.uniform(0.3, 0.5) * shadow)[..., None]
         save("notebook", i, mf.finish(img, rng), q)
+
+    for i in range(PER_CASE):
+        # 7. Card on block-printed cloth, flash on (a separate loop: the scenes
+        # above keep their random draws).
+        rng = np.random.default_rng(9300 + i)
+        kind = "aadhaar" if i % 2 == 0 else "pan"
+        card, _ = hc.card(kind, rng)
+        s = rng.uniform(0.75, 0.9) * W / card.shape[1]
+        q = quad(rng, W / 2 + rng.uniform(-40, 40), H / 2 + rng.uniform(-150, 250), card.shape[1] * s / 2, card.shape[0] * s / 2, 4, 4)
+        img = flash_falloff(put(block_print(rng), card, q))
+        c = q.mean(axis=0) + rng.uniform(-150, 150, 2)
+        img = glare(img, rng, c, rng.uniform(80, 140), rng.uniform(60, 120))
+        save("card_on_pattern", i, mf.finish(img, rng, light=(1.0, 0.95), noise=3), q)
 
     (OUT / "scene_cases.json").write_text(
         json.dumps({"image_size": [W, H], "corner_order": "TL,TR,BR,BL", "cases": cases}, indent=1, ensure_ascii=False)

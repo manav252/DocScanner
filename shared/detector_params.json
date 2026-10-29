@@ -39,5 +39,17 @@
   "paper_sat_max": 60,
   "paper_morph": 0.02,
   "glare_percentile": 99.0,
-  "texture_morph": 0.02
+  "texture_morph": 0.02,
+  "hough_lines": 8,
+  "hough_tilt": 20,
+  "hough_votes": 0.06,
+  "doc_ratios": [
+    1.586,
+    1.414,
+    1.294
+  ],
+  "ratio_tol": 0.05,
+  "ratio_bonus": 1.15,
+  "track_margin": 1.25,
+  "track_full_every": 5
 }

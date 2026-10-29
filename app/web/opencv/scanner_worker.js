@@ -40,6 +40,9 @@ function release(canvas) {
   canvas.height = 0;
 }
 
+// Live tracking state: the last frame's page outline.
+const live = { corners: null, width: 0, height: 0, at: 0, count: 0 };
+
 const asImage = (img) => ({ data: new Uint8ClampedArray(img.data), width: img.width, height: img.height });
 
 self.onmessage = async (e) => {
@@ -49,7 +52,13 @@ self.onmessage = async (e) => {
     const cv = self.cv;
     let result;
     if (type === 'detect') {
-      result = DocScanner.detectDocument(cv, asImage(e.data.image));
+      // Live frames: follow the page from frame to frame (see trackQuad).
+      const img = asImage(e.data.image);
+      const fresh = !live.corners || live.width !== img.width || live.height !== img.height || Date.now() - live.at > 1000;
+      const full = fresh || ++live.count % DocScanner.PARAMS.track_full_every === 0;
+      result = DocScanner.detectDocument(cv, img, undefined, fresh ? null : live.corners, full);
+      if (result.found) Object.assign(live, { corners: result.corners, width: img.width, height: img.height, at: Date.now() });
+      else live.corners = null;
     } else if (type === 'detectEncoded') {
       const img = await decode(e.data.bytes);
       result = { ...DocScanner.detectDocument(cv, img), width: img.width, height: img.height };

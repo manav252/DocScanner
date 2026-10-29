@@ -113,6 +113,15 @@ def test_params_match_shared_json():
         p["step_offset"],
         p["step_min"],
     )
+    assert (D.HOUGH_LINES, D.HOUGH_TILT, D.HOUGH_VOTES, list(D.DOC_RATIOS), D.RATIO_TOL, D.RATIO_BONUS) == (
+        p["hough_lines"],
+        p["hough_tilt"],
+        p["hough_votes"],
+        p["doc_ratios"],
+        p["ratio_tol"],
+        p["ratio_bonus"],
+    )
+    assert (D.TRACK_MARGIN, D.TRACK_FULL_EVERY) == (p["track_margin"], p["track_full_every"])
     assert (D.LINE_COUNT, D.CONFIDENT_SCORE, D.LINE_MIN_LENGTH, D.LINE_EPSILON) == (
         p["line_count"],
         p["confident_score"],
@@ -125,3 +134,26 @@ def test_params_match_shared_json():
     assert (D.PAPER_SAT_MAX, D.PAPER_MORPH, D.GLARE_PERCENTILE, D.TEXTURE_MORPH) == (
         p["paper_sat_max"], p["paper_morph"], p["glare_percentile"], p["texture_morph"]
     )
+
+
+def test_tracking_keeps_the_page_and_ignores_a_wrong_hint():
+    """Live frames: the previous outline is kept while it still fits; a hint
+    with no page under it is ignored, and never invents a page."""
+    img = load_fixture("tilted_paper")
+    d = detect_document(img)
+    t = detect_document(img, hint=d.corners)
+    assert t.found and max_corner_error(t.corners, d.corners) < 3
+    h, w = img.shape[:2]
+    wrong = np.float32([[0.1 * w, 0.1 * h], [0.3 * w, 0.1 * h], [0.3 * w, 0.3 * h], [0.1 * w, 0.3 * h]])
+    assert max_corner_error(detect_document(img, hint=wrong).corners, d.corners) < 3
+    assert not detect_document(load_fixture("no_document"), hint=d.corners).found
+
+
+def test_known_ratio():
+    from scanner_core.detect import _known_ratio
+
+    rect = lambda w, h: np.float32([[0, 0], [w, 0], [w, h], [0, h]])  # noqa: E731
+    assert _known_ratio(rect(856, 540)) and _known_ratio(rect(540, 856))  # ID-1 card
+    assert _known_ratio(rect(210, 297)) and _known_ratio(rect(216, 279))  # A4, US Letter
+    assert not _known_ratio(rect(100, 100)) and not _known_ratio(rect(300, 100))
+

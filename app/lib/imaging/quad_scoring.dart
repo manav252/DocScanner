@@ -257,3 +257,97 @@ List<List<Pt>> lineQuads(List<(double, double, double, double)> segments, int w,
   }
   return quads;
 }
+
+/// Proportions (mean of opposite sides) of an ID card or a standard paper
+/// size? Perspective changes them a little, hence the tolerance.
+bool knownRatio(List<Pt> q) {
+  double side(int i) => q[(i + 1) % 4].distanceTo(q[i]);
+  final a = side(0) + side(2), b = side(1) + side(3);
+  if (a < 1e-6 || b < 1e-6) return false;
+  final r = math.max(a, b) / math.min(a, b);
+  return _P.docRatios.any((k) => (r / k - 1).abs() < _P.ratioTol);
+}
+
+/// Straight lines (rho, theta) through the set pixels of [mask] (w x h),
+/// theta within houghTilt degrees of [centre]: a vote count over whole
+/// degrees and pixels, strongest first, each suppressing its neighbours
+/// (+-5 degrees, +-8 px). Exactly as in detect.py and scanner.js.
+List<(double, double)> houghPeaks(Uint8List mask, int w, int h, int centre, int thr) {
+  const tilt = _P.houghTilt, nT = 2 * tilt + 1;
+  final rMax = math.sqrt(w * w + h * h).truncate() + 1, nR = 2 * rMax + 1;
+  final acc = Int32List(nT * nR);
+  final cs = Float64List(nT), sn = Float64List(nT);
+  for (var k = 0; k < nT; k++) {
+    final t = (centre - tilt + k) * (math.pi / 180);
+    cs[k] = math.cos(t);
+    sn[k] = math.sin(t);
+  }
+  for (var y = 0; y < h; y++) {
+    for (var x = 0; x < w; x++) {
+      if (mask[y * w + x] == 0) continue;
+      for (var k = 0; k < nT; k++) {
+        acc[k * nR + (x * cs[k] + y * sn[k] + 0.5).floor() + rMax]++;
+      }
+    }
+  }
+  final out = <(double, double)>[];
+  while (out.length < _P.houghLines) {
+    var bi = 0;
+    for (var i = 1; i < acc.length; i++) {
+      if (acc[i] > acc[bi]) bi = i; // first maximum
+    }
+    if (acc[bi] < thr) break;
+    final k = bi ~/ nR, r = bi % nR;
+    out.add(((r - rMax).toDouble(), (centre - tilt + k) * (math.pi / 180)));
+    for (var kk = math.max(0, k - 5); kk <= math.min(nT - 1, k + 5); kk++) {
+      for (var rr = math.max(0, r - 8); rr <= math.min(nR - 1, r + 8); rr++) {
+        acc[kk * nR + rr] = 0;
+      }
+    }
+  }
+  return out;
+}
+
+/// Where two (rho, theta) lines cross, or null if they are parallel.
+Pt? houghCross((double, double) l1, (double, double) l2) {
+  final (r1, t1) = l1;
+  final (r2, t2) = l2;
+  final c1 = math.cos(t1), s1 = math.sin(t1), c2 = math.cos(t2), s2 = math.sin(t2);
+  final det = c1 * s2 - s1 * c2;
+  if (det.abs() < 1e-6) return null;
+  return Pt((r1 * s2 - s1 * r2) / det, (c1 * r2 - r1 * c2) / det);
+}
+
+/// Lines pass: the best quad made of two roughly horizontal and two roughly
+/// vertical [horiz]/[vert] lines (from [houghPeaks]), checked like any
+/// straight-line quad; one shaped like a card or a sheet of paper scores
+/// higher (lines make many rectangles: a card's printed boxes, too).
+ScoredQuad? bestHoughQuad(List<(double, double)> horiz, List<(double, double)> vert, GrayImage img) {
+  final w = img.width, h = img.height;
+  final imgArea = (w * h).toDouble();
+  ScoredQuad? best;
+  for (var i = 0; i < horiz.length; i++) {
+    for (var j = i + 1; j < horiz.length; j++) {
+      for (var k = 0; k < vert.length; k++) {
+        for (var m = k + 1; m < vert.length; m++) {
+          final pts = [
+            houghCross(horiz[i], vert[k]),
+            houghCross(horiz[i], vert[m]),
+            houghCross(horiz[j], vert[m]),
+            houghCross(horiz[j], vert[k]),
+          ];
+          if (pts.any((p) => p == null)) continue;
+          if (!pts.every((p) => p!.x >= -0.02 * w && p.x <= 1.02 * w && p.y >= -0.02 * h && p.y <= 1.02 * h)) continue;
+          final r = scoreQuad(null, 0, [for (final p in pts) Pt(_f32(p!.x), _f32(p.y))], imgArea, img);
+          if (r == null) continue;
+          final score = r.score * (knownRatio(r.quad) ? _P.ratioBonus : 1.0);
+          if (best == null || score > best.score) best = ScoredQuad(r.quad, score, curved: false);
+        }
+      }
+    }
+  }
+  return best;
+}
+
+final _f32buf = Float32List(1);
+double _f32(double v) => (_f32buf..[0] = v)[0];

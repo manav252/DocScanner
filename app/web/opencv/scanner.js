@@ -53,6 +53,14 @@
     paper_morph: 0.02,
     glare_percentile: 99.0,
     texture_morph: 0.02,
+    hough_lines: 8,
+    hough_tilt: 20,
+    hough_votes: 0.06,
+    doc_ratios: [1.586, 1.414, 1.294],
+    ratio_tol: 0.05,
+    ratio_bonus: 1.15,
+    track_margin: 1.25,
+    track_full_every: 5,
   };
 
   // ---------- pure geometry (no OpenCV) ----------
@@ -327,6 +335,99 @@
     return quads;
   }
 
+  /** Proportions (mean of opposite sides) of an ID card or a standard paper size? */
+  function knownRatio(q) {
+    const side = (i) => Math.hypot(q[(i + 1) % 4][0] - q[i][0], q[(i + 1) % 4][1] - q[i][1]);
+    const a = side(0) + side(2), b = side(1) + side(3);
+    if (a < 1e-6 || b < 1e-6) return false;
+    const r = Math.max(a, b) / Math.min(a, b);
+    return PARAMS.doc_ratios.some((k) => Math.abs(r / k - 1) < PARAMS.ratio_tol);
+  }
+
+  /**
+   * Straight lines [rho, theta] through the set pixels of mask (Uint8Array,
+   * w x h), theta within hough_tilt degrees of centre: a vote count over whole
+   * degrees and pixels, strongest first, each suppressing its neighbours
+   * (+-5 degrees, +-8 px). Written out (cv.HoughLines is not in opencv.js)
+   * exactly as in detect.py.
+   */
+  function houghPeaks(mask, w, h, centre, thr) {
+    const tilt = PARAMS.hough_tilt, nT = 2 * tilt + 1;
+    const rMax = Math.trunc(Math.hypot(w, h)) + 1, nR = 2 * rMax + 1;
+    const acc = new Int32Array(nT * nR);
+    const cs = new Float64Array(nT), sn = new Float64Array(nT);
+    for (let k = 0; k < nT; k++) {
+      const t = (centre - tilt + k) * (Math.PI / 180);
+      cs[k] = Math.cos(t); sn[k] = Math.sin(t);
+    }
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      if (!mask[y * w + x]) continue;
+      for (let k = 0; k < nT; k++) acc[k * nR + Math.floor(x * cs[k] + y * sn[k] + 0.5) + rMax]++;
+    }
+    const out = [];
+    while (out.length < PARAMS.hough_lines) {
+      let bi = 0;
+      for (let i = 1; i < acc.length; i++) if (acc[i] > acc[bi]) bi = i; // first maximum
+      if (acc[bi] < thr) break;
+      const k = Math.trunc(bi / nR), r = bi % nR;
+      out.push([r - rMax, (centre - tilt + k) * (Math.PI / 180)]);
+      for (let kk = Math.max(0, k - 5); kk <= Math.min(nT - 1, k + 5); kk++)
+        for (let rr = Math.max(0, r - 8); rr <= Math.min(nR - 1, r + 8); rr++) acc[kk * nR + rr] = 0;
+    }
+    return out;
+  }
+
+  function houghCross([r1, t1], [r2, t2]) {
+    const c1 = Math.cos(t1), s1 = Math.sin(t1), c2 = Math.cos(t2), s2 = Math.sin(t2);
+    const det = c1 * s2 - s1 * c2;
+    if (Math.abs(det) < 1e-6) return null;
+    return [(r1 * s2 - s1 * r2) / det, (c1 * r2 - r1 * c2) / det];
+  }
+
+  /**
+   * Lines pass, for a page or card on busy cloth whose outline merges with the
+   * pattern: the strongest roughly horizontal and roughly vertical lines (each
+   * voted for only by edge pixels whose gradient points across it, so a
+   * diagonal or zigzag pattern does not count), every two of each combined
+   * into a quad and checked like any straight-line quad. gray = working image.
+   */
+  function houghQuad(cv, gray) {
+    const g = new cv.Mat(), e = new cv.Mat(), gx = new cv.Mat(), gy = new cv.Mat();
+    cv.GaussianBlur(gray, g, new cv.Size(5, 5), 0);
+    cv.Canny(g, e, PARAMS.low_canny[0], PARAMS.low_canny[1]);
+    cv.Sobel(g, gx, cv.CV_16S, 1, 0, 3);
+    cv.Sobel(g, gy, cv.CV_16S, 0, 1, 3);
+    const w = g.cols, h = g.rows, E = e.data, X = gx.data16S, Y = gy.data16S;
+    const mh = new Uint8Array(w * h), mv = new Uint8Array(w * h);
+    for (let i = 0; i < w * h; i++) {
+      if (!E[i]) continue;
+      const ax = Math.abs(X[i]), ay = Math.abs(Y[i]);
+      if (ay > 2 * ax) mh[i] = 1;
+      else if (ax > 2 * ay) mv[i] = 1;
+    }
+    const img = { data: g.data, width: w, height: h };
+    e.delete(); gx.delete(); gy.delete();
+    const thr = Math.trunc(PARAMS.hough_votes * Math.max(w, h));
+    const horiz = houghPeaks(mh, w, h, 90, thr), vert = houghPeaks(mv, w, h, 0, thr);
+    const imgArea = w * h;
+    let best = null;
+    for (let i = 0; i < horiz.length; i++) for (let j = i + 1; j < horiz.length; j++)
+      for (let k = 0; k < vert.length; k++) for (let m = k + 1; m < vert.length; m++) {
+        const pts = [houghCross(horiz[i], vert[k]), houghCross(horiz[i], vert[m]), houghCross(horiz[j], vert[m]), houghCross(horiz[j], vert[k])];
+        if (pts.some((p) => !p)) continue;
+        if (!pts.every(([x, y]) => x >= -0.02 * w && x <= 1.02 * w && y >= -0.02 * h && y <= 1.02 * h)) continue;
+        const r = scoreQuad(null, 0, pts.map(([x, y]) => [Math.fround(x), Math.fround(y)]), imgArea, img);
+        if (!r) continue;
+        // Lines make many rectangles (a card's printed boxes, too): prefer one
+        // shaped like a card or a sheet of paper.
+        const score = r.score * (knownRatio(r.quad) ? PARAMS.ratio_bonus : 1);
+        if (!best || score > best.score) best = { ...r, score };
+      }
+    g.delete();
+    if (best) best.ratio = polyArea(best.quad) / imgArea;
+    return best;
+  }
+
   /** Best page outline: {quad, score, curved, ratio} or null. img = the pass's blurred channel. */
   function bestQuad(cv, edges, img, log) {
     const imgArea = edges.cols * edges.rows;
@@ -515,8 +616,35 @@
     ];
   }
 
-  /** Run the passes; best result {quad, score, curved, ratio, pass} or null. keep(steps) may keep the chosen pass's images. */
-  function searchPasses(cv, work, keep) {
+  /**
+   * Live tracking: the previous frame's outline (source pixels), snapped to
+   * this frame's edges and checked like a straight-line quad. {quad, score,
+   * curved, ratio, frameSides} or null.
+   */
+  function trackQuad(cv, work, hint) {
+    const pad = PARAMS.pad, s = work.scale;
+    const q0 = hint.map(([x, y]) => [(x + 0.5) * s - 0.5 + pad, (y + 0.5) * s - 0.5 + pad]);
+    const g = new cv.Mat();
+    cv.GaussianBlur(work.gray, g, new cv.Size(5, 5), 0);
+    const q = refineCorners(cv, q0, work.gray);
+    const r = scoreQuad(null, 0, q, g.cols * g.rows, { data: g.data, width: g.cols, height: g.rows });
+    g.delete();
+    if (!r) return null;
+    r.ratio = polyArea(r.quad) / (work.gray.cols * work.gray.rows);
+    r.frameSides = onFrame(r.quad, work.gray.cols, work.gray.rows).filter(Boolean).length;
+    return r;
+  }
+
+  /**
+   * Run the passes; best result {quad, score, curved, ratio, pass} or null. keep(steps) may keep the chosen pass's images.
+   * hint: the previous live frame's corners (source pixels); full: search all passes even if it still fits.
+   */
+  function searchPasses(cv, work, keep, hint, full) {
+    const tracked = hint ? trackQuad(cv, work, hint) : null;
+    // The page still where it was, with all four sides visible: keep it (a
+    // steady outline for auto-capture, and fast). Now and then search anyway,
+    // in case it was the wrong shape.
+    if (tracked && !full && tracked.frameSides === 0) return { ...tracked, pass: 'tracked' };
     let best = null;
     for (const [name, make, low, onGray] of passes(cv, work)) {
       const channel = make();
@@ -534,6 +662,14 @@
       } else { st.blurred.delete(); st.edges.delete(); }
       if (best && best.score >= PARAMS.confident_score) break; // a clear page: skip the rest
     }
+    if (!best || best.score < PARAMS.confident_score || onFrame(best.quad, work.gray.cols, work.gray.rows).some(Boolean)) {
+      // Last: straight lines across the whole photo (a card on busy cloth,
+      // whose outline may have merged with the cloth down to the photo's border).
+      const res = houghQuad(cv, work.gray);
+      if (res && (!best || res.score > best.score)) best = { ...res, pass: 'lines' };
+    }
+    // Switch away from the tracked outline only for a clearly better one.
+    if (tracked && (!best || tracked.score * PARAMS.track_margin >= best.score)) best = { ...tracked, pass: 'tracked' };
     return best;
   }
 
@@ -639,11 +775,12 @@
   }
 
   /** Detect the page. Returns {corners: [[x,y] x4] TL,TR,BR,BL in source pixels, found, score}. */
-  function detectDocument(cv, image, maxDim = PARAMS.max_dim) {
+  /** hint / full: see searchPasses (live frames). */
+  function detectDocument(cv, image, maxDim = PARAMS.max_dim, hint = null, full = false) {
     const { width: w, height: h } = image;
     const work = workingImage(cv, image, maxDim);
     try {
-      return finish(cv, searchPasses(cv, work), work, w, h);
+      return finish(cv, searchPasses(cv, work, null, hint, full), work, w, h);
     } finally {
       work.gray.delete(); work.color.delete();
     }
@@ -1152,6 +1289,6 @@
     fullBounds, outputSize,
     // For tests: compare the scoring step by step with the Python reference.
     __test: { clipGlare, flatten, refineCorners },
-    internals: { workingImage, passes, edgeSteps, bestQuad, scoreQuad, sideFits, edgeSupport, extremePoints, lineQuads },
+    internals: { workingImage, passes, edgeSteps, bestQuad, houghQuad, knownRatio, scoreQuad, sideFits, edgeSupport, extremePoints, lineQuads },
   };
 });

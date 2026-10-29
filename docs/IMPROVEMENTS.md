@@ -238,6 +238,31 @@ Building it needed two fixes: compileSdk 37 (a plugin requires it) and R8 rules 
 ML Kit's unused Chinese/Japanese/Korean classes; the x86_64 (emulator) APK needs
 Rosetta on Apple-silicon Macs and was not built.
 
+## 11. Real iPhone test: auto-capture and a card on patterned cloth (29 Oct)
+
+Found on a real iPhone 14 Pro Max (web app):
+
+| Problem | Cause | Fix |
+|---|---|---|
+| Card found, but never auto-captured | Steadiness allowed 1.2 % outline movement; one wobbly or wrong frame reset it | 2.5 % tolerance, up to 2 odd outlines ignored, steady after ~0.9 s (slow phones), shorter sharpness wait |
+| Aadhaar on blue/cream block-printed cloth not found | Its outline merges with the cloth, so no closed outline; long straight edges are taken from outlines | New last pass: direction-aware line votes (horizontal lines only from up/down gradients, vertical from left/right), every 2+2 lines tried; card/A4/Letter proportions (1.586, 1.414, 1.294) score 15 % higher in this pass. Also runs when the best outline lies along the photo's border |
+| Outline jumps between frames (notebook, card) | Each frame detected from scratch; small pixel changes flip the result | Live tracking: the last outline is snapped to the new frame's edges and kept while all four sides still show (full search every 5th frame; a new outline must be 25 % better) |
+
+Measured on the two real screenshots (camera area only; kept in
+tests/fixtures/real/, not in git), 15 simulated hand-held frames each (shift,
+brightness, noise):
+
+| | Before | After (web) | After (Android code, host) |
+|---|---|---|---|
+| Aadhaar on cloth | not found | right from frame 5 (web) / frame 0 (Android), then steady | same |
+| Notebook page | found on some frames only | steady from frame 0 (web) / 3 (Android) | same |
+| Time per tracked frame | 52-80 ms | 10-20 ms | 6-8 ms |
+
+The shape bonus is applied only in the lines pass: applied to every pass it
+picked A4-shaped wrong outlines on 3 synthetic photos. New synthetic scene
+card_on_pattern: 4/8 before and after (the orange-header Aadhaar design loses
+its header against cream cloth: not solved).
+
 ## Not solved / not verified
 
 - **iPhone crashes**: not reproduced here; memory and main-thread work reduced.

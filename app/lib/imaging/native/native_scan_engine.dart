@@ -194,7 +194,16 @@ Detection _decodeDetection(List<Object?> r) {
 /// An Android YUV_420_888 frame: converted to colour at detection size (the
 /// brightness plane shrunk, the half-size colour planes scaled to match), then
 /// detected like a web frame. Corners are returned in frame pixels.
-Detection _detectYuv(Uint8List all, _Request req) {
+/// Live tracking state of the detector isolate: the last frame's page outline.
+class _Live {
+  List<Pt>? corners;
+  int width = 0, height = 0, at = 0, count = 0;
+  final clock = Stopwatch()..start();
+}
+
+final live = _Live();
+
+Detection _detectYuv(Uint8List all, _Request req, [List<Pt>? hint, bool full = false]) {
   final w = req.width, h = req.height;
   final scale = math.min(1.0, DetectorParams.maxDim / math.max(w, h));
   final size = (math.max(1, (w * scale).round()), math.max(1, (h * scale).round()));
@@ -226,7 +235,11 @@ Detection _detectYuv(Uint8List all, _Request req) {
   for (final m in [y, u, v, yuv]) {
     m.dispose();
   }
-  final d = detectDocumentMat(bgr);
+  final d = detectDocumentMat(
+    bgr,
+    hint: hint == null ? null : [for (final p in hint) Pt((p.x + 0.5) * scale - 0.5, (p.y + 0.5) * scale - 0.5)],
+    full: full,
+  );
   bgr.dispose();
   if (scale >= 1) return d;
   return Detection(
@@ -318,18 +331,35 @@ void _worker(SendPort out) {
         return;
       }
       final format = PixelFormat.values[req.format];
+      // Live frames: follow the page from frame to frame (see detectDocumentMat).
+      final fresh =
+          live.corners == null ||
+          live.width != req.width ||
+          live.height != req.height ||
+          live.clock.elapsedMilliseconds - live.at > 1000;
+      final full = fresh || ++live.count % DetectorParams.trackFullEvery == 0;
+      final hint = fresh ? null : live.corners;
       Detection d;
       if (format == PixelFormat.luma) {
-        d = detectDocumentLuma(bytes, req.width, req.height, rowStride: req.stride);
+        d = detectDocumentLuma(bytes, req.width, req.height, rowStride: req.stride, hint: hint, full: full);
       } else if (format == PixelFormat.yuv420) {
-        d = _detectYuv(bytes, req);
+        d = _detectYuv(bytes, req, hint, full);
       } else {
         // Colour in, like the web: the saturation pass needs it.
         final m = _matFrom(bytes, req.width, req.height, req.stride, 4);
         final bgr = cv.cvtColor(m, format == PixelFormat.bgra ? cv.COLOR_BGRA2BGR : cv.COLOR_RGBA2BGR);
-        d = detectDocumentMat(bgr);
+        d = detectDocumentMat(bgr, hint: hint, full: full);
         m.dispose();
         bgr.dispose();
+      }
+      if (d.found) {
+        live
+          ..corners = d.corners
+          ..width = req.width
+          ..height = req.height
+          ..at = live.clock.elapsedMilliseconds;
+      } else {
+        live.corners = null;
       }
       out.send((id, true, _encodeDetection(d)));
     } catch (e) {

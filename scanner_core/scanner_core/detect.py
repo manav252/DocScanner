@@ -42,6 +42,14 @@ TEXTURE_MORPH = 0.02  # texture pass: closing kernel (fraction of the long side)
 PAPER_SAT_MAX = 60  # paper mask: colourless (HSV saturation below this) ...
 PAPER_MORPH = 0.02  # ... morphology kernel (fraction of the long side) removing checks, text and gaps
 GLARE_PERCENTILE = 99.0  # lighting pass: highlights (flash glare) clipped at this brightness percentile
+HOUGH_LINES = 8  # lines pass: strongest lines kept per direction (roughly horizontal, roughly vertical)
+HOUGH_TILT = 20  # ... within this many degrees of horizontal / vertical
+HOUGH_VOTES = 0.06  # ... with at least this many edge pixels (fraction of the long side)
+DOC_RATIOS = (1.586, 1.414, 1.294)  # ID-1 card (Aadhaar, PAN, licence), ISO A sizes and passport page, US Letter
+RATIO_TOL = 0.05  # a lines-pass outline within 5 % of one of these proportions ...
+RATIO_BONUS = 1.15  # ... scores this much higher
+TRACK_MARGIN = 1.25  # live frames: a new outline replaces the tracked one only if this much better
+TRACK_FULL_EVERY = 5  # ... and every this many frames all passes run anyway (in the scanner, not here)
 
 
 @dataclass(frozen=True)
@@ -357,6 +365,98 @@ def _validate(c, c_area, q, img_area, img):
     return q, score, curved
 
 
+def _known_ratio(q: np.ndarray) -> bool:
+    """Are q's proportions (mean of opposite sides) those of an ID card or a
+    standard paper size? Perspective changes them a little, hence the tolerance."""
+    s = [float(np.linalg.norm(q[(i + 1) % 4] - q[i])) for i in range(4)]
+    a, b = s[0] + s[2], s[1] + s[3]
+    if a < 1e-6 or b < 1e-6:
+        return False
+    r = max(a, b) / min(a, b)
+    return any(abs(r / k - 1) < RATIO_TOL for k in DOC_RATIOS)
+
+
+def _hough_peaks(mask: np.ndarray, centre: int, thr: int) -> list[tuple[float, float]]:
+    """Straight lines (rho, theta) through the pixels of [mask], theta within
+    HOUGH_TILT degrees of [centre]: a vote count over whole degrees and pixels,
+    strongest first, each suppressing its neighbours (+-5 degrees, +-8 px).
+    Written out (not cv2.HoughLines, missing from opencv.js) so that every
+    port finds the same lines."""
+    h, w = mask.shape
+    ys, xs = np.nonzero(mask)
+    degs = np.arange(centre - HOUGH_TILT, centre + HOUGH_TILT + 1)
+    th = degs * (np.pi / 180)
+    r_max = int(np.hypot(w, h)) + 1
+    acc = np.zeros((len(th), 2 * r_max + 1), np.int32)
+    for k in range(len(th)):
+        rho = np.floor(xs * np.cos(th[k]) + ys * np.sin(th[k]) + 0.5).astype(np.int64) + r_max
+        acc[k] = np.bincount(rho, minlength=2 * r_max + 1)
+    out = []
+    while len(out) < HOUGH_LINES:
+        i = int(acc.argmax())  # first maximum in row-major order
+        k, r = divmod(i, acc.shape[1])
+        if acc[k, r] < thr:
+            break
+        out.append((float(r - r_max), float(th[k])))
+        acc[max(0, k - 5) : k + 6, max(0, r - 8) : r + 9] = 0
+    return out
+
+
+def _hough_quad(g: np.ndarray) -> tuple[np.ndarray, float, bool, float] | None:
+    """Lines pass, for a page or card on busy cloth whose outline merges with
+    the pattern: the strongest roughly horizontal and roughly vertical lines
+    (each voted for only by edge pixels whose gradient points across it, so a
+    diagonal or zigzag pattern does not count), every two of each combined
+    into a quad and checked like any straight-line quad."""
+    h, w = g.shape
+    e = cv2.Canny(g, 12, 36) > 0
+    gx = np.abs(cv2.Sobel(g, cv2.CV_16S, 1, 0).astype(np.int32))
+    gy = np.abs(cv2.Sobel(g, cv2.CV_16S, 0, 1).astype(np.int32))
+    thr = int(HOUGH_VOTES * max(w, h))
+    horiz = _hough_peaks(e & (gy > 2 * gx), 90, thr)
+    vert = _hough_peaks(e & (gx > 2 * gy), 0, thr)
+    img_area = float(w * h)
+    best, best_score = None, 0.0
+    for i in range(len(horiz)):
+        for j in range(i + 1, len(horiz)):
+            for k in range(len(vert)):
+                for m in range(k + 1, len(vert)):
+                    pts = [
+                        _hough_cross(horiz[i], vert[k]),
+                        _hough_cross(horiz[i], vert[m]),
+                        _hough_cross(horiz[j], vert[m]),
+                        _hough_cross(horiz[j], vert[k]),
+                    ]
+                    if any(p is None for p in pts):
+                        continue
+                    q = np.float32(pts)
+                    if (
+                        (q[:, 0] < -0.02 * w).any()
+                        or (q[:, 0] > 1.02 * w).any()
+                        or (q[:, 1] < -0.02 * h).any()
+                        or (q[:, 1] > 1.02 * h).any()
+                    ):
+                        continue
+                    r = _validate(None, 0, q, img_area, g)
+                    if r is None:
+                        continue
+                    # Lines make many rectangles (a card's printed boxes, too):
+                    # prefer one shaped like a card or a sheet of paper.
+                    score = r[1] * (RATIO_BONUS if _known_ratio(r[0]) else 1.0)
+                    if score > best_score:
+                        best, best_score = (r[0], cv2.contourArea(r[0]) / img_area, False, score), score
+    return best
+
+
+def _hough_cross(l1: tuple[float, float], l2: tuple[float, float]) -> tuple[float, float] | None:
+    (r1, t1), (r2, t2) = l1, l2
+    c1, s1, c2, s2 = np.cos(t1), np.sin(t1), np.cos(t2), np.sin(t2)
+    det = c1 * s2 - s1 * c2
+    if abs(det) < 1e-6:
+        return None
+    return ((r1 * s2 - s1 * r2) / det, (c1 * r2 - r1 * c2) / det)
+
+
 def _on_frame(q: np.ndarray, w: int, h: int) -> list[bool]:
     """For each side of q: does it lie along the photo's border (both ends
     within FRAME_MARGIN of the same edge of the unpadded photo)?"""
@@ -489,12 +589,26 @@ def edge_map(channel: np.ndarray, low: bool = False) -> np.ndarray:
     return cv2.dilate(e, cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3)), iterations=1)
 
 
-def detect_document(image: np.ndarray, max_dim: int = MAX_DIM) -> Detection:
+def _track_quad(gray: np.ndarray, hint: np.ndarray):
+    """Live tracking: the previous frame's outline ([hint], working pixels)
+    snapped to this frame's edges and checked like a straight-line quad.
+    (ordered quad, score, curved) or None."""
+    g = cv2.GaussianBlur(gray, (5, 5), 0)
+    return _validate(None, 0, refine_corners(np.float32(hint), gray), float(g.size), g)
+
+
+def detect_document(
+    image: np.ndarray, max_dim: int = MAX_DIM, hint: np.ndarray | None = None, full: bool = False
+) -> Detection:
     """Detect the page in a BGR or grayscale image. Corners are in source pixels.
 
     Passes, until one finds a page confidently (else the best of all): (1) grayscale; (2) lighting normalised +
     CLAHE, for shadows and white-on-white; (3) colour saturation, for a page on
     a coloured background of the same brightness.
+
+    Live frames: [hint] is the previous frame's outline (source pixels); if it
+    still fits this frame it is kept (a steady outline, and fast) unless
+    [full], which searches every pass anyway.
     """
     if image is None or image.size == 0:
         raise ValueError("empty image")
@@ -522,6 +636,14 @@ def detect_document(image: np.ndarray, max_dim: int = MAX_DIM) -> Detection:
         # edges (the mask's are always crisp), so a blob of paper plus pale
         # cloth does not pass.
         passes.append((lambda: paper_mask(small), False, gray))
+    tracked = None
+    if hint is not None:
+        hw = (np.float32(hint).reshape(4, 2) + 0.5) * scale - 0.5 + pad
+        t = _track_quad(gray, hw)
+        if t is not None:
+            tracked = (t[0], cv2.contourArea(t[0]) / float(gray.size), False, t[1])
+    if tracked is not None and not full and not any(_on_frame(tracked[0], gray.shape[1], gray.shape[0])):
+        passes = []  # the page still where it was, with all four sides visible: keep it
     best = None
     for channel, low, support in passes:
         channel = channel() if callable(channel) else channel  # built only when needed
@@ -530,6 +652,15 @@ def detect_document(image: np.ndarray, max_dim: int = MAX_DIM) -> Detection:
             best = res
         if best is not None and best[3] >= CONFIDENT_SCORE:
             break  # a clear page: skip the remaining passes
+    if passes and (best is None or best[3] < CONFIDENT_SCORE or any(_on_frame(best[0], gray.shape[1], gray.shape[0]))):
+        # Last: straight lines across the whole photo (a card on busy cloth,
+        # whose outline may have merged with the cloth down to the photo's border).
+        res = _hough_quad(cv2.GaussianBlur(gray, (5, 5), 0))
+        if res is not None and (best is None or res[3] > best[3]):
+            best = res
+    # Switch away from the tracked outline only for a clearly better one.
+    if tracked is not None and (best is None or tracked[3] * TRACK_MARGIN >= best[3]):
+        best = tracked
     if best is not None:
         q, ratio, curved, _ = best
         if not curved:  # refining fits straight lines: wrong for a bowed side

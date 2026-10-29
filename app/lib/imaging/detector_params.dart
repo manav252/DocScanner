@@ -30,6 +30,14 @@ abstract final class DetectorParams {
   static const paperMorph = 0.02;
   static const glarePercentile = 99.0;
   static const textureMorph = 0.02;
+  static const houghLines = 8;
+  static const houghTilt = 20;
+  static const houghVotes = 0.06;
+  static const docRatios = [1.586, 1.414, 1.294];
+  static const ratioTol = 0.05;
+  static const ratioBonus = 1.15;
+  static const trackMargin = 1.25;
+  static const trackFullEvery = 5;
 
   static Map<String, Object> toJson() => {
     'max_dim': maxDim,
@@ -62,5 +70,13 @@ abstract final class DetectorParams {
     'paper_morph': paperMorph,
     'glare_percentile': glarePercentile,
     'texture_morph': textureMorph,
+    'hough_lines': houghLines,
+    'hough_tilt': houghTilt,
+    'hough_votes': houghVotes,
+    'doc_ratios': docRatios,
+    'ratio_tol': ratioTol,
+    'ratio_bonus': ratioBonus,
+    'track_margin': trackMargin,
+    'track_full_every': trackFullEvery,
   };
 }

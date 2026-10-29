@@ -25,7 +25,11 @@ import '../quad_scoring.dart';
 typedef _P = DetectorParams;
 
 /// Detect the page in a BGR, BGRA or grayscale [image]. Corners are in source pixels.
-Detection detectDocumentMat(cv.Mat image, {int maxDim = _P.maxDim}) {
+///
+/// Live frames: [hint] is the previous frame's outline (pixels of [image]);
+/// if it still fits this frame it is kept (a steady outline, and fast)
+/// unless [full], which searches every pass anyway (see web/opencv/scanner.js).
+Detection detectDocumentMat(cv.Mat image, {int maxDim = _P.maxDim, List<Pt>? hint, bool full = false}) {
   final w = image.cols, h = image.rows;
   if (w == 0 || h == 0) throw ArgumentError('empty image');
   final scale = math.min(1.0, maxDim / math.max(w, h));
@@ -58,7 +62,10 @@ Detection detectDocumentMat(cv.Mat image, {int maxDim = _P.maxDim}) {
   }
 
   try {
-    return _detectPadded(gray, saturation, bgr == null ? null : () => _paperMask(bgr), w, h, scale);
+    final hintWork = hint == null
+        ? null
+        : [for (final p in hint) Pt((p.x + 0.5) * scale - 0.5 + pad, (p.y + 0.5) * scale - 0.5 + pad)];
+    return _detectPadded(gray, saturation, bgr == null ? null : () => _paperMask(bgr), w, h, scale, hintWork, full);
   } finally {
     gray.dispose();
     padded.dispose();
@@ -68,12 +75,20 @@ Detection detectDocumentMat(cv.Mat image, {int maxDim = _P.maxDim}) {
 
 /// Fast path for camera frames: the Y (luma) plane of a YUV420/NV21 frame is
 /// already a grayscale image, so no colour conversion is needed.
-Detection detectDocumentLuma(Uint8List luma, int width, int height, {int? rowStride, int maxDim = _P.maxDim}) {
+Detection detectDocumentLuma(
+  Uint8List luma,
+  int width,
+  int height, {
+  int? rowStride,
+  int maxDim = _P.maxDim,
+  List<Pt>? hint,
+  bool full = false,
+}) {
   final stride = rowStride ?? width;
   final packed = stride == width ? luma.sublist(0, width * height) : Uint8List(width * height)
     ..setAll(0, [for (var r = 0; r < height; r++) ...luma.sublist(r * stride, r * stride + width)]);
   final m = cv.Mat.fromList(height, width, cv.MatType.CV_8UC1, packed);
-  final d = detectDocumentMat(m, maxDim: maxDim);
+  final d = detectDocumentMat(m, maxDim: maxDim, hint: hint, full: full);
   m.dispose();
   return d;
 }
@@ -93,9 +108,74 @@ Detection _detectPadded(
   cv.Mat Function()? paperMask,
   int w,
   int h,
-  double scale,
-) {
+  double scale, [
+  List<Pt>? hint,
+  bool full = false,
+]) {
   const pad = _P.pad;
+  final tracked = hint == null ? null : _trackQuad(gray, hint);
+  // The page still where it was, with all four sides visible: keep it. Now
+  // and then search anyway, in case it was the wrong shape.
+  ScoredQuad? best;
+  if (tracked != null && !full && !onFrame(tracked.quad, gray.cols, gray.rows).contains(true)) {
+    best = tracked;
+  } else {
+    best = _searchPasses(gray, saturation, paperMask);
+    // Switch away from the tracked outline only for a clearly better one.
+    if (tracked != null && (best == null || tracked.score * _P.trackMargin >= best.score)) best = tracked;
+  }
+  if (best == null) return Detection(fullBounds(w, h), found: false);
+  // Refining fits straight lines: wrong for a bowed side.
+  final q = (best.curved ? best.quad : _refineCorners(best.quad, gray))
+      .map(
+        (p) => Pt(
+          ((p.x - pad + 0.5) / scale - 0.5).clamp(0, w - 1).toDouble(),
+          ((p.y - pad + 0.5) / scale - 0.5).clamp(0, h - 1).toDouble(),
+        ),
+      )
+      .toList();
+  return Detection(q, found: true, score: polygonArea(best.quad) / (gray.cols * gray.rows));
+}
+
+/// Live tracking: the previous frame's outline ([hint], working pixels)
+/// snapped to this frame's edges and checked like a straight-line quad.
+ScoredQuad? _trackQuad(cv.Mat gray, List<Pt> hint) {
+  final blurred = cv.gaussianBlur(gray, (5, 5), 0);
+  final img = GrayImage(Uint8List.fromList(blurred.data), blurred.cols, blurred.rows);
+  blurred.dispose();
+  return scoreQuad(null, 0, _refineCorners(hint, gray), (gray.cols * gray.rows).toDouble(), img);
+}
+
+/// Lines pass, for a page or card on busy cloth whose outline merges with
+/// the pattern: the strongest roughly horizontal and roughly vertical lines,
+/// each voted for only by edge pixels whose gradient points across it (so a
+/// diagonal or zigzag pattern does not count).
+ScoredQuad? _houghQuad(cv.Mat gray) {
+  final g = cv.gaussianBlur(gray, (5, 5), 0);
+  final e = cv.canny(g, _P.lowCanny[0].toDouble(), _P.lowCanny[1].toDouble());
+  final gx = cv.sobel(g, cv.MatType.CV_16S, 1, 0), gy = cv.sobel(g, cv.MatType.CV_16S, 0, 1);
+  final w = g.cols, h = g.rows, n = w * h;
+  final ed = e.data;
+  final xd = ByteData.sublistView(gx.data), yd = ByteData.sublistView(gy.data);
+  final mh = Uint8List(n), mv = Uint8List(n);
+  for (var i = 0; i < n; i++) {
+    if (ed[i] == 0) continue;
+    final ax = xd.getInt16(2 * i, Endian.host).abs(), ay = yd.getInt16(2 * i, Endian.host).abs();
+    if (ay > 2 * ax) {
+      mh[i] = 1;
+    } else if (ax > 2 * ay) {
+      mv[i] = 1;
+    }
+  }
+  final img = GrayImage(Uint8List.fromList(g.data), w, h);
+  for (final m in [g, e, gx, gy]) {
+    m.dispose();
+  }
+  final thr = (_P.houghVotes * math.max(w, h)).truncate();
+  return bestHoughQuad(houghPeaks(mh, w, h, 90, thr), houghPeaks(mv, w, h, 0, thr), img);
+}
+
+ScoredQuad? _searchPasses(cv.Mat gray, cv.Mat? Function() saturation, cv.Mat Function()? paperMask) {
   // (channel, low thresholds, borders checked on the grayscale image instead of the channel)
   final passes = <(cv.Mat? Function(), bool, bool)>[
     (() => gray.clone(), false, false),
@@ -132,17 +212,13 @@ Detection _detectPadded(
     if (res != null && (best == null || res.score > best.score)) best = res;
     if (best != null && best.score >= _P.confidentScore) break; // a clear page: skip the rest
   }
-  if (best == null) return Detection(fullBounds(w, h), found: false);
-  // Refining fits straight lines: wrong for a bowed side.
-  final q = (best.curved ? best.quad : _refineCorners(best.quad, gray))
-      .map(
-        (p) => Pt(
-          ((p.x - pad + 0.5) / scale - 0.5).clamp(0, w - 1).toDouble(),
-          ((p.y - pad + 0.5) / scale - 0.5).clamp(0, h - 1).toDouble(),
-        ),
-      )
-      .toList();
-  return Detection(q, found: true, score: polygonArea(best.quad) / (gray.cols * gray.rows));
+  if (best == null || best.score < _P.confidentScore || onFrame(best.quad, gray.cols, gray.rows).contains(true)) {
+    // Last: straight lines across the whole photo (a card on busy cloth,
+    // whose outline may have merged with the cloth down to the photo's border).
+    final res = _houghQuad(gray);
+    if (res != null && (best == null || res.score > best.score)) best = res;
+  }
+  return best;
 }
 
 cv.Mat _clahe(cv.Mat gray) {

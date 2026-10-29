@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:docscanner/imaging/geometry.dart';
 import 'package:docscanner/imaging/native/opencv_detector.dart';
+import 'package:docscanner/imaging/quad_scoring.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencv_dart/opencv_dart.dart' as cv;
 
@@ -75,5 +76,23 @@ void main() {
     // ignore: avoid_print
     print('detectDocumentMat 720x1280 (opencv_dart, host): ${ms.toStringAsFixed(1)} ms');
     expect(ms, lessThan(40));
+  });
+
+  test('tracking: the previous outline is kept; a hint with no page under it is ignored', () {
+    final img = load('tilted_paper');
+    final d = detectDocumentMat(img);
+    final t = detectDocumentMat(img, hint: d.corners);
+    expect(t.found, isTrue);
+    expect(maxCornerError(t.corners, d.corners), lessThan(3));
+    final w = img.cols.toDouble(), h = img.rows.toDouble();
+    final wrong = [Pt(0.1 * w, 0.1 * h), Pt(0.3 * w, 0.1 * h), Pt(0.3 * w, 0.3 * h), Pt(0.1 * w, 0.3 * h)];
+    expect(maxCornerError(detectDocumentMat(img, hint: wrong).corners, d.corners), lessThan(3));
+    expect(detectDocumentMat(load('no_document'), hint: d.corners).found, isFalse);
+  });
+
+  test('document proportions: ID card, A4 and Letter yes; square and strip no', () {
+    List<Pt> rect(double w, double h) => [Pt(0, 0), Pt(w, 0), Pt(w, h), Pt(0, h)];
+    expect([rect(856, 540), rect(540, 856), rect(210, 297), rect(216, 279)].every(knownRatio), isTrue);
+    expect([rect(100, 100), rect(300, 100)].any(knownRatio), isFalse);
   });
 }
