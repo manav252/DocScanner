@@ -1,12 +1,14 @@
 // ScanEngine for Android/iOS: runs opencv_dart on one long-lived
 // background isolate so detection never blocks the UI thread.
 import 'dart:async';
+import 'dart:math' as math;
 import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:opencv_dart/opencv_dart.dart' as cv;
 
 import '../scan_engine.dart';
+import '../detector_params.dart';
 import '../geometry.dart';
 import '../page_edits.dart';
 import 'opencv_filters.dart';
@@ -50,14 +52,20 @@ class NativeScanEngine implements ScanEngine {
 
   @override
   Future<Detection> detectFrame(FrameData f) async {
+    final yuv = f.format == PixelFormat.yuv420;
     final r = await _call(
       _Request(
         _Kind.frame,
-        TransferableTypedData.fromList([f.bytes]),
+        // Y, U, V one after the other; the split is in yLength/uLength.
+        TransferableTypedData.fromList([f.bytes, if (yuv) f.u!, if (yuv) f.v!]),
         width: f.width,
         height: f.height,
         stride: f.rowStride,
         format: f.format.index,
+        yLength: yuv ? f.bytes.length : 0,
+        uLength: yuv ? f.u!.length : 0,
+        uvStride: f.uvRowStride,
+        uvPixelStride: f.uvPixelStride,
       ),
     );
     return _decodeDetection(r! as List<Object?>);
@@ -145,10 +153,17 @@ class _Request {
     this.maxSide = 0,
     this.quality = 0,
     this.contrast = false,
+    this.yLength = 0,
+    this.uLength = 0,
+    this.uvStride = 0,
+    this.uvPixelStride = 1,
   });
   final _Kind kind;
   final TransferableTypedData bytes;
   final int width, height, stride, format, maxSide, quality;
+
+  /// YUV frames: where the U and V planes start in [bytes], and their layout.
+  final int yLength, uLength, uvStride, uvPixelStride;
 
   /// OCR input: the grayscale + CLAHE variant.
   final bool contrast;
@@ -173,6 +188,57 @@ Detection _decodeDetection(List<Object?> r) {
     [for (var i = 0; i < 4; i++) Pt(c[2 * i], c[2 * i + 1])],
     found: r[1]! as bool,
     score: r[2]! as double,
+  );
+}
+
+/// An Android YUV_420_888 frame: converted to colour at detection size (the
+/// brightness plane shrunk, the half-size colour planes scaled to match), then
+/// detected like a web frame. Corners are returned in frame pixels.
+Detection _detectYuv(Uint8List all, _Request req) {
+  final w = req.width, h = req.height;
+  final scale = math.min(1.0, DetectorParams.maxDim / math.max(w, h));
+  final size = (math.max(1, (w * scale).round()), math.max(1, (h * scale).round()));
+  final yFull = _matFrom(Uint8List.sublistView(all, 0, req.yLength), w, h, req.stride, 1);
+  final y = scale < 1 ? cv.resize(yFull, size, interpolation: cv.INTER_AREA) : yFull.clone();
+  yFull.dispose();
+  final cw = (w + 1) ~/ 2, ch = (h + 1) ~/ 2;
+  cv.Mat chroma(int start, int length) {
+    final src = Uint8List.sublistView(all, start, start + length);
+    final dense = Uint8List(cw * ch);
+    final ps = req.uvPixelStride, rs = req.uvStride;
+    for (var r = 0; r < ch; r++) {
+      final row = r * rs;
+      for (var c = 0; c < cw; c++) {
+        final i = row + c * ps;
+        dense[r * cw + c] = i < src.length ? src[i] : 128;
+      }
+    }
+    final half = cv.Mat.fromList(ch, cw, cv.MatType.CV_8UC1, dense);
+    final out = cv.resize(half, size, interpolation: cv.INTER_LINEAR);
+    half.dispose();
+    return out;
+  }
+
+  final u = chroma(req.yLength, req.uLength);
+  final v = chroma(req.yLength + req.uLength, all.length - req.yLength - req.uLength);
+  final yuv = cv.merge(cv.VecMat.fromList([y, u, v]));
+  final bgr = cv.cvtColor(yuv, cv.COLOR_YUV2BGR);
+  for (final m in [y, u, v, yuv]) {
+    m.dispose();
+  }
+  final d = detectDocumentMat(bgr);
+  bgr.dispose();
+  if (scale >= 1) return d;
+  return Detection(
+    [
+      for (final p in d.corners)
+        Pt(
+          ((p.x + 0.5) / scale - 0.5).clamp(0, w - 1).toDouble(),
+          ((p.y + 0.5) / scale - 0.5).clamp(0, h - 1).toDouble(),
+        ),
+    ],
+    found: d.found,
+    score: d.score,
   );
 }
 
@@ -255,12 +321,15 @@ void _worker(SendPort out) {
       Detection d;
       if (format == PixelFormat.luma) {
         d = detectDocumentLuma(bytes, req.width, req.height, rowStride: req.stride);
+      } else if (format == PixelFormat.yuv420) {
+        d = _detectYuv(bytes, req);
       } else {
+        // Colour in, like the web: the saturation pass needs it.
         final m = _matFrom(bytes, req.width, req.height, req.stride, 4);
-        final gray = cv.cvtColor(m, format == PixelFormat.bgra ? cv.COLOR_BGRA2GRAY : cv.COLOR_RGBA2GRAY);
-        d = detectDocumentMat(gray);
+        final bgr = cv.cvtColor(m, format == PixelFormat.bgra ? cv.COLOR_BGRA2BGR : cv.COLOR_RGBA2BGR);
+        d = detectDocumentMat(bgr);
         m.dispose();
-        gray.dispose();
+        bgr.dispose();
       }
       out.send((id, true, _encodeDetection(d)));
     } catch (e) {

@@ -251,4 +251,14 @@ void main() {
     await ctrl().resume(retake: true);
     expect(read().status, CaptureStatus.failed);
   });
+
+  test('preview outline onto a photo of another shape (Android: 16:9 stream, 4:3 photo)', () {
+    // Same shape: unchanged.
+    expect(previewToPhoto(const [Pt(0.25, 0.5)], 301 / 401, 301, 401).single, const Pt(75, 200));
+    // Portrait preview 9:16 is the middle 3/4 of a 3:4 photo's width, all of its height.
+    final p = previewToPhoto(const [Pt(0, 0), Pt(1, 1)], 9 / 16, 3001, 4001);
+    expect(p[0].x, closeTo(375, 1));
+    expect(p[1].x, closeTo(2625, 1));
+    expect((p[0].y, p[1].y), (0.0, 4000.0));
+  });
 }

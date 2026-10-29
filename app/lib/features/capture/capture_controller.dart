@@ -403,7 +403,7 @@ class CaptureController extends Notifier<CaptureState> {
         (corners, detected) = (r.detection.corners, true);
       } else if (previewCorners != null) {
         // The still missed the page but the preview had it: reuse the preview outline.
-        corners = [for (final p in previewCorners) Pt(p.x * (r.width - 1), p.y * (r.height - 1))];
+        corners = previewToPhoto(previewCorners, state.previewAspectRatio, r.width, r.height);
         detected = true;
       } else {
         (corners, detected) = (fullBounds(r.width, r.height), false);
@@ -522,3 +522,21 @@ class CaptureController extends Notifier<CaptureState> {
 }
 
 final captureControllerProvider = NotifierProvider.autoDispose<CaptureController, CaptureState>(CaptureController.new);
+
+/// Normalised preview corners -> photo pixels. On Android the preview stream
+/// (16:9) and the photo (4:3) have different shapes: the stream is the middle
+/// of the sensor's picture, so the photo shows more at the sides (or top and
+/// bottom). [previewAspect] and the photo are both upright (width / height).
+List<Pt> previewToPhoto(List<Pt> normalized, double previewAspect, int photoWidth, int photoHeight) {
+  final photoAspect = photoWidth / photoHeight;
+  // Part of the photo's width and height the preview covers (centred).
+  final fw = previewAspect < photoAspect ? previewAspect / photoAspect : 1.0;
+  final fh = previewAspect > photoAspect ? photoAspect / previewAspect : 1.0;
+  return [
+    for (final p in normalized)
+      Pt(
+        ((0.5 + (p.x - 0.5) * fw) * (photoWidth - 1)).clamp(0, photoWidth - 1).toDouble(),
+        ((0.5 + (p.y - 0.5) * fh) * (photoHeight - 1)).clamp(0, photoHeight - 1).toDouble(),
+      ),
+  ];
+}

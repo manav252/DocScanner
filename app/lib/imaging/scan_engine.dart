@@ -26,6 +26,12 @@ enum PixelFormat {
 
   /// 4 bytes per pixel, R G B A (browser canvas ImageData).
   rgba,
+
+  /// Android camera YUV_420_888: [FrameData.bytes] is the Y plane (so it reads
+  /// like [luma]); the colour planes are in [FrameData.u] / [FrameData.v].
+  /// Detection converts it to colour at detection size, so the colour
+  /// (saturation) pass runs as on the web.
+  yuv420,
 }
 
 class FrameData {
@@ -35,7 +41,11 @@ class FrameData {
     required this.height,
     required this.format,
     int? rowStride,
-  }) : rowStride = rowStride ?? width * (format == PixelFormat.luma ? 1 : 4);
+    this.u,
+    this.v,
+    this.uvRowStride = 0,
+    this.uvPixelStride = 1,
+  }) : rowStride = rowStride ?? width * (format == PixelFormat.luma || format == PixelFormat.yuv420 ? 1 : 4);
 
   final Uint8List bytes;
   final int width, height;
@@ -43,6 +53,14 @@ class FrameData {
   /// Bytes per row (camera buffers are often padded).
   final int rowStride;
   final PixelFormat format;
+
+  /// [PixelFormat.yuv420] only: the U and V planes (half size), their bytes
+  /// per row and bytes between neighbouring samples (2 when interleaved).
+  final Uint8List? u, v;
+  final int uvRowStride, uvPixelStride;
+
+  /// Bytes per pixel in [bytes]: 1 for a brightness plane, 4 for RGBA/BGRA.
+  int get bytesPerPixel => format == PixelFormat.luma || format == PixelFormat.yuv420 ? 1 : 4;
 }
 
 /// A decoded still image (gallery import / captured photo) with its detection.

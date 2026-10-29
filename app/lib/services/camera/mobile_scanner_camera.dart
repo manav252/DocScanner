@@ -86,12 +86,20 @@ class MobileScannerCamera implements ScannerCamera {
     if (w == null || w.isCompleted) return; // nobody waiting: drop the frame
     _waiter = null;
     final plane = img.planes.first; // Y plane (Android) or the BGRA plane (iOS)
+    final yuv = img.format.group != ImageFormatGroup.bgra8888 && img.planes.length >= 3;
     final frame = FrameData(
       bytes: plane.bytes,
       width: img.width,
       height: img.height,
       rowStride: plane.bytesPerRow,
-      format: img.format.group == ImageFormatGroup.bgra8888 ? PixelFormat.bgra : PixelFormat.luma,
+      format: img.format.group == ImageFormatGroup.bgra8888
+          ? PixelFormat.bgra
+          : (yuv ? PixelFormat.yuv420 : PixelFormat.luma),
+      // Android: the colour planes too, so detection sees colour like the web.
+      u: yuv ? img.planes[1].bytes : null,
+      v: yuv ? img.planes[2].bytes : null,
+      uvRowStride: yuv ? img.planes[1].bytesPerRow : 0,
+      uvPixelStride: yuv ? (img.planes[1].bytesPerPixel ?? 1) : 1,
     );
     // The UI is locked to portrait. Stream buffers come in sensor orientation
     // (landscape on almost every phone), so rotate them by the sensor angle.

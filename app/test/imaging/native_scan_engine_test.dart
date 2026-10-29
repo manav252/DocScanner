@@ -2,6 +2,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:docscanner/imaging/geometry.dart';
 import 'package:docscanner/imaging/scan_engine.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencv_dart/opencv_dart.dart' as cv;
@@ -42,6 +43,74 @@ void main() {
       expect(d.found, isTrue, reason: '$format');
       expect(maxCornerError(d.corners, expected), lessThan(tolerance), reason: '$format');
     }
+  });
+
+  /// [img] (BGR) as an Android camera frame: Y plane with padded rows, U/V
+  /// interleaved (pixel stride 2) as YUV_420_888 gives them.
+  FrameData yuvFrame(cv.Mat img) {
+    final w = img.cols, h = img.rows, stride = w + 32;
+    final yuv = cv.cvtColor(img, cv.COLOR_BGR2YUV);
+    final d = yuv.data;
+    final y = Uint8List(stride * h);
+    for (var r = 0; r < h; r++) {
+      for (var c = 0; c < w; c++) {
+        y[r * stride + c] = d[(r * w + c) * 3];
+      }
+    }
+    final cw = (w + 1) ~/ 2, ch = (h + 1) ~/ 2, uvStride = cw * 2;
+    final uv = Uint8List(uvStride * ch);
+    for (var r = 0; r < ch; r++) {
+      for (var c = 0; c < cw; c++) {
+        final i = ((2 * r) * w + 2 * c) * 3;
+        uv[r * uvStride + 2 * c] = d[i + 1];
+        uv[r * uvStride + 2 * c + 1] = d[i + 2];
+      }
+    }
+    yuv.dispose();
+    return FrameData(
+      bytes: y,
+      width: w,
+      height: h,
+      rowStride: stride,
+      format: PixelFormat.yuv420,
+      u: uv,
+      v: Uint8List.sublistView(uv, 1),
+      uvRowStride: uvStride,
+      uvPixelStride: 2,
+    );
+  }
+
+  test('Android YUV frames: same corners as the colour photo', () async {
+    final img = cv.imread('${fixturesDir.path}/strong_perspective.jpg');
+    final expected = cornersOf((cases['strong_perspective'] as Map)['corners']);
+    final d = await detector.detectFrame(yuvFrame(img));
+    expect(d.found, isTrue);
+    expect(maxCornerError(d.corners, expected), lessThan(tolerance));
+  });
+
+  test('Android YUV frames use colour: a grey page on a yellow cloth of the same brightness', () async {
+    // Grey page (luma 204) on yellow (luma ~204): invisible in brightness alone.
+    final img = cv.Mat.fromScalar(800, 600, cv.MatType.CV_8UC3, cv.Scalar(0, 230, 231));
+    cv.fillPoly(
+      img,
+      cv.VecVecPoint.fromList([
+        [cv.Point(140, 160), cv.Point(470, 140), cv.Point(490, 640), cv.Point(120, 660)],
+      ]),
+      cv.Scalar(204, 204, 204),
+    );
+    final expected = const [Pt(140, 160), Pt(470, 140), Pt(490, 640), Pt(120, 660)];
+    final luma = cv.cvtColor(img, cv.COLOR_BGR2GRAY);
+    final grey = await detector.detectFrame(
+      FrameData(bytes: luma.data, width: img.cols, height: img.rows, format: PixelFormat.luma),
+    );
+    final colour = await detector.detectFrame(yuvFrame(img));
+    expect(colour.found, isTrue, reason: 'the colour pass finds it');
+    expect(maxCornerError(colour.corners, expected), lessThan(tolerance));
+    expect(
+      grey.found && maxCornerError(grey.corners, expected) < tolerance,
+      isFalse,
+      reason: 'brightness alone cannot',
+    );
   });
 
   test('errors come back as exceptions, not hangs', () async {

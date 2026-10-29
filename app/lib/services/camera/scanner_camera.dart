@@ -105,7 +105,7 @@ abstract interface class ScannerCamera {
 double estimateBrightness(FrameData f) {
   const step = 8;
   var sum = 0, n = 0;
-  final bpp = f.format == PixelFormat.luma ? 1 : 4;
+  final bpp = f.bytesPerPixel;
   for (var y = 0; y < f.height; y += step) {
     final row = y * f.rowStride;
     for (var x = 0; x < f.width; x += step) {
@@ -129,7 +129,7 @@ double estimateBrightness(FrameData f) {
 /// to other frames of the same scene.
 double estimateSharpness(FrameData f) {
   const step = 3;
-  final bpp = f.format == PixelFormat.luma ? 1 : 4;
+  final bpp = f.bytesPerPixel;
   int lum(int x, int y) {
     final i = y * f.rowStride + x * bpp;
     return bpp == 1 ? f.bytes[i] : (f.bytes[i] + 2 * f.bytes[i + 1] + f.bytes[i + 2]) >> 2;
@@ -175,7 +175,7 @@ class SharpnessGate {
 /// is held still (see [gridMotion]).
 Uint8List lumaGrid(FrameData f) {
   const n = 32;
-  final bpp = f.format == PixelFormat.luma ? 1 : 4;
+  final bpp = f.bytesPerPixel;
   final out = Uint8List(n * n);
   for (var gy = 0; gy < n; gy++) {
     final y = (gy + 0.5) * f.height ~/ n;
