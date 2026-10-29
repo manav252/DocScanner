@@ -37,6 +37,12 @@
     // It is pdf.js's "legacy" build: the modern one needs Safari 18.2+ (e.g. Uint8Array.toHex)
     // and failed on every PDF on older iPhones.
     window.dartPdfJsBaseUrl = new URL('pdfjs/', document.baseURI).href;
+    // This page is always fetched fresh, even by an older offline copy (sw.js)
+    // that serves the rest from its cache: ask the browser to check sw.js for a
+    // newer one on every start (browsers alone may not for a day, or ever).
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistration().then((r) => r && r.update()).catch(() => {});
+    }
   </script>
   <!-- OCR helper (loads Tesseract.js lazily on first use). -->
   <script src="ocr/ocr.js" defer></script>

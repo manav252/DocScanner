@@ -3,13 +3,18 @@
 //              by tools/pwa_precache.py), so scanning, OCR and PDF import work offline.
 //              Entries carry a content hash: unchanged files are copied from the
 //              previous version's cache, so an update downloads only what changed.
-//   fetch    : the page itself network-first, but from the cache if the network has
-//              not answered in 4 s (a slow or stalled mobile connection must not
-//              leave a blank page); everything else cache-first, filling the cache
-//              with anything not pre-cached
+//   fetch    : the page itself and flutter_bootstrap.js (which names the build, so
+//              registers the next build's worker) network-first, but from the cache
+//              if the network has not answered in 4 s (a slow or stalled mobile
+//              connection must not leave a blank page); everything else cache-first,
+//              filling the cache with anything not pre-cached
 //   activate : delete caches of older builds
 const VERSION = new URL(self.location).searchParams.get('v') || 'dev';
-const CACHE = `docscanner-${VERSION}`;
+// "-2": this worker's own cache, apart from the one an older worker filled
+// (which served flutter_bootstrap.js from its cache, so never learnt of a new build).
+const CACHE = `docscanner-${VERSION}-2`;
+// Fetched network-first, like the page: they say which build is current.
+const FRESH = new Set(['flutter_bootstrap.js', 'version.json']);
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -50,12 +55,18 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(req.url);
   if (req.method !== 'GET' || url.origin !== self.location.origin) return; // API calls go to the network
   if (!url.pathname.startsWith(new URL('./', self.location).pathname)) return; // outside the app (website)
-  if (req.mode === 'navigate') {
+  const name = url.pathname.slice(new URL('./', self.location).pathname.length);
+  if (req.mode === 'navigate' || FRESH.has(name)) {
+    const key = req.mode === 'navigate' ? './' : name;
     event.respondWith(
       (async () => {
-        const cached = async () => (await caches.match('./')) || (await caches.match('index.html'));
-        const network = fetch(req).then(async (fresh) => {
-          if (fresh.ok) (await caches.open(CACHE)).put('./', fresh.clone());
+        const cache = await caches.open(CACHE);
+        const cached = async () =>
+          req.mode === 'navigate'
+            ? (await cache.match('./')) || (await cache.match('index.html', { ignoreSearch: true }))
+            : await cache.match(name, { ignoreSearch: true });
+        const network = fetch(req, { cache: 'no-cache' }).then(async (fresh) => {
+          if (fresh.ok) await cache.put(key, fresh.clone());
           return fresh;
         });
         const slow = new Promise((resolve) => setTimeout(() => resolve('slow'), 4000));
