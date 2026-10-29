@@ -224,6 +224,9 @@ class CaptureController extends Notifier<CaptureState> {
 
   /// `?debug=1` on the web: show a diagnostics line on the scanner.
   final bool _debug = kIsWeb && Uri.base.queryParameters['debug'] == '1';
+
+  /// The deployed build (git commit, set by the web build), shown on the diagnostics line.
+  static const _build = String.fromEnvironment('ASSET_VERSION', defaultValue: 'dev');
   final _brightness = <double>[];
   final _frameTimes = <int>[];
   final _clock = Stopwatch()..start();
@@ -358,7 +361,7 @@ class CaptureController extends Notifier<CaptureState> {
         debug: _debug
             ? 'fps ${fps.toStringAsFixed(0)} · page ${detection.found ? detection.score.toStringAsFixed(2) : '-'}'
                   ' · steady ${(_stability.progress * 100).round()}% · sharp ${sharpFrame ? 'yes' : 'no'}'
-                  ' (${sharpness.round()}) · ${f.width}x${f.height}'
+                  ' (${sharpness.round()}) · ${f.width}x${f.height} · build ${_build.length > 7 ? _build.substring(0, 7) : _build}'
             : null,
       );
       // Held still with no page found: count towards a capture anyway.
