@@ -10,3 +10,7 @@ backend/.env
 .claude/
 **/*.egg-info/
 docs/testing/raw/
+
+# Real photos from phone tests (may show real ID details): never committed
+tests/fixtures/real/
+recordings/
