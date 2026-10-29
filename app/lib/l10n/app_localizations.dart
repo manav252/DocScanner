@@ -1310,6 +1310,24 @@ abstract class AppLocalizations {
   /// **'Page captured. Show the next page.'**
   String get hintNextPage;
 
+  /// No description provided for @hintHoldSteady.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold steady'**
+  String get hintHoldSteady;
+
+  /// No description provided for @hintShowCorners.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all 4 corners'**
+  String get hintShowCorners;
+
+  /// No description provided for @hintDarkerBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Try a darker background'**
+  String get hintDarkerBackground;
+
   /// No description provided for @hintStillCapture.
   ///
   /// In en, this message translates to:

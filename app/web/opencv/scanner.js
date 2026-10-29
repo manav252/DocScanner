@@ -438,7 +438,7 @@
   /** Page outline without what is on or under it: closing fills in strokes and rules, median flattens weave. */
   function suppressTexture(cv, gray) {
     const k = Math.max(3, Math.trunc(PARAMS.texture_morph * Math.max(gray.rows, gray.cols)) | 1);
-    const kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(k, k));
+    const kernel = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(k, k));
     const closed = new cv.Mat(), out = new cv.Mat();
     cv.morphologyEx(gray, closed, cv.MORPH_CLOSE, kernel);
     cv.medianBlur(closed, out, 5);
@@ -466,7 +466,7 @@
     for (let i = 0; i < M.length; i++) M[i] = S[i] < PARAMS.paper_sat_max && B[i] > 0 ? 255 : 0;
     rgb.delete(); hsv.delete(); sat.delete(); v.delete(); parts.delete(); val.delete(); bright.delete();
     const k = Math.max(3, Math.trunc(PARAMS.paper_morph * Math.max(mask.rows, mask.cols)) | 1);
-    const kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(k, k));
+    const kernel = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(k, k));
     cv.morphologyEx(mask, mask, cv.MORPH_OPEN, kernel);
     cv.morphologyEx(mask, mask, cv.MORPH_CLOSE, kernel);
     kernel.delete();

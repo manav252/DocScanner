@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:docscanner/core/providers.dart';
 import 'package:docscanner/features/capture/capture_controller.dart';
+import 'package:docscanner/features/capture/capture_page.dart';
 import 'package:docscanner/imaging/geometry.dart';
 import 'package:docscanner/imaging/scan_engine.dart';
 import 'package:docscanner/services/camera/scanner_camera.dart';
@@ -138,14 +139,15 @@ void main() {
     expect(camera.pictures, 0);
   });
 
-  test('nothing found anywhere: full photo bounds, detected=false', () async {
+  test('nothing found anywhere: a box a little inside the photo, detected=false', () async {
     engine.frameDetector = (_) => noPage;
     container = makeContainer();
     await waitFor(() => read().status == CaptureStatus.running);
     await ctrl().capture();
     final cap = read().pendingCapture!;
     expect(cap.detected, isFalse);
-    expect(cap.corners, fullBounds(1000, 1400));
+    expect(cap.corners, defaultQuad(1000, 1400));
+    expect(cap.corners.first.x, closeTo(80, 1));
   });
 
   test('resume clears the capture and keeps scanning', () async {
@@ -260,5 +262,29 @@ void main() {
     expect(p[0].x, closeTo(375, 1));
     expect(p[1].x, closeTo(2625, 1));
     expect((p[0].y, p[1].y), (0.0, 4000.0));
+  });
+
+  test('blurred frames are skipped (at most 3 in a row) with a "hold steady" state', () async {
+    // Crisp frames first (they set the bar), then flat ones that count as blurred.
+    final crisp = Uint8List.fromList([for (var i = 0; i < 64 * 48; i++) (i ~/ 3).isEven ? 230 : 20]);
+    camera = FakeCamera(
+      frameAt: (i) => i < 6 ? FrameData(bytes: crisp, width: 64, height: 48, format: PixelFormat.luma) : lumaFrame(),
+    );
+    engine.frameDetector = (_) => noPage;
+    container = makeContainer();
+    await waitFor(() => read().blurry);
+    final framesAtBlur = engine.frames;
+    await waitFor(() => engine.frames > framesAtBlur); // searched again after 3 skipped frames
+  });
+
+  test('hints: after 2 s without a page, suggestions take turns', () {
+    const base = CaptureState(status: CaptureStatus.running, autoCapture: false);
+    ScanHint at(int ms) => ScanHint.of(base.copyWith(noPageFor: Duration(milliseconds: ms)));
+    expect(at(500), ScanHint.pointCamera);
+    expect(at(2100), ScanHint.moveCloser);
+    expect(at(4700), ScanHint.showCorners);
+    expect(at(7200), ScanHint.darkerBackground);
+    expect(at(9700), ScanHint.moveCloser);
+    expect(ScanHint.of(base.copyWith(blurry: true)), ScanHint.holdSteady);
   });
 }

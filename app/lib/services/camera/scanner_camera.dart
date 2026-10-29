@@ -168,6 +168,11 @@ class SharpnessGate {
     return sharpness >= ratio * _recent.reduce((a, b) => a > b ? a : b);
   }
 
+  /// [sharpness] (already added with [update]) is far below the recent best:
+  /// the frame is blurred by shake or still focusing.
+  bool isBlurry(double sharpness, {double ratio = 0.3}) =>
+      _recent.length >= 5 && sharpness < ratio * _recent.reduce((a, b) => a > b ? a : b);
+
   void reset() => _recent.clear();
 }
 

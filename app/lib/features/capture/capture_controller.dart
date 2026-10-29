@@ -53,7 +53,7 @@ class CaptureTuning {
     this.minDocumentArea = 0.12,
     this.lowLightThreshold = 45,
     this.autoCaptureCooldown = const Duration(milliseconds: 1500),
-    this.steadyFrames = 8,
+    this.steadyFrames = 10,
     this.newPageDistance = 0.12,
     this.stillCapture = const Duration(seconds: 4),
     this.stillMotion = 6.0,
@@ -112,6 +112,8 @@ class CaptureState {
     this.message,
     this.debug,
     this.stillProgress = 0,
+    this.blurry = false,
+    this.noPageFor = Duration.zero,
   });
 
   final CaptureStatus status;
@@ -144,6 +146,12 @@ class CaptureState {
   /// 0..1 while the camera is held still with no page found (captured at 1).
   final double stillProgress;
 
+  /// The last frame was blurred (shake, focusing): it was not searched.
+  final bool blurry;
+
+  /// How long no page has been found (for hints after a while).
+  final Duration noPageFor;
+
   bool get documentFound => corners != null;
 
   CaptureState copyWith({
@@ -164,6 +172,8 @@ class CaptureState {
     Object? message = _unset,
     String? debug,
     double? stillProgress,
+    bool? blurry,
+    Duration? noPageFor,
   }) => CaptureState(
     status: status ?? this.status,
     failure: identical(failure, _unset) ? this.failure : failure as CameraFailure?,
@@ -182,6 +192,8 @@ class CaptureState {
     message: identical(message, _unset) ? this.message : message as CaptureMessage?,
     debug: debug ?? this.debug,
     stillProgress: stillProgress ?? this.stillProgress,
+    blurry: blurry ?? this.blurry,
+    noPageFor: noPageFor ?? this.noPageFor,
   );
 }
 
@@ -202,6 +214,12 @@ class CaptureController extends Notifier<CaptureState> {
 
   /// Steady frames in a row that were not sharp; after [maxSharpWait] the page is captured anyway.
   int _unsharpSteady = 0;
+
+  /// Blurred frames skipped in a row (at most [maxBlurSkips], so a camera whose
+  /// frames vary a lot still gets searched), and since when no page is found.
+  int _blurSkips = 0;
+  static const maxBlurSkips = 3;
+  Duration? _noPageSince;
   static const maxSharpWait = 6;
 
   /// `?debug=1` on the web: show a diagnostics line on the scanner.
@@ -287,6 +305,16 @@ class CaptureController extends Notifier<CaptureState> {
       if (state.status != CaptureStatus.running) continue;
       final f = frame.data;
       final analysisStart = _clock.elapsed;
+      // A blurred frame (shake, focusing) gives a wrong or no outline: skip it
+      // and keep the last outline, with a "Hold steady" hint.
+      final sharpness = estimateSharpness(f);
+      final sharpFrame = _sharpness.update(sharpness);
+      if (_sharpness.isBlurry(sharpness) && _blurSkips < maxBlurSkips) {
+        _blurSkips++;
+        state = state.copyWith(blurry: true);
+        continue;
+      }
+      _blurSkips = 0;
       final detection = await engine
           .detectFrame(f)
           .catchError((Object _) => Detection(fullBounds(f.width, f.height), found: false));
@@ -299,8 +327,6 @@ class CaptureController extends Notifier<CaptureState> {
       // Shake blurs the photo even while the outline looks steady: wait for a
       // sharp frame, but not forever (a camera whose frames never count as
       // sharp, e.g. heavy noise reduction, must still capture).
-      final sharpness = estimateSharpness(f);
-      final sharpFrame = _sharpness.update(sharpness);
       _unsharpSteady = steady && !sharpFrame ? _unsharpSteady + 1 : 0;
       final sharp = sharpFrame || _unsharpSteady >= maxSharpWait;
 
@@ -315,7 +341,15 @@ class CaptureController extends Notifier<CaptureState> {
       }
       final fps = _frameTimes.length < 2 ? 0.0 : (_frameTimes.length - 1) * 1000 / math.max(1, now - _frameTimes.first);
 
+      final now0 = _clock.elapsed;
+      if (good) {
+        _noPageSince = null;
+      } else {
+        _noPageSince ??= now0;
+      }
       state = state.copyWith(
+        blurry: false,
+        noPageFor: _noPageSince == null ? Duration.zero : now0 - _noPageSince!,
         corners: smoothed,
         steadyProgress: _stability.progress,
         lowLight: _brightness.length >= 5 && meanBrightness < _tuning.lowLightThreshold,
@@ -406,7 +440,8 @@ class CaptureController extends Notifier<CaptureState> {
         corners = previewToPhoto(previewCorners, state.previewAspectRatio, r.width, r.height);
         detected = true;
       } else {
-        (corners, detected) = (fullBounds(r.width, r.height), false);
+        // Nothing found: a box a little inside the photo, easy to drag onto the page.
+        (corners, detected) = (defaultQuad(r.width, r.height), false);
       }
       state = state.copyWith(
         status: CaptureStatus.reviewing,
@@ -539,4 +574,10 @@ List<Pt> previewToPhoto(List<Pt> normalized, double previewAspect, int photoWidt
         ((0.5 + (p.y - 0.5) * fh) * (photoHeight - 1)).clamp(0, photoHeight - 1).toDouble(),
       ),
   ];
+}
+
+/// Corners for a photo where no page was found: 8 % in from each edge.
+List<Pt> defaultQuad(int w, int h) {
+  final x0 = 0.08 * (w - 1), y0 = 0.08 * (h - 1), x1 = 0.92 * (w - 1), y1 = 0.92 * (h - 1);
+  return [Pt(x0, y0), Pt(x1, y0), Pt(x1, y1), Pt(x0, y1)];
 }

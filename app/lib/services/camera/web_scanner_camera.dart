@@ -94,7 +94,34 @@ class WebScannerCamera implements ScannerCamera {
     } catch (_) {
       cameraCount = 1;
     }
+    _continuousFocus();
     _sinceLastFrame.start();
+  }
+
+  /// Ask for continuous autofocus where the browser offers it (Chrome on
+  /// Android); others focus on their own.
+  void _continuousFocus() {
+    try {
+      final track = _stream?.getVideoTracks().toDart.firstOrNull;
+      if (track == null || !track.has('getCapabilities')) return;
+      final modes = track.getCapabilities().getProperty<JSAny?>('focusMode'.toJS);
+      if (modes == null || !(modes as JSArray<JSString>).toDart.map((m) => m.toDart).contains('continuous')) return;
+      unawaited(
+        track
+            .applyConstraints(
+              {
+                    'advanced': [
+                      {'focusMode': 'continuous'},
+                    ],
+                  }.jsify()!
+                  as web.MediaTrackConstraints,
+            )
+            .toDart
+            .catchError((_) => null),
+      );
+    } catch (_) {
+      // Not offered: the camera keeps its own focus.
+    }
   }
 
   static Future<List<web.MediaDeviceInfo>> _videoInputs(web.MediaDevices devices) async => [

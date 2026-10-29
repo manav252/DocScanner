@@ -339,6 +339,9 @@ S = {
     "hintHoldStill": ("Hold still", "स्थिर रखें"),
     "hintFound": ("Document found", "दस्तावेज़ मिल गया"),
     "hintNextPage": ("Page captured. Show the next page.", "पेज की फ़ोटो ली गई। अगला पेज दिखाएँ।"),
+    "hintHoldSteady": ("Hold steady", "स्थिर पकड़ें"),
+    "hintShowCorners": ("Show all 4 corners", "चारों कोने दिखाएँ"),
+    "hintDarkerBackground": ("Try a darker background", "गहरे रंग की सतह पर रखें"),
     "hintStillCapture": (
         "Hold still to capture. You can fix the corners next.",
         "फ़ोटो लेने के लिए स्थिर रखें। कोने आप अगले कदम में ठीक कर सकते हैं।",

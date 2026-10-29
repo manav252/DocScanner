@@ -682,6 +682,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hintNextPage => 'Page captured. Show the next page.';
 
   @override
+  String get hintHoldSteady => 'Hold steady';
+
+  @override
+  String get hintShowCorners => 'Show all 4 corners';
+
+  @override
+  String get hintDarkerBackground => 'Try a darker background';
+
+  @override
   String get hintStillCapture => 'Hold still to capture. You can fix the corners next.';
 
   @override

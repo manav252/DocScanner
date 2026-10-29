@@ -683,6 +683,15 @@ class AppLocalizationsHi extends AppLocalizations {
   String get hintNextPage => 'पेज की फ़ोटो ली गई। अगला पेज दिखाएँ।';
 
   @override
+  String get hintHoldSteady => 'स्थिर पकड़ें';
+
+  @override
+  String get hintShowCorners => 'चारों कोने दिखाएँ';
+
+  @override
+  String get hintDarkerBackground => 'गहरे रंग की सतह पर रखें';
+
+  @override
   String get hintStillCapture => 'फ़ोटो लेने के लिए स्थिर रखें। कोने आप अगले कदम में ठीक कर सकते हैं।';
 
   @override

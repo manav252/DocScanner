@@ -223,7 +223,7 @@ cv.Mat _normalizeLighting(cv.Mat gray) {
 /// strokes (handwriting, ruled lines, print), a median blur flattens weave.
 cv.Mat _suppressTexture(cv.Mat gray) {
   final k = math.max(3, (_P.textureMorph * math.max(gray.rows, gray.cols)).truncate() | 1);
-  final kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE, (k, k));
+  final kernel = cv.getStructuringElement(cv.MORPH_RECT, (k, k));
   final closed = cv.morphologyEx(gray, cv.MORPH_CLOSE, kernel);
   kernel.dispose();
   final out = cv.medianBlur(closed, 5);
@@ -250,7 +250,7 @@ cv.Mat _paperMask(cv.Mat bgr) {
     m.dispose();
   }
   final k = math.max(3, (_P.paperMorph * math.max(bgr.rows, bgr.cols)).truncate() | 1);
-  final kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE, (k, k));
+  final kernel = cv.getStructuringElement(cv.MORPH_RECT, (k, k));
   final raw = cv.Mat.fromList(bgr.rows, bgr.cols, cv.MatType.CV_8UC1, mask);
   final opened = cv.morphologyEx(raw, cv.MORPH_OPEN, kernel);
   final closed = cv.morphologyEx(opened, cv.MORPH_CLOSE, kernel);
@@ -258,15 +258,7 @@ cv.Mat _paperMask(cv.Mat bgr) {
     m.dispose();
   }
   final labels = cv.Mat.empty(), stats = cv.Mat.empty(), centroids = cv.Mat.empty();
-  final n = cv.connectedComponentsWithStats(
-    closed,
-    labels,
-    stats,
-    centroids,
-    8,
-    cv.MatType.CV_32S,
-    cv.CCL_DEFAULT,
-  );
+  final n = cv.connectedComponentsWithStats(closed, labels, stats, centroids, 8, cv.MatType.CV_32S, cv.CCL_DEFAULT);
   var biggest = -1, area = -1;
   for (var i = 1; i < n; i++) {
     final a = stats.at<int>(i, cv.CC_STAT_AREA);

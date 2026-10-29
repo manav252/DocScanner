@@ -1,0 +1,14 @@
+{
+ "label": "final-nopage",
+ "engine": "Chrome (headless), 390x844 phone viewport",
+ "photo": "no_document",
+ "shakePx": 2,
+ "runs": [
+  {
+   "run": 0,
+   "capturedAfterMs": 5572,
+   "lastHint": "",
+   "errors": []
+  }
+ ]
+}

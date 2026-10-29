@@ -446,15 +446,26 @@ enum ScanHint {
   nextPage,
   tapShutter,
   stillCapture,
+  holdSteady,
+  showCorners,
+  darkerBackground,
   none;
+
+  /// No page for this long: the hint starts suggesting what to change.
+  static const searchHelpAfter = Duration(seconds: 2);
 
   static ScanHint of(CaptureState s) {
     if (s.status == CaptureStatus.capturing) return capturing;
     if (s.status != CaptureStatus.running) return none;
     if (s.lowLight) return s.supportsTorch ? tooDarkFlash : tooDark;
+    if (s.blurry) return holdSteady;
     if (!s.documentFound) {
       if (s.autoCapture && s.stillProgress > 0.25) return stillCapture;
-      return s.tooSmall ? moveCloser : pointCamera;
+      if (s.tooSmall) return moveCloser;
+      if (s.noPageFor < searchHelpAfter) return pointCamera;
+      // Then one suggestion after another, 2.5 s each.
+      const tips = [moveCloser, showCorners, darkerBackground];
+      return tips[((s.noPageFor - searchHelpAfter).inMilliseconds ~/ 2500) % tips.length];
     }
     if (s.autoCapture && s.awaitingNextPage) return nextPage;
     if (s.autoCapture) return s.steadyProgress > 0.2 ? holdStill : found;
@@ -472,6 +483,9 @@ enum ScanHint {
     nextPage => l.hintNextPage,
     tapShutter => l.hintTapShutter,
     stillCapture => l.hintStillCapture,
+    holdSteady => l.hintHoldSteady,
+    showCorners => l.hintShowCorners,
+    darkerBackground => l.hintDarkerBackground,
     none => '',
   };
 }

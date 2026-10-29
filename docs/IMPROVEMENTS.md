@@ -178,6 +178,66 @@ Checked in WebKit 18.0 (Safari's engine, Playwright, iPhone 13 emulation:
 test pages the reading score is 0–7 in every orientation. Reading handwriting needs a
 model such as TrOCR or a cloud service (section 4); not added.
 
+## 10. Live detection: Android parity and the six phone-test scenes (29 Oct)
+
+Classic OpenCV only, no models. Python (`scanner_core`), web (`opencv.js`) and
+Android (`opencv_dart`) run the same steps with the same settings
+(`shared/detector_params.json`; a test in each fails if a copy differs).
+
+**Parity fixes**
+
+| Difference | Fix |
+|---|---|
+| Android searched only the brightness (Y) plane, so the colour passes never ran live | YUV frame converted to colour at detection size (~500 px) in the background isolate |
+| Android/iPhone app turned colour (BGRA/RGBA) frames grey before detecting | Colour passed through |
+| Android preview stream 16:9, photo 4:3: the preview outline was put on the photo stretched | Mapped as the centre part of the photo (`previewToPhoto`) |
+| Glare clipping did nothing on web (a function name clash) | Fixed; Python and web now give identical lighting-corrected images |
+| Rotation / mirroring | Checked: Android frames are turned upright by the sensor angle before mapping; the front camera's preview is un-mirrored; web frames are already upright |
+
+Parity test (`hard_cases_test.dart`, `scanner.test.js`): all 144 synthetic photos;
+the same decision and corners within 6 px, except where both results are right
+(at most 5 %; web 3/144, Android 1/144) or both wrong. No photo is right in one
+version and wrong in another.
+
+**Detector changes** (A–G of the request)
+
+| | Change |
+|---|---|
+| A | Never the photo itself: a quad with more than 2 sides on the photo border (within 1.2 %) or over 95 % of it is rejected; each border side lowers the score |
+| B | Paper mask pass: colourless and bright for its surroundings (Otsu), opened/closed, largest region; its outlines are checked against the photo's own edges |
+| C | Lighting: highlights clipped at the 99th percentile, divided by the lighting (two box blurs: fast and identical in every OpenCV version), CLAHE |
+| D | Texture pass: closing + median removes handwriting, ruled lines and print before edges |
+| F | (Already scored: size, border support on all 4 sides, squareness, outline fit, fill) |
+| G | Corner refinement only follows edges that step the same way as the page border, so a card's photo box or a shadow cannot pull a side |
+| E | Tried (photo border as a page side, weak spine side): fixed no notebook photo and caused false finds on clutter; not kept |
+
+**Synthetic scenes** (`shared/test_fixtures/scenes`, 8 photos each; success = every corner within 20 px)
+
+| Scene | Before | After (Python = web = Android) | Median error before → after |
+|---|---:|---:|---|
+| Small card on a white sheet running off the frame | 1/8 | 2/8 | 47 → 26 px |
+| Card on white paper, flash glare | 8/8 | 8/8 | 6 → 6 px |
+| Card very close and blurry | 4/8 | 4/8 | 60 → 60 px |
+| Blank page on checked cloth | 3/8 (2 = whole frame) | **8/8** (0 whole frame) | 227 → 2 px |
+| Blank page, half shadow | 7/8 | 7/8 | 2 → 2 px |
+| Notebook page (spine, shadow, off-frame) | 0/8 | 0/8 | — |
+
+Older hard cases: unchanged except Aadhaar 1 → 3/12 (refinement).
+
+**Speed** (web engine, per frame, Node): page found at once 15.3 → 15.6 ms; no page
+(every pass) 60.1 → 51.8 ms; the 48 scenes 30.9 → 27.5 ms.
+
+**Scanner screen** (H–J): blurred frames are skipped (at most 3 in a row) with
+"Hold steady"; after 2 s with no page, hints take turns ("Move closer", "Show all 4
+corners", "Try a darker background"); manual capture with nothing found opens the
+corners with a box 8 % inside the photo; auto-capture after 10 steady frames (~1 s);
+web asks for continuous autofocus where offered.
+
+**APK** (release, split per ABI, arm only): arm64 50.0 → 50.0 MB, armv7 39.8 → 39.9 MB.
+Building it needed two fixes: compileSdk 37 (a plugin requires it) and R8 rules for
+ML Kit's unused Chinese/Japanese/Korean classes; the x86_64 (emulator) APK needs
+Rosetta on Apple-silicon Macs and was not built.
+
 ## Not solved / not verified
 
 - **iPhone crashes**: not reproduced here; memory and main-thread work reduced.

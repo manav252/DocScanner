@@ -451,17 +451,17 @@ def normalize_lighting(gray: np.ndarray) -> np.ndarray:
 
 def suppress_texture(gray: np.ndarray) -> np.ndarray:
     """Page outline without what is on or under the page: a closing with a
-    kernel of TEXTURE_MORPH of the long side fills in dark strokes (handwriting,
+    square kernel (fast) of TEXTURE_MORPH of the long side fills in dark strokes (handwriting,
     ruled lines, print) and a median blur flattens cloth weave."""
     k = max(3, int(TEXTURE_MORPH * max(gray.shape)) | 1)
-    closed = cv2.morphologyEx(gray, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k, k)))
+    closed = cv2.morphologyEx(gray, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_RECT, (k, k)))
     return cv2.medianBlur(closed, 5)
 
 
 def paper_mask(bgr: np.ndarray) -> np.ndarray:
     """Where the paper is: colourless (low saturation) and bright for its
     surroundings (brightness with the lighting divided out, above the Otsu
-    threshold). Opening then closing with a kernel of PAPER_MORPH of the long
+    threshold). Opening then closing with a square kernel (fast) of PAPER_MORPH of the long
     side removes cloth checks, ruled lines and text; only the largest connected
     region is kept. 255 = paper."""
     hsv = cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV)
@@ -469,7 +469,7 @@ def paper_mask(bgr: np.ndarray) -> np.ndarray:
     _, bright = cv2.threshold(val, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     mask = np.where((sat < PAPER_SAT_MAX) & (bright > 0), 255, 0).astype(np.uint8)
     k = max(3, int(PAPER_MORPH * max(mask.shape)) | 1)
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k, k))
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (k, k))
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
     n, labels, stats, _ = cv2.connectedComponentsWithStats(mask, connectivity=8)
