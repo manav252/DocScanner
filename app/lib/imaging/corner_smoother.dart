@@ -52,56 +52,99 @@ class CornerSmoother {
 }
 
 class StabilityTracker {
-  /// Steady when the last [window] detections all lie within [tolerance]
-  /// (fraction of the frame diagonal) of their mean. At 10 fps, 8 frames ~ 0.8 s.
-  /// Up to [allowedMisses] frames in a row without a page (the detector missing
-  /// one frame of a hand-held page) do not restart the count.
-  StabilityTracker({this.window = 8, this.tolerance = 0.012, this.allowedMisses = 2});
+  /// Steady when [window] detections (or at least [minFrames] spanning
+  /// [minDuration], whichever comes first) lie within [tolerance] (fraction of
+  /// the frame diagonal) of their mean. A hand-held phone's outline wobbles a
+  /// little and the detector now and then returns a wrong outline for one
+  /// frame: up to [allowedOutliers] such frames per count are ignored (more
+  /// means the page is moving), and up to
+  /// [allowedMisses] frames without a page do not restart the count. Slow
+  /// drift drops the oldest frames instead of restarting.
+  StabilityTracker({
+    this.window = 8,
+    this.tolerance = 0.025,
+    this.allowedMisses = 2,
+    this.allowedOutliers = 2,
+    this.minFrames = 4,
+    this.minDuration = const Duration(milliseconds: 900),
+  });
 
   final int window;
   final double tolerance;
   final int allowedMisses;
-  final _buf = Queue<List<Pt>>();
+  final int allowedOutliers;
+  final int minFrames;
+  final Duration minDuration;
+  final _buf = Queue<(List<Pt>, Duration?)>();
   int _misses = 0;
+  int _outliers = 0;
 
   void reset() {
     _buf.clear();
     _misses = 0;
+    _outliers = 0;
   }
 
-  bool update(List<Pt>? corners) {
+  /// [at]: the frame's time, so a slow phone (few frames a second) is steady
+  /// after [minDuration] rather than after [window] frames.
+  bool update(List<Pt>? corners, {Duration? at}) {
     if (corners == null) {
-      if (++_misses > allowedMisses) _buf.clear();
+      if (++_misses > allowedMisses) reset();
       return false;
     }
     _misses = 0;
-    _buf.addLast(corners);
+    if (_buf.isNotEmpty && _distance(corners, _mean()) > _limit) {
+      if (++_outliers > allowedOutliers) {
+        _buf.clear(); // the page (or the phone) really moved
+        _outliers = 0;
+      } else {
+        return false;
+      }
+    }
+    _buf.addLast((corners, at));
     while (_buf.length > window) {
+      _buf.removeFirst();
+    }
+    // Slow drift: drop old frames that no longer agree with the mean.
+    while (_buf.length > 1 && _distance(_buf.first.$1, _mean()) > _limit) {
       _buf.removeFirst();
     }
     return isSteady;
   }
 
-  double _spread() {
+  double get _limit => tolerance * math.sqrt2;
+
+  List<Pt> _mean() {
+    return [
+      for (var i = 0; i < 4; i++)
+        Pt(
+          _buf.fold(0.0, (s, c) => s + c.$1[i].x) / _buf.length,
+          _buf.fold(0.0, (s, c) => s + c.$1[i].y) / _buf.length,
+        ),
+    ];
+  }
+
+  static double _distance(List<Pt> a, List<Pt> b) {
     var worst = 0.0;
     for (var i = 0; i < 4; i++) {
-      var mx = 0.0, my = 0.0;
-      for (final c in _buf) {
-        mx += c[i].x;
-        my += c[i].y;
-      }
-      final mean = Pt(mx / _buf.length, my / _buf.length);
-      for (final c in _buf) {
-        worst = math.max(worst, c[i].distanceTo(mean));
-      }
+      worst = math.max(worst, a[i].distanceTo(b[i]));
     }
     return worst;
   }
 
-  bool get _withinTolerance => _buf.isNotEmpty && _spread() <= tolerance * math.sqrt2;
+  Duration get _span {
+    final first = _buf.isEmpty ? null : _buf.first.$2;
+    final last = _buf.isEmpty ? null : _buf.last.$2;
+    return first == null || last == null ? Duration.zero : last - first;
+  }
 
-  bool get isSteady => _buf.length == window && _withinTolerance;
+  bool get isSteady => _buf.length >= window || (_buf.length >= minFrames && _span >= minDuration);
 
   /// 0..1, for drawing a "hold still" ring in the UI.
-  double get progress => _withinTolerance ? _buf.length / window : 0.0;
+  double get progress {
+    if (_buf.isEmpty) return 0;
+    if (isSteady) return 1;
+    final byTime = _span.inMicroseconds / minDuration.inMicroseconds;
+    return math.min(1.0, math.max(_buf.length / window, math.min(byTime, (_buf.length) / minFrames)));
+  }
 }

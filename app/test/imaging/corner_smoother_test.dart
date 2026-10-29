@@ -53,6 +53,10 @@ void main() {
   test('stability: never steady while moving; a brief miss is forgiven, a longer one resets', () {
     final t = StabilityTracker(window: 3);
     expect([for (var i = 0; i < 10; i++) t.update(shift(0.02 * i))].any((x) => x), isFalse);
+    final jumpy = StabilityTracker(window: 5);
+    expect([for (var i = 0; i < 20; i++) jumpy.update(shift(i.isEven ? 0 : 0.06))].any((x) => x), isFalse,
+        reason: 'jumping between two places');
+    t.reset();
     for (var i = 0; i < 3; i++) {
       t.update(base);
     }
@@ -64,5 +68,38 @@ void main() {
     }
     expect(t.isSteady, isFalse);
     expect(t.progress, 0);
+  });
+
+  test('stability: hand-held wobble and a one-frame wrong outline do not restart the count', () {
+    final rng = math.Random(1), t = StabilityTracker(window: 8);
+    final results = <bool>[];
+    for (var i = 0; i < 10; i++) {
+      // ~1 % wobble on every corner, plus one frame that jumps to another edge
+      final d = i == 4 ? 0.15 : 0.01 * _gauss(rng);
+      results.add(t.update(shift(d)));
+    }
+    expect(results.last, isTrue);
+    expect(results.indexOf(true), lessThanOrEqualTo(8));
+  });
+
+  test('stability: a slow phone is steady after about a second, not after the full window', () {
+    final t = StabilityTracker(window: 10);
+    final results = [for (var i = 0; i < 5; i++) t.update(base, at: Duration(milliseconds: 250 * i))];
+    expect(results, [false, false, false, false, true]);
+    expect(t.progress, 1.0);
+  });
+
+  test('stability: a moved page restarts the count', () {
+    final t = StabilityTracker(window: 4);
+    for (var i = 0; i < 3; i++) {
+      t.update(base);
+    }
+    for (var i = 0; i < 3; i++) {
+      t.update(shift(0.2));
+    }
+    expect(t.isSteady, isFalse);
+    expect(t.update(shift(0.2)), isFalse);
+    expect(t.update(shift(0.2)), isFalse);
+    expect(t.update(shift(0.2)), isTrue);
   });
 }

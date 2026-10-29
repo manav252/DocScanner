@@ -220,7 +220,7 @@ class CaptureController extends Notifier<CaptureState> {
   int _blurSkips = 0;
   static const maxBlurSkips = 3;
   Duration? _noPageSince;
-  static const maxSharpWait = 6;
+  static const maxSharpWait = 3;
 
   /// `?debug=1` on the web: show a diagnostics line on the scanner.
   final bool _debug = kIsWeb && Uri.base.queryParameters['debug'] == '1';
@@ -326,7 +326,7 @@ class CaptureController extends Notifier<CaptureState> {
       final good = detection.found && detection.score >= _tuning.minDocumentArea;
       final upright = good ? frame.toUpright(detection.normalized(f.width, f.height)) : null;
       final smoothed = _smoother.update(upright);
-      final steady = _stability.update(upright);
+      final steady = _stability.update(upright, at: _clock.elapsed);
       // Shake blurs the photo even while the outline looks steady: wait for a
       // sharp frame, but not forever (a camera whose frames never count as
       // sharp, e.g. heavy noise reduction, must still capture).
